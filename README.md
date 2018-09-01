@@ -1,2 +1,2 @@
 # torchpack
-Use Pytorch in a smart way
+Use Pytorch in a easiest way

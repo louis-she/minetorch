@@ -1,11 +1,10 @@
 import torch
 
-
 class Trainer(object):
 
     def __init__(self, logger, model, optimizer,
                  train_dataloader, val_dataloader, loss_func,
-                 eval_func, resume=True, eval_stride=1, persist_stride=1,
+                 resume=True, eval_stride=1, persist_stride=1,
                  hooks={}):
         self.logger = logger
         self.model = model
@@ -19,7 +18,6 @@ class Trainer(object):
         self.loss_func = loss_func
         self.resume = resume
         self.eval_stride = eval_stride
-        self.eval_func = eval_func
 
         self.lowest_train_loss = float('inf')
         self.lowest_val_loss = float('inf')
