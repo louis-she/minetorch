@@ -1,4 +1,5 @@
 import torch
+import os
 
 class Trainer(object):
 
@@ -32,7 +33,12 @@ class Trainer(object):
         """
         if self.resume is True:
             # resume from the newest model
-            checkpoint = self.logger.get_checkpoint('latest')
+            if os.path.isfile(self.logger.model_file_path('latest')):
+                checkpoint = self.logger.get_checkpoint('latest')
+            else:
+                checkpoint = None
+                self.logger.warn('Could not find checkpoint to resume, train '
+                                 'from scratch')
         elif type(self.resume) == str:
             checkpoint = self.logger.get_checkpoint(self.resume)
         else:

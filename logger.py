@@ -27,9 +27,11 @@ class Logger(object):
             self.writer.add_scalars(key, value, index)
 
     def info(self, log):
+        print(log)
         logging.info(log)
 
     def warn(self, log):
+        print(log)
         logging.warn(log)
 
     def get_checkpoint(self, name):
@@ -40,5 +42,5 @@ class Logger(object):
         self.info('save checkpoint to {}'.format(self.model_file_path(name)))
 
     def model_file_path(self, model_name):
-        model_file_name = '{}.pth.tar'.format(name)
+        model_file_name = '{}.pth.tar'.format(model_name)
         return os.path.join(self.models_dir, model_file_name)

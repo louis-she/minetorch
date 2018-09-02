@@ -11,6 +11,7 @@ sys.path.append('..')
 from logger import Logger
 from trainer import Trainer
 
+
 # step 1: define some model
 class Net(nn.Module):
     def __init__(self):
