@@ -8,7 +8,7 @@ In [Minecraft](https://minecraft.net/), torches are very important for mining. N
 1. Clone this repo
 
 ```
-git clone git@github.com:louis-she/torchpack.git
+git clone git@github.com:louis-she/minetorch.git
 ```
 
 2. Goto examples and execute
@@ -17,7 +17,7 @@ git clone git@github.com:louis-she/torchpack.git
 python mnist.py
 ```
 
-The `mnist.py` is pretty much like pytorch official mnist example https://github.com/pytorch/examples/blob/master/mnist/main.py, with some minor changes to be adapted to Torchpack.
+The `mnist.py` is pretty much like pytorch official mnist example https://github.com/pytorch/examples/blob/master/mnist/main.py, with some minor changes to be adapted to Minetorch.
 
 This will create a `log` and `data` directory in working directory.
 
