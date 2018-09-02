@@ -7,32 +7,35 @@ from tensorboardX import SummaryWriter
 class Logger(object):
 
     def __init__(self, log_dir, namespace):
-        self.log_dir = log_dir
+        self.log_dir = os.path.join(log_dir, namespace)
         self.namespace = namespace
-        self.writer = SummaryWriter()
         self.models_dir = os.path.join(self.log_dir, 'models')
         self.log_file = os.path.join(self.log_dir, 'log.txt')
+        self.writer = SummaryWriter(log_dir=self.log_dir)
 
-        if not os.path.isdir(self.log_dir):
-            os.mkdir(self.log_dir)
-        if not os.path.isdir(self.models_dir):
-            os.mkdir(self.models_dir)
-        logging.basicConfig(filename=self.log_file, level=logging.DEBUG)
+        self.check_dir('')
+        self.check_dir('models')
+
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.addHandler(logging.FileHandler(self.log_file))
+
+    def check_dir(self, dirname):
+        if not os.path.isdir(os.path.join(self.log_dir, dirname)):
+            os.mkdir(os.path.join(self.log_dir, dirname))
 
     def scalar(self, value, index, data_name):
         key = '{}/{}'.format(self.namespace, data_name)
-        if isinstance(value, str):
-            self.writer.add_scalar(key, value, index)
-        else:
+        if isinstance(value, dict):
             self.writer.add_scalars(key, value, index)
+        else:
+            self.writer.add_scalar(key, value, index)
 
     def info(self, log):
-        print(log)
-        logging.info(log)
+        self.logger.info(log)
 
     def warn(self, log):
-        print(log)
-        logging.warn(log)
+        self.logger.warn(log)
 
     def get_checkpoint(self, name):
         torch.load(self.model_file_path(name))
