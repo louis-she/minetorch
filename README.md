@@ -1,5 +1,7 @@
-# Torchpack
-Use Pytorch in a smart way.
+![](./images/minetorch.jpg)
+# Minetorch
+
+In [Minecraft](https://minecraft.net/), torches are very important for mining. No one can get all the diamonds without torch. So is data-mining, A special torch named [pytorch](http://pytorch.org/) can help us get the dimonds in data. Minetorch is a tools collection for miners, to use pytorch in a more convinent way.
 
 ## Quick Start
 
