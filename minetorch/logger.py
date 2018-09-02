@@ -38,7 +38,7 @@ class Logger(object):
         self.logger.warn(log)
 
     def get_checkpoint(self, name):
-        torch.load(self.model_file_path(name))
+        return torch.load(self.model_file_path(name))
 
     def persist(self, data, name):
         torch.save(data, self.model_file_path(name))

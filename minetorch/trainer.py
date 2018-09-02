@@ -39,15 +39,14 @@ class Trainer(object):
                 checkpoint = None
                 self.logger.warn('Could not find checkpoint to resume, train '
                                  'from scratch')
-        elif type(self.resume) == str:
+        elif isinstance(self.resume, str):
             checkpoint = self.logger.get_checkpoint(self.resume)
         else:
             checkpoint = False
 
         if checkpoint:
             self.logger.info("Start to load checkpoint")
-            checkpoint = torch.load(checkpoint)
-            self.current_epoch = checkpoint['current_epoch']
+            self.current_epoch = checkpoint['epoch']
             self.lowest_train_loss = checkpoint['lowest_train_loss']
             self.lowest_val_loss = checkpoint['lowest_val_loss']
 
