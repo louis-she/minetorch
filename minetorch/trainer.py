@@ -19,6 +19,7 @@ class Trainer(object):
         self.loss_func = loss_func
         self.resume = resume
         self.eval_stride = eval_stride
+        self.persist_stride = persist_stride
 
         self.lowest_train_loss = float('inf')
         self.lowest_val_loss = float('inf')
@@ -85,30 +86,32 @@ class Trainer(object):
                 for index, data in enumerate(self.val_dataloader):
                     total_val_loss += self.run_val_iteration(index, data)
 
-                train_loss = total_train_loss / self.train_iters
-                val_loss = total_val_loss / self.val_iters
+            train_loss = total_train_loss / self.train_iters
+            val_loss = total_val_loss / self.val_iters
 
-                self.logger.scalar(
-                    {'train': train_loss, 'val': val_loss},
-                    self.current_epoch,
-                    'loss'
-                )
+            self.logger.scalar(
+                {'train': train_loss, 'val': val_loss},
+                self.current_epoch,
+                'loss'
+            )
 
-                if train_loss < self.lowest_train_loss:
-                    self.lowest_train_loss = train_loss
+            if train_loss < self.lowest_train_loss:
+                self.lowest_train_loss = train_loss
 
-                if val_loss < self.lowest_val_loss:
-                    self.logger.info(
-                        'current val loss {} is lower than lowest {}, '
-                        'persist this model as best one'.format(
-                            val_loss, self.lowest_val_loss))
+            if val_loss < self.lowest_val_loss:
+                self.logger.info(
+                    'current val loss {} is lower than lowest {}, '
+                    'persist this model as best one'.format(
+                        val_loss, self.lowest_val_loss))
 
-                    self.lowest_val_loss = val_loss
-                    self.persist('best')
+                self.lowest_val_loss = val_loss
+                self.persist('best')
+            self.persist('latest')
 
-                self.persist('latest')
+            if not self.current_epoch % self.persist_stride:
                 self.persist('epoch_{}'.format(self.current_epoch))
-                self.call_hook_func('after_epoch_end')
+
+            self.call_hook_func('after_epoch_end')
 
     def run_train_iteration(self, index, data):
         loss = self.loss_func(self.model, data, self.logger)
