@@ -79,35 +79,36 @@ class Trainer(object):
             for index, data in enumerate(self.train_dataloader):
                 total_train_loss += self.run_train_iteration(index, data)
 
-            self.model.eval()
-            total_val_loss = 0
-            for index, data in enumerate(self.val_dataloader):
-                total_val_loss += self.run_val_iteration(index, data)
+            with torch.set_grad_enabled(False):
+                self.model.eval()
+                total_val_loss = 0
+                for index, data in enumerate(self.val_dataloader):
+                    total_val_loss += self.run_val_iteration(index, data)
 
-            train_loss = total_train_loss / self.train_iters
-            val_loss = total_val_loss / self.val_iters
+                train_loss = total_train_loss / self.train_iters
+                val_loss = total_val_loss / self.val_iters
 
-            self.logger.scalar(
-                {'train': train_loss, 'val': val_loss},
-                self.current_epoch,
-                'loss'
-            )
+                self.logger.scalar(
+                    {'train': train_loss, 'val': val_loss},
+                    self.current_epoch,
+                    'loss'
+                )
 
-            if train_loss < self.lowest_train_loss:
-                self.lowest_train_loss = train_loss
+                if train_loss < self.lowest_train_loss:
+                    self.lowest_train_loss = train_loss
 
-            if val_loss < self.lowest_val_loss:
-                self.logger.info(
-                    'current val loss {} is lower than lowest {}, '
-                    'persist this model as best one'.format(
-                        val_loss, self.lowest_val_loss))
+                if val_loss < self.lowest_val_loss:
+                    self.logger.info(
+                        'current val loss {} is lower than lowest {}, '
+                        'persist this model as best one'.format(
+                            val_loss, self.lowest_val_loss))
 
-                self.lowest_val_loss = val_loss
-                self.persist('best')
+                    self.lowest_val_loss = val_loss
+                    self.persist('best')
 
-            self.persist('latest')
-            self.persist('epoch_{}'.format(self.current_epoch))
-            self.call_hook_func('after_epoch_end')
+                self.persist('latest')
+                self.persist('epoch_{}'.format(self.current_epoch))
+                self.call_hook_func('after_epoch_end')
 
     def run_train_iteration(self, index, data):
         loss = self.loss_func(self.model, data, self.logger)
