@@ -3,8 +3,8 @@ import os
 
 class Trainer(object):
 
-    def __init__(self, logger, model, optimizer,
-                 train_dataloader, val_dataloader, loss_func,
+    def __init__(self, logger, model, optimizer, loss_func,
+                 train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1,
                  hooks={}):
         self.logger = logger
@@ -12,9 +12,6 @@ class Trainer(object):
         self.optimizer = optimizer
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
-
-        self.train_iters = len(self.train_dataloader)
-        self.val_iters = len(self.val_dataloader)
 
         self.loss_func = loss_func
         self.resume = resume
@@ -76,18 +73,22 @@ class Trainer(object):
             self.current_epoch += 1
 
             self.model.train()
+            train_iters = len(self.train_dataloader)
+            val_iters = len(self.val_dataloader)
+
             total_train_loss = 0
             for index, data in enumerate(self.train_dataloader):
-                total_train_loss += self.run_train_iteration(index, data)
+                total_train_loss += self.run_train_iteration(index, data, train_iters)
+            train_loss = total_train_loss / train_iters
 
-            with torch.set_grad_enabled(False):
-                self.model.eval()
-                total_val_loss = 0
-                for index, data in enumerate(self.val_dataloader):
-                    total_val_loss += self.run_val_iteration(index, data)
-
-            train_loss = total_train_loss / self.train_iters
-            val_loss = total_val_loss / self.val_iters
+            total_val_loss = 0
+            if self.val_dataloader is not None:
+                val_iters = len(self.val_dataloader)
+                with torch.set_grad_enabled(False):
+                    self.model.eval()
+                    for index, data in enumerate(self.val_dataloader):
+                        total_val_loss += self.run_val_iteration(index, data, val_iters)
+                val_loss = total_val_loss / val_iters
 
             self.logger.scalar(
                 {'train': train_loss, 'val': val_loss},
@@ -113,23 +114,23 @@ class Trainer(object):
 
             self.call_hook_func('after_epoch_end')
 
-    def run_train_iteration(self, index, data):
+    def run_train_iteration(self, index, data, train_iters):
         loss = self.loss_func(self.model, data, self.logger)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         self.logger.info('[train {}/{}/{}] loss {}'.format(
-            self.current_epoch, index, self.train_iters, loss))
+            self.current_epoch, index, train_iters, loss))
 
         if loss < self.lowest_train_loss:
             self.lowest_train_loss = loss
 
         return loss
 
-    def run_val_iteration(self, index, data):
+    def run_val_iteration(self, index, data, val_iters):
         loss = self.loss_func(self.model, data, self.logger)
         self.logger.info('[val {}/{}/{}] loss {}'.format(
-            self.current_epoch, index, self.val_iters, loss))
+            self.current_epoch, index, val_iters, loss))
 
         return loss
 
