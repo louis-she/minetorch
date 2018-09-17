@@ -6,7 +6,7 @@ class Trainer(object):
     def __init__(self, logger, model, optimizer, loss_func,
                  train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1,
-                 hooks={}):
+                 hooks={}, max_epochs=None):
         self.logger = logger
         self.model = model
         self.optimizer = optimizer
@@ -22,6 +22,7 @@ class Trainer(object):
         self.lowest_val_loss = float('inf')
         self.current_epoch = 0
         self.hook_funcs = hooks
+        self.max_epochs = max_epochs
 
         self.init_model()
         self.call_hook_func('after_init')
@@ -113,6 +114,10 @@ class Trainer(object):
                 self.persist('epoch_{}'.format(self.current_epoch))
 
             self.call_hook_func('after_epoch_end')
+
+            if self.max_epochs is not None and self.current_epoch > self.max_epochs:
+                self.logger.info('exceed max epochs, quit!')
+                break
 
     def run_train_iteration(self, index, data, train_iters):
         loss = self.loss_func(self.model, data, self.logger)
