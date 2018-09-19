@@ -115,7 +115,7 @@ class Trainer(object):
 
             self.call_hook_func('after_epoch_end')
 
-            if self.max_epochs is not None and self.current_epoch > self.max_epochs:
+            if self.max_epochs is not None and self.current_epoch >= self.max_epochs:
                 self.logger.info('exceed max epochs, quit!')
                 break
 
