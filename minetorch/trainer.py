@@ -26,6 +26,7 @@ class Trainer(object):
 
         self.init_model()
         self.call_hook_func('after_init')
+        self.status = 'init'
 
     def init_model(self):
         """resume from some checkpoint
@@ -72,6 +73,7 @@ class Trainer(object):
         while True:
             self.call_hook_func('before_epoch_start')
             self.current_epoch += 1
+            self.logger.set_step(self.current_epoch)
 
             self.model.train()
             train_iters = len(self.train_dataloader)
@@ -92,9 +94,7 @@ class Trainer(object):
                 val_loss = total_val_loss / val_iters
 
             self.logger.scalar(
-                {'train': train_loss, 'val': val_loss},
-                self.current_epoch,
-                'loss'
+                {'train': train_loss, 'val': val_loss}, 'loss'
             )
 
             if train_loss < self.lowest_train_loss:
@@ -120,23 +120,29 @@ class Trainer(object):
                 break
 
     def run_train_iteration(self, index, data, train_iters):
-        loss = self.loss_func(self.model, data, self.logger)
+        self.status = 'train'
+        self.call_hook_func('before_train_iteration_start')
+
+        loss = self.loss_func(self, data)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         self.logger.info('[train {}/{}/{}] loss {}'.format(
             self.current_epoch, index, train_iters, loss))
-
         if loss < self.lowest_train_loss:
             self.lowest_train_loss = loss
 
+        self.call_hook_func('after_train_iteration_start')
         return loss
 
     def run_val_iteration(self, index, data, val_iters):
-        loss = self.loss_func(self.model, data, self.logger)
+        self.status = 'val'
+        self.call_hook_func('before_val_iteration_start')
+        loss = self.loss_func(self, data)
         self.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
 
+        self.call_hook_func('after_val_iteration_start')
         return loss
 
     def persist(self, name):

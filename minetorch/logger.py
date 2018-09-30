@@ -19,17 +19,23 @@ class Logger(object):
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.DEBUG)
         self.logger.addHandler(logging.FileHandler(self.log_file))
+        self.step = 0
 
     def check_dir(self, dirname):
         if not os.path.isdir(os.path.join(self.log_dir, dirname)):
             os.mkdir(os.path.join(self.log_dir, dirname))
 
-    def scalar(self, value, index, data_name):
+    def set_step(self, step):
+        self.step = step
+
+    def scalar(self, value, data_name, step=None):
+        if step is None:
+            step = self.step
         key = '{}/{}'.format(self.namespace, data_name)
         if isinstance(value, dict):
-            self.writer.add_scalars(key, value, index)
+            self.writer.add_scalars(key, value, step)
         else:
-            self.writer.add_scalar(key, value, index)
+            self.writer.add_scalar(key, value, step)
 
     def info(self, log):
         self.logger.info(log)
