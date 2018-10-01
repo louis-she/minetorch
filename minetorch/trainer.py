@@ -127,6 +127,7 @@ class Trainer(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        loss = loss.detach()
         self.logger.info('[train {}/{}/{}] loss {}'.format(
             self.current_epoch, index, train_iters, loss))
         if loss < self.lowest_train_loss:
@@ -139,6 +140,7 @@ class Trainer(object):
         self.status = 'val'
         self.call_hook_func('before_val_iteration_start')
         loss = self.loss_func(self, data)
+        loss = loss.detach()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
 
