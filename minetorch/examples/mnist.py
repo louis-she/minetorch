@@ -50,9 +50,9 @@ val_loader = torch.utils.data.DataLoader(
 
 
 # step 3(plan-A): define a loss computing function
-def compute_loss(model, data, logger):
+def compute_loss(trainer, data):
     image, target = data
-    output = model(image)
+    output = trainer.model(image)
     return F.nll_loss(output, target)
 
 
