@@ -1,6 +1,9 @@
-from distutils.core import setup
+import setuptools
 
-setup(
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
     name='Minetorch',
     description='A tools collection for pytorch users',
     version='0.2.0',
@@ -10,6 +13,5 @@ setup(
     author_email='chenglu.she@gmail.com',
     keywords='pytorch minecraft',
     install_requires=['tensorboardX', 'torch']
-
 )
 
