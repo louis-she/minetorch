@@ -1,4 +1,3 @@
-import logging
 import os
 
 from tensorboardX import SummaryWriter
@@ -12,9 +11,12 @@ class Drawer():
         """Constructor
 
         Args:
-            alchemistic_directory (string): same as trainer's alchemistic_directory
-            code ([type]): same as trainer's alchemistic_directory
-            step ([type], optional): Defaults to None. The timeline
+            alchemistic_directory (string):
+                same as trainer's alchemistic_directory
+            code (string):
+                same as trainer's alchemistic_directory
+            step (int, optional):
+                Defaults to None. The timeline
         """
         self.step_file = os.path.join(alchemistic_directory, code, '.drawer_step')
         self.code = code
@@ -29,16 +31,21 @@ class Drawer():
         """Plot different scalars on a graph
 
         Args:
-            value (dict): scalar to plot
-            graph (string): graph name
+            value (dict):
+                scalar to plot
+            graph (string):
+                graph name
         """
         raise NotImplementedError()
 
     def scalar(self, value, graph):
         """Plot one scalar on a graph
+
         Args:
-            value (float): scalar to plot
-            graph (string): graph name
+            value (float):
+                scalar to plot
+            graph (string):
+                graph name
         """
         self.scalars({graph: value}, graph)
 
@@ -46,6 +53,11 @@ class Drawer():
         """Return current state(counter) of the Drawer
         """
         return self.state
+
+    def set_state(self, state):
+        """Set current state(counter) to state
+        """
+        self.state = state
 
 
 class TensorboardDrawer(Drawer):
@@ -62,8 +74,10 @@ class TensorboardDrawer(Drawer):
         """Add a scalar on a graph
 
         Args:
-            value (dict): scalars to put on the graph
-            graph (string): graph name
+            value (dict):
+                scalars to put on the graph
+            graph (string):
+                graph name
         """
         if graph not in self.state:
             self.state[graph] = 0

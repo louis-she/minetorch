@@ -10,38 +10,44 @@ class Trainer(object):
     """The heart of minetorch
 
     Args:
-        alchemistic_directory (string): The directory which minetorch will
-            use to store everything in
-        model (torch.nn.Module): Pytorch model
-        optimizer (torch.optim.Optimizer): Pytorch optimizer
-        loss_func (function): A special hook function to compute loss,
-            the function receive 2 variable:
-                * Trainer: the trainer object
-                * Data: Batch data been yield by the loader
+        alchemistic_directory (string):
+            The directory which minetorch will use to store everything in
+        model (torch.nn.Module):
+            Pytorch model optimizer (torch.optim.Optimizer): Pytorch optimizer
+        loss_func (function):
+            A special hook function to compute loss, the function receive 2 variable:
+            * Trainer: the trainer object
+            * Data: Batch data been yield by the loader
             return value of the hook function should be a float number of the loss
-        code (str, optional): Defaults to "geass". It's a code name of one
+        code (str, optional):
+            Defaults to "geass". It's a code name of one
             attempt. Assume one is doing kaggle competition and will try
             different models, parameters, optimizers... To keep results of every
             attempt, one should change the code name before tweaking things.
-        train_dataloader (torch.utils.data.DataLoader): Pytorch dataloader
-        val_dataloader (torch.utils.data.DataLoader, optional): Defaults to
-            None, if no validation dataloader is provided, will skip validation
-        resume (bool, optional): Defaults to True. Resume from last training,
-            could be:
-                * True: resume from the very last epochs
-                * String: resume from the specified epochs
+        train_dataloader (torch.utils.data.DataLoader):
+            Pytorch dataloader
+        val_dataloader (torch.utils.data.DataLoader, optional):
+            Defaults to None, if no validation dataloader is provided, will skip validation
+        resume (bool, optional):
+            Defaults to True. Resume from last training, could be:
+            * True: resume from the very last epochs
+            * String: resume from the specified epochs
                           etc. `34`, `68` `best`
-        eval_stride (int, optional): Defaults to 1. Validate every
-            `eval_stride` epochs
-        persist_stride (int, optional): Defaults to 1. Save model every
-            `persist_stride` epochs
-        drawer (minetorch.Drawer or string, optional): Defaults to None.
+        eval_stride (int, optional):
+            Defaults to 1. Validate every `eval_stride` epochs
+        persist_stride (int, optional):
+            Defaults to 1.
+            Save model every `persist_stride` epochs
+        drawer (minetorch.Drawer or string, optional):
+            Defaults to None.
             If provide, Trainer will draw training loss and validation loss
             curves, could be `tensorboard` or self implemented Drawer object
-        hooks (dict, optional): Defaults to {}. Define hook functions.
-        max_epochs ([type], optional): Defaults to None. How many epochs to
-            train, None means unlimited.
-        logging_format ([type], optional): Defaults to None. logging format
+        hooks (dict, optional):
+            Defaults to {}. Define hook functions.
+        max_epochs ([type], optional):
+            Defaults to None. How many epochs to train, None means unlimited.
+        logging_format ([type], optional):
+            Defaults to None. logging format
     """
 
     def __init__(self, alchemistic_directory, model, optimizer, loss_func,
@@ -104,8 +110,8 @@ class Trainer(object):
                 checkpoint = self.get_checkpoint('latest')
             else:
                 checkpoint = None
-                logging.warn('Could not find checkpoint to resume, '
-                             'train from scratch')
+                logging.warning('Could not find checkpoint to resume, '
+                                'train from scratch')
         elif isinstance(self.resume, str):
             checkpoint = self.get_checkpoint(self.resume)
         else:
@@ -120,13 +126,14 @@ class Trainer(object):
             try:
                 self.model.load_state_dict(checkpoint['state_dict'], strict=True)
             except:
-                logging.warn(
+                logging.warning(
                     'load checkpoint failed, the state in the '
                     'checkpoint is not matched with the model, '
                     'try to reload checkpoint with unstrict mode')
                 self.model.load_state_dict(checkpoint['state_dict'], strict=False)
 
             self.optimizer.load_state_dict(checkpoint['optimizer'])
+            self.drawer.set_state(checkpoint['drawer_state'])
             logging.info('Checkpoint loaded')
 
     def call_hook_func(self, name):
@@ -217,12 +224,18 @@ class Trainer(object):
     def persist(self, name):
         """save the model to disk
         """
+        if self.drawer is not None:
+            drawer_state = self.drawer.get_state()
+        else:
+            drawer_state = {}
+
         state = {
             'state_dict': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
             'epoch': self.current_epoch,
             'lowest_train_loss': self.lowest_train_loss,
-            'lowest_val_loss': self.lowest_val_loss
+            'lowest_val_loss': self.lowest_val_loss,
+            'drawer_state': drawer_state
         }
 
         torch.save(state, self.model_file_path(name))
