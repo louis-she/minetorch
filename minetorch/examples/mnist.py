@@ -4,12 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from minetorch.trainer import Trainer
 from torchvision import datasets, transforms
-
-sys.path.append('..')
-
-from logger import Logger
-from trainer import Trainer
 
 
 # step 1: define some model
@@ -58,7 +54,7 @@ def compute_loss(trainer, data):
 
 # step 3(plan-B): define a loss computing function
 # Uncoment the code bellow to train mnist with cross_entropy loss
-# def compute_loss(model, data, logger):
+# def compute_loss(model, data):
 #     image, target = data
 #     output = model(image)
 #     return F.cross_entropy(output, target)
@@ -75,21 +71,21 @@ def after_epoch_end(trainer):
             pred = output.max(1, keepdim=True)[1]
             correct += pred.eq(target.view_as(pred)).sum().numpy()
     accuracy = correct / len(trainer.val_dataloader.dataset)
-    trainer.logger.scalar(accuracy, trainer.current_epoch, 'accuracy')
+    trainer.drawer.scalar(accuracy, 'accuracy')
 
 # step 4: start to train
 model = Net()
 
 trainer = Trainer(
-    logger=Logger(log_dir='./log', namespace='plan-A'),
     # if training with plan-B, use the code bellow
-    # logger=Logger(log_dir='./log', namespace='plan-B'),
+    alchemistic_directory='./alchemistic_directory',
     model=model,
     optimizer=optim.SGD(model.parameters(), lr=0.01),
     train_dataloader=train_loader,
     val_dataloader=val_loader,
     loss_func=compute_loss,
-    hooks={'after_epoch_end': after_epoch_end}
+    hooks={'after_epoch_end': after_epoch_end},
+    drawer='tensorboard'
 )
 
 trainer.train()
