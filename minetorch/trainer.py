@@ -133,7 +133,8 @@ class Trainer(object):
                 self.model.load_state_dict(checkpoint['state_dict'], strict=False)
 
             self.optimizer.load_state_dict(checkpoint['optimizer'])
-            self.drawer.set_state(checkpoint['drawer_state'])
+            if (self.drawer is not None) and ('drawer_state' in checkpoint):
+                self.drawer.set_state(checkpoint['drawer_state'])
             logging.info('Checkpoint loaded')
 
     def call_hook_func(self, name):
