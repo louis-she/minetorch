@@ -191,6 +191,7 @@ class Trainer(object):
             self.call_hook_func('after_epoch_end')
 
             if self.max_epochs is not None and self.current_epoch >= self.max_epochs:
+                self.call_hook_func('before_quit')
                 logging.info('exceed max epochs, quit!')
                 break
 
@@ -208,7 +209,7 @@ class Trainer(object):
         if loss < self.lowest_train_loss:
             self.lowest_train_loss = loss
 
-        self.call_hook_func('after_train_iteration_start')
+        self.call_hook_func('after_train_iteration_end')
         return loss
 
     def run_val_iteration(self, index, data, val_iters):
@@ -219,12 +220,13 @@ class Trainer(object):
         logging.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
 
-        self.call_hook_func('after_val_iteration_start')
+        self.call_hook_func('after_val_iteration_ended')
         return loss
 
     def persist(self, name):
         """save the model to disk
         """
+        self.call_hook_func('before_checkpoint_persisted')
         if self.drawer is not None:
             drawer_state = self.drawer.get_state()
         else:
@@ -241,6 +243,8 @@ class Trainer(object):
 
         torch.save(state, self.model_file_path(name))
         logging.info('save checkpoint to {}'.format(self.model_file_path(name)))
+        self.call_hook_func('after_checkpoint_persisted')
+
 
     def model_file_path(self, model_name):
         model_file_name = '{}.pth.tar'.format(model_name)
