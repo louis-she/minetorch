@@ -26,7 +26,7 @@ python mnist.py
 
 The `mnist.py` is pretty much like pytorch official mnist example https://github.com/pytorch/examples/blob/master/mnist/main.py, with some minor changes to be adapted to Minetorch.
 
-This will create a `log` and `data` directory in working directory.
+This will create a `alchemistic_directory` and `data` directory in working directory.
 
 3. Execute tensorboard to visualize
 
