@@ -1,6 +1,7 @@
 import os
-
+import matplotlib.pyplot as plt
 from tensorboardX import SummaryWriter
+import pickle
 
 
 class Drawer():
@@ -15,8 +16,11 @@ class Drawer():
                 same as trainer's alchemistic_directory
             code (string):
                 same as trainer's alchemistic_directory
-            step (int, optional):
-                Defaults to None. The timeline
+            graph (state, optional):
+                Defaults to None. Since we could draw multiple graph during
+                training, the state records the current position of each graph
+                The keys are the name of the graphs and values are current
+                positions.
         """
         self.step_file = os.path.join(alchemistic_directory, code, '.drawer_step')
         self.code = code
@@ -87,3 +91,37 @@ class TensorboardDrawer(Drawer):
         else:
             self.writer.add_scalar(key, value, self.state[graph])
         self.state[graph] += 1
+
+
+class MatplotlibDrawer(Drawer):
+
+    def __init__(self, alchemistic_directory, code, state=None):
+        super().__init__(alchemistic_directory, code, state)
+        self.fig, self.ax = plt.subplots()
+        self.graph_dir = os.path.join(alchemistic_directory, code, 'graphs')
+        self.data_file = os.path.join(self.graph_dir, '.graphs.pickle')
+        if not os.path.isdir(self.graph_dir):
+            os.mkdir(self.graph_dir)
+
+        self.graph_data = pickle.load(self.data_file) if \
+            os.path.isfile(self.data_file) else {}
+
+    def scalars(self, value, graph):
+        """Add a scalar on a graph
+
+        Args:
+            value (dict):
+                scalars to put on the graph
+            graph (string):
+                graph name
+        """
+        if graph not in self.state:
+            self.state[graph] = 0
+        key = '{}/{}'.format(self.code, graph)
+        if isinstance(value, dict):
+            self.writer.add_scalars(key, value, self.state[graph])
+        else:
+            self.writer.add_scalar(key, value, self.state[graph])
+        self.state[graph] += 1
+
+
