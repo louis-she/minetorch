@@ -2,7 +2,43 @@
 
 # Minetorch
 
-In [Minecraft](https://minecraft.net/), torches are very important for mining. No one can get all the diamonds without torch. So is data-mining, A special torch named [pytorch](http://pytorch.org/) can help us get the dimonds in data. Minetorch is a tools collection for miners, to use pytorch in a more convinent way.
+In [Minecraft](https://minecraft.net/), torches are very important for mining. No one can get all the diamonds without torch. So is data-mining, A special torch named [PyTorch](http://pytorch.org/) can help us get the dimonds in data. Minetorch is a tools collection for miners, to use PyTorch in a more convinent way.
+
+## Installation
+
+```
+pip install minetorch
+```
+
+## Quick Start
+
+1. Clone this repo
+
+```
+git clone git@github.com:louis-she/minetorch.git
+```
+
+2. Goto examples and execute
+
+```
+python mnist.py
+```
+
+The `mnist.py` is pretty much like PyTorch official mnist example https://github.com/pytorch/examples/blob/master/mnist/main.py, with some minor changes to be adapted to Minetorch.
+
+This will create a `alchemistic_directory` and `data` directory in working directory.
+
+3. Execute tensorboard to visualize
+
+```
+tensorboard ./log
+```
+
+![](./images/plan-a.png)
+
+4. Now let's change the loss function to cross_entropy(just follow some instructions in the comments of `mnist.py`), and train the mnist again.
+
+![](./images/plan-a-b.png)
 
 ## How it works
 
@@ -14,8 +50,8 @@ The components users must provided:
 | ---------- | ---- | ----------- |
 | alchemistic_directory | string | path of a directory, all the `checkpoint`, `log` or `graph` will be saved in this `alchemistic_directory` |
 | train_dataloader | torch.utils.data.DataLoader | Used to tell minetorch how to load training data |
-| model | torch.nn.Module | Pytorch's nn.Module |
-| loss_func | callable | A special hook function, should receive 2 arguments: `data` which yields by the loader and `trainer` which is the trainer instance |
+| model | torch.nn.Module | PyTorch's nn.Module |
+| loss_func | callable | A special hook function, should receive 2 arguments: `data` which yields by the loader and `trainer` which is the trainer instance, this function should return a single scalar which is the loss |
 
 And that's it, minetorch will take care of others things like `logging`, `resumming`, `visualization` etc... The names of the components are actually the parameters of the `Trainer` class. The other optional parameters are:
 
@@ -48,32 +84,3 @@ Minetorch provided many hook points for users to controller the training behavio
 | after_checkpoint_persisted | called after checkpoint persisted |
 | before_quit | called before the max_epochs exceeded and about to quit training |
 
-## Quick Start
-
-1. Clone this repo
-
-```
-git clone git@github.com:louis-she/minetorch.git
-```
-
-2. Goto examples and execute
-
-```
-python mnist.py
-```
-
-The `mnist.py` is pretty much like pytorch official mnist example https://github.com/pytorch/examples/blob/master/mnist/main.py, with some minor changes to be adapted to Minetorch.
-
-This will create a `log` and `data` directory in working directory.
-
-3. Execute tensorboard to visualize
-
-```
-tensorboard ./log
-```
-
-![](./images/plan-a.png)
-
-4. Now let's change the loss function to cross_entropy(just follow some instructions in the comments of `mnist.py`), and train the mnist again.
-
-![](./images/plan-a-b.png)
