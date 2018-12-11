@@ -36,11 +36,13 @@ tensorboard ./log
 
 ![](./images/plan-a.png)
 
-or if you used `matplotlib` as drawer
+or if you used `matplotlib` as drawer, there will be 2 images under the path `${alchemistic_directory}/${code}/graph` named loss.png and accuracy.png
 
-![](./images/loss.png)
+loss.png             |  accuracy.png
+:-------------------------:|:-------------------------:
+![](./images/loss.png)| ![](./images/accuracy.png)
 
-![](./images/accuracy.png)
+
 
 > Note: Since PyTorch 1.0 comes with CUDA10 but the newest version of Tensorboard just supported CUDA9, so if you are using Tensorboard as drawer, make sure you got CUDA9 installed, or it's better to use matplotlib. Due to this, Minetorch default drawer has changed to matplotlib instead of Tensorboard.
 
