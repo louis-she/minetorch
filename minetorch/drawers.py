@@ -1,7 +1,8 @@
 import os
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from tensorboardX import SummaryWriter
-import pickle
+import _pickle as pickle
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 
 class Drawer():
@@ -97,16 +98,39 @@ class MatplotlibDrawer(Drawer):
 
     def __init__(self, alchemistic_directory, code, state=None):
         super().__init__(alchemistic_directory, code, state)
-        self.fig, self.ax = plt.subplots()
         self.graph_dir = os.path.join(alchemistic_directory, code, 'graphs')
         self.data_file = os.path.join(self.graph_dir, '.graphs.pickle')
+        self.colors = ['blue', 'orange', 'green', 'red', 'purple',
+                       'brown', 'pink', 'gray', 'olive', 'cyan']
         if not os.path.isdir(self.graph_dir):
             os.mkdir(self.graph_dir)
+        if os.path.isfile(self.data_file):
+            with open(self.data_file, 'rb') as f:
+                self.graph_data = pickle.load(f)
 
-        self.graph_data = pickle.load(self.data_file) if \
-            os.path.isfile(self.data_file) else {}
+    def _update_state(self, values, graph):
+        if graph not in self.state or not isinstance(self.state[graph], dict):
+            self.state[graph] = {}
+        for key in values:
+            if key not in self.state[graph]:
+                self.state[graph][key] = []
+            self.state[graph][key].append(values[key])
+        with open(self.data_file, 'wb') as f:
+            pickle.dump(self.state, f)
 
-    def scalars(self, value, graph):
+    def _save_png(self, graph):
+        png_file = os.path.join(self.graph_dir, graph + ".png")
+        fig = Figure()
+        FigureCanvas(fig)
+        ax = fig.add_subplot(1, 1, 1)
+        ax.grid(True)
+        for index, curve in enumerate(self.state[graph]):
+            ax.plot(self.state[graph][curve], label=curve, color=self.colors[index])
+
+        ax.legend(loc='upper left')
+        fig.savefig(png_file)
+
+    def scalars(self, values, graph):
         """Add a scalar on a graph
 
         Args:
@@ -115,13 +139,5 @@ class MatplotlibDrawer(Drawer):
             graph (string):
                 graph name
         """
-        if graph not in self.state:
-            self.state[graph] = 0
-        key = '{}/{}'.format(self.code, graph)
-        if isinstance(value, dict):
-            self.writer.add_scalars(key, value, self.state[graph])
-        else:
-            self.writer.add_scalar(key, value, self.state[graph])
-        self.state[graph] += 1
-
-
+        self._update_state(values, graph)
+        self._save_png(graph)

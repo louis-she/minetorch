@@ -85,7 +85,7 @@ trainer = Trainer(
     val_dataloader=val_loader,
     loss_func=compute_loss,
     hooks={'after_epoch_end': after_epoch_end},
-    drawer='tensorboard'
+    drawer='matplotlib'
 )
 
 trainer.train()

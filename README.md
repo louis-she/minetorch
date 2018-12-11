@@ -36,6 +36,14 @@ tensorboard ./log
 
 ![](./images/plan-a.png)
 
+or if you used `matplotlib` as drawer
+
+![](./images/loss.png)
+
+![](./images/accuracy.png)
+
+> Note: Since PyTorch 1.0 comes with CUDA10 but the newest version of Tensorboard just supported CUDA9, so if you are using Tensorboard as drawer, make sure you got CUDA9 installed, or it's better to use matplotlib. Due to this, Minetorch default drawer has changed to matplotlib instead of Tensorboard.
+
 4. Now let's change the loss function to cross_entropy(just follow some instructions in the comments of `mnist.py`), and train the mnist again.
 
 ![](./images/plan-a-b.png)
@@ -61,7 +69,7 @@ And that's it, minetorch will take care of others things like `logging`, `resumm
 | resume | bool or string  | Defaults to True, means the minetorch will try to resume from the latest checkpoint, if a string is given then minetorch will resume from a specified checkpoint, the string could be number of epoch, name of the checkpoint file or absolute path of the checkpoint file, false means train from scratch|
 | eval_stride  | int | Defaults to 1, how many epochs to run a validation process |
 | persist_stride  | int | Defaults to 1, how many epochs to save a checkpoint |
-| drawer  | minetorch.Drawer or string | To generate graphs of the whole training process, now support 'tensorboard', can also write a customized Drawer |
+| drawer  | minetorch.Drawer or string | Defaults to 'matplotlib'. To generate graphs of the whole training process, now support 'tensorboard' and 'matplotlib', can also write a customized Drawer by yourself |
 | code  | string | it's actually a sub directory path of `alchemistic_directory`, for sperating the results of different attempts, every attempts should have a uniq name |
 | hooks | dict | Defining hook function, see [Hooks](#hooks) |
 | max_epochs | int  | How many epochs to train, defaults to None, means unlimited |

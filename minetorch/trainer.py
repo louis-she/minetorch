@@ -39,7 +39,7 @@ class Trainer(object):
             Defaults to 1.
             Save model every `persist_stride` epochs
         drawer (minetorch.Drawer or string, optional):
-            Defaults to None.
+            Defaults to matplotlib.
             If provide, Trainer will draw training loss and validation loss
             curves, could be `tensorboard` or self implemented Drawer object
         hooks (dict, optional):
@@ -97,6 +97,9 @@ class Trainer(object):
     def create_drawer(self, drawer):
         if drawer == 'tensorboard':
             self.drawer = drawers.TensorboardDrawer(
+                self.alchemistic_directory, self.code)
+        elif drawer == 'matplotlib':
+            self.drawer = drawers.MatplotlibDrawer(
                 self.alchemistic_directory, self.code)
         else:
             self.drawer = drawer
