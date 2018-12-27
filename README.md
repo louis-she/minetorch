@@ -6,10 +6,10 @@ In [Minecraft](https://minecraft.net/), torches are very important for mining. N
 
 ## TODOs
 
-[x] More hook points.
-[ ] Number of x axis of Drawer generated images are not changed after resume from checkpoint.
-[ ] Drawer DB Adapter. To persist drawer data to db and then can be visualization by any tools. 
-[ ] Graceful exists.
+- [x] More hook points.
+- [ ] Number of x axis of Drawer generated images are not changed after resume from checkpoint.
+- [ ] Drawer DB Adapter. To persist drawer data to db and then can be visualization by any tools. 
+- [ ] Graceful exists.
 
 ## Installation
 
