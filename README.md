@@ -10,7 +10,7 @@ In [Minecraft](https://minecraft.net/), torches are very important for mining. N
 * Visualization. Built in with Tensorboard or Matplotlib.
 * Resumption. Default will resume from the last checkpoint.
 * Many hook points.
-* Namespace. Or actually alchemistic_directory, used to easily switch to different training status. 
+* Training code. Or actually a namespace, used to easily sperate different training status.
 
 ## Installation
 
