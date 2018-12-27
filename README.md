@@ -4,6 +4,13 @@
 
 In [Minecraft](https://minecraft.net/), torches are very important for mining. No one can get all the diamonds without torch. So is data-mining, A special torch named [PyTorch](http://pytorch.org/) can help us get the dimonds in data. Minetorch is a tools collection for miners, to use PyTorch in a more convinent way.
 
+## TODOs
+
+[x] More hook points.
+[ ] Number of x axis of Drawer generated images are not changed after resume from checkpoint.
+[ ] Drawer DB Adapter. To persist drawer data to db and then can be visualization by any tools. 
+[ ] Graceful exists.
+
 ## Installation
 
 ```
