@@ -1,8 +1,16 @@
-![](./images/minetorch.jpg)
-
 # Minetorch
 
+![](./images/minetorch.jpg)
+
 In [Minecraft](https://minecraft.net/), torches are very important for mining. No one can get all the diamonds without torch. So is data-mining, A special torch named [PyTorch](http://pytorch.org/) can help us get the dimonds in data. Minetorch is a tools collection for miners, to use PyTorch in a more convinent way.
+
+## Features
+
+* Logging of course.
+* Visualization. Built in with Tensorboard or Matplotlib.
+* Resumption. Default will resume from the last checkpoint.
+* Many hook points.
+* Training code. Or actually a namespace, used to easily sperate different training status.
 
 ## Installation
 
@@ -93,4 +101,12 @@ Minetorch provided many hook points for users to controller the training behavio
 | before_checkpoint_persisted | called before checkpoint persisted |
 | after_checkpoint_persisted | called after checkpoint persisted |
 | before_quit | called before the max_epochs exceeded and about to quit training |
+
+## TODOs
+
+- [x] More hook points.
+- [ ] Number of x axis of Drawer generated images are not changed after resume from checkpoint.
+- [ ] Drawer DB Adapter. To persist drawer data to db and then can be visualization by any tools. 
+- [ ] Graceful exists.
+- [ ] Dockerize.
 
