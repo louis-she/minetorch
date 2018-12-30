@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 import torch
 
@@ -109,19 +110,26 @@ class Trainer(object):
         """
         if self.resume is True:
             # resume from the newest model
-            if os.path.isfile(self.model_file_path('latest')):
-                checkpoint = self.get_checkpoint('latest')
+            if self.model_file_path('latest') is not None:
+                checkpoint_path = self.model_file_path('latest')
             else:
-                checkpoint = None
+                checkpoint_path = None
                 logging.warning('Could not find checkpoint to resume, '
                                 'train from scratch')
         elif isinstance(self.resume, str):
-            checkpoint = self.get_checkpoint(self.resume)
+            checkpoint_path = self.model_file_path(self.resume)
+        elif isinstance(self.resume, int):
+            checkpoint_path = self.model_file_path(str(self.resume))
         else:
-            checkpoint = False
+            checkpoint_path = None
 
-        if checkpoint:
-            logging.info("Start to load checkpoint")
+        if self.resume is not True and self.resume and checkpoint_path is None:
+            # user has specified a none existed model, should raise a error
+            raise Exception(f"Could not find model {self.resume}")
+
+        if checkpoint_path is not None:
+            logging.info(f"Start to load checkpoint {checkpoint_path}")
+            checkpoint = torch.load(checkpoint_path)
             self.current_epoch = checkpoint['epoch']
             self.lowest_train_loss = checkpoint['lowest_train_loss']
             self.lowest_val_loss = checkpoint['lowest_val_loss']
@@ -244,17 +252,29 @@ class Trainer(object):
             'drawer_state': drawer_state
         }
 
-        torch.save(state, self.model_file_path(name))
-        logging.info('save checkpoint to {}'.format(self.model_file_path(name)))
+        torch.save(state, self.standard_model_path(name))
+        logging.info(f'save checkpoint to {self.standard_model_path(name)}')
         self.call_hook_func('after_checkpoint_persisted')
 
+    def standard_model_path(self, model_name):
+        return os.path.join(self.models_dir, f'{model_name}.pth.tar')
 
     def model_file_path(self, model_name):
-        model_file_name = '{}.pth.tar'.format(model_name)
-        return os.path.join(self.models_dir, model_file_name)
+        model_name_path = Path(model_name)
+        models_dir_path = Path(self.models_dir)
 
-    def get_checkpoint(self, name):
-        return torch.load(self.model_file_path(name))
+        search_paths = [
+            model_name_path,
+            models_dir_path / model_name_path,
+            models_dir_path / f'{model_name}.pth.tar',
+            models_dir_path / f'epoch_{model_name}.pth.tar',
+        ]
+
+        for path in search_paths:
+            if path.is_file():
+                return path.resolve()
+
+        return None
 
     # TODO: implement methods below
     def graceful_stop(self):
