@@ -62,9 +62,9 @@ loss.png             |  accuracy.png
 
 Minetorch let users focusing on **the only** necessary things, and will take care of the others. It's more like a skeleton and users should provide necessary components to make it work.
 
-The components users must provided:
+The parameters users must provided:
 
-| components | type | description |
+| parameters | type | description |
 | ---------- | ---- | ----------- |
 | alchemistic_directory | string | path of a directory, all the `checkpoint`, `log` or `graph` will be saved in this `alchemistic_directory` |
 | train_dataloader | torch.utils.data.DataLoader | Used to tell minetorch how to load training data |
@@ -73,7 +73,7 @@ The components users must provided:
 
 And that's it, minetorch will take care of others things like `logging`, `resumming`, `visualization` etc... The names of the components are actually the parameters of the `Trainer` class. The other optional parameters are:
 
-| components | type | description |
+| parameters | type | description |
 | ---------- | ---- | ----------- |
 | val_dataloader | torch.utils.data.DataLoader | Used to tell minetorch how to load validation data |
 | resume | bool or string  | Defaults to True, means the minetorch will try to resume from the latest checkpoint, if a string is given then minetorch will resume from a specified checkpoint, the string could be number of epoch, name of the checkpoint file or absolute path of the checkpoint file, false means train from scratch|
@@ -84,6 +84,7 @@ And that's it, minetorch will take care of others things like `logging`, `resumm
 | hooks | dict | Defining hook function, see [Hooks](#hooks) |
 | max_epochs | int  | How many epochs to train, defaults to None, means unlimited |
 | logging_format | string  | Defaults to '%(levelname)s %(asctime)s %(message)s', same as logging's format |
+| trival | bool  | Defaults to False, if set to True, both training and validation process will be breaked in 10 iterations, useful at development stage |
 
 ## Hooks
 

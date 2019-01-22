@@ -49,13 +49,16 @@ class Trainer(object):
             Defaults to None. How many epochs to train, None means unlimited.
         logging_format ([type], optional):
             Defaults to None. logging format
+        trival ([Boolean], optional):
+            Defaults to False. If true, both training and validation
+            process will be breaked in 10 iterations
     """
 
     def __init__(self, alchemistic_directory, model, optimizer, loss_func,
                  code="geass", train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1,
                  drawer=None, hooks={}, max_epochs=None,
-                 logging_format=None):
+                 logging_format=None, trival=False):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         self.create_dirs()
@@ -82,6 +85,7 @@ class Trainer(object):
         self.init_model()
         self.call_hook_func('after_init')
         self.status = 'init'
+        self.trival = trival
 
     def set_logging_config(self, alchemistic_directory, code, logging_format):
         self.log_dir = os.path.join(alchemistic_directory, code)
@@ -165,34 +169,37 @@ class Trainer(object):
 
             total_train_loss = 0
             for index, data in enumerate(self.train_dataloader):
+                if self.trival is True and index == 10:
+                    break
                 total_train_loss += self.run_train_iteration(index, data, train_iters)
-            train_loss = total_train_loss / train_iters
+            total_train_loss = total_train_loss / train_iters
 
             total_val_loss = 0
             if self.val_dataloader is not None:
                 val_iters = len(self.val_dataloader)
-                val_iters = len(self.val_dataloader)
                 with torch.set_grad_enabled(False):
                     self.model.eval()
                     for index, data in enumerate(self.val_dataloader):
+                        if self.trival is True and index == 10:
+                            break
                         total_val_loss += self.run_val_iteration(index, data, val_iters)
-                val_loss = total_val_loss / val_iters
+                total_val_loss = total_val_loss / val_iters
 
             if self.drawer is not None:
                 self.drawer.scalars(
-                    {'train': train_loss, 'val': val_loss}, 'loss'
+                    {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
 
-            if train_loss < self.lowest_train_loss:
-                self.lowest_train_loss = train_loss
+            if total_train_loss < self.lowest_train_loss:
+                self.lowest_train_loss = total_train_loss
 
-            if val_loss < self.lowest_val_loss:
+            if total_val_loss < self.lowest_val_loss:
                 logging.info(
                     'current val loss {} is lower than lowest {}, '
                     'persist this model as best one'.format(
-                        val_loss, self.lowest_val_loss))
+                        total_val_loss, self.lowest_val_loss))
 
-                self.lowest_val_loss = val_loss
+                self.lowest_val_loss = total_val_loss
                 self.persist('best')
             self.persist('latest')
 
