@@ -162,7 +162,6 @@ class Trainer(object):
 
             self.model.train()
             train_iters = len(self.train_dataloader)
-            val_iters = len(self.val_dataloader)
 
             total_train_loss = 0
             for index, data in enumerate(self.train_dataloader):
@@ -171,6 +170,7 @@ class Trainer(object):
 
             total_val_loss = 0
             if self.val_dataloader is not None:
+                val_iters = len(self.val_dataloader)
                 val_iters = len(self.val_dataloader)
                 with torch.set_grad_enabled(False):
                     self.model.eval()
