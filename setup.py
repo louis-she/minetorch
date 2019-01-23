@@ -6,12 +6,12 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name='Minetorch',
     description='A tools collection for pytorch users',
-    version='0.2.8',
+    version='0.2.9',
     packages=['minetorch'],
     url="https://github.com/louis-she/minetorch",
     author='louis',
     author_email='chenglu.she@gmail.com',
     keywords='pytorch minecraft',
-    install_requires=['tensorboardX', 'torch', 'matplotlib']
+    install_requires=['tensorboardX', 'torch', 'matplotlib', 'albumentations']
 )
 
