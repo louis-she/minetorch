@@ -1,3 +1,6 @@
+# TODO: all of the processor should be able to
+#       handle multiple columns at a time
+
 from pathlib import Path
 
 import cv2
@@ -48,13 +51,20 @@ class ImageLoader(Processor):
         return image
 
 
-class ImageAgumentor(Processor):
+class Augmentor(Processor):
+    """This is a tiny wrapper of albumentations
+    see: https://github.com/albu/albumentations
+    """
 
-    def __init__(self, image_augment_instance):
-        self.image_augment_instance = image_augment_instance
+    def __init__(self, aug):
+        """
+        Args:
+            aug (albumentations.core.composition.Compose)
+        """
+        self.aug = aug
 
-    def __call__(self, image):
-        return self.image_augment_instance.augment(image)
+    def __call__(self, tensor):
+        return self.aug(image=tensor)['image']
 
 
 class ImagenetNormalizor(Processor):
