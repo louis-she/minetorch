@@ -12,8 +12,8 @@ class ProcessorBundler:
     def __init__(self, processors=[]):
         self.processors = processors
 
-    def register_processor(self, processor, column):
-        self.processors.append((processor, column))
+    def add_processors(self, processors=[]):
+        self.processors.concat(processors)
 
     def __call__(self, data):
         for (processor, column) in self.processors:
