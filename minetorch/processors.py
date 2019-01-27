@@ -13,7 +13,7 @@ class ProcessorBundler:
         self.processors = processors
 
     def add_processors(self, processors=[]):
-        self.processors.concat(processors)
+        self.processors += processors
 
     def __call__(self, data):
         for (processor, column) in self.processors:
