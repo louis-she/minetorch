@@ -1,6 +1,3 @@
-# TODO: all of the processor should be able to
-#       handle multiple columns at a time
-
 from pathlib import Path
 
 import cv2
@@ -16,8 +13,12 @@ class ProcessorBundler:
         self.processors += processors
 
     def __call__(self, data):
-        for (processor, column) in self.processors:
-            data[column] = processor(data[column])
+        for (processor, columns) in self.processors:
+            if not isinstance(columns, tuple):
+                columns = (columns,)
+
+            for column in columns:
+                data[column] = processor(data[column])
         return data
 
 
