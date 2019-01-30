@@ -12,6 +12,9 @@ class ProcessorBundler:
     def add_processors(self, processors=[]):
         self.processors += processors
 
+    def prepend_processors(self, processors=[]):
+        self.processors = processors + self.processors
+
     def __call__(self, data):
         for (processor, columns) in self.processors:
             if not isinstance(columns, tuple):
