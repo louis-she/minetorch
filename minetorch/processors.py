@@ -2,6 +2,7 @@ from pathlib import Path
 
 import cv2
 from torchvision import transforms
+import inspect
 
 
 class ProcessorBundler:
@@ -29,6 +30,12 @@ class Processor:
 
     def __call__(self):
         raise NotImplementedError()
+
+    def source_file(self):
+        return inspect.getsourcefile(self.__class__)
+
+    def source_lineno(self):
+        return inspect.getsourcelines(self.__class__)[1]
 
 
 class PathMaker(Processor):

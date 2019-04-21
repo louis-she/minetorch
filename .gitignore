@@ -6,3 +6,5 @@ dist
 *.pyc
 Minetorch.egg-info
 .DS_Store
+.venv
+.vscode
