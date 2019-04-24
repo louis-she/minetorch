@@ -185,6 +185,8 @@ class Trainer(object):
                         total_val_loss += self.run_val_iteration(index, data, val_iters)
                 total_val_loss = total_val_loss / val_iters
 
+            self.call_hook_func('after_epoch_end')
+
             if self.drawer is not None:
                 self.drawer.scalars(
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
@@ -205,8 +207,6 @@ class Trainer(object):
 
             if not self.current_epoch % self.persist_stride:
                 self.persist('epoch_{}'.format(self.current_epoch))
-
-            self.call_hook_func('after_epoch_end')
 
             if self.max_epochs is not None and self.current_epoch >= self.max_epochs:
                 self.call_hook_func('before_quit')
