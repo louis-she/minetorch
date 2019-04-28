@@ -1,3 +1,6 @@
-from .trainer import Trainer
+__package__ = __name__
 
-__all__ = ['Trainer']
+from minetorch.trainer import Trainer
+from minetorch.core import model, optimizer, dataflow, loss
+
+__all__ = ['Trainer', 'model', 'optimizer', 'dataflow', 'loss']
