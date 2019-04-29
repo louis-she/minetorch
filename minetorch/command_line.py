@@ -16,5 +16,7 @@ cli.add_command(ls)
 
 if __name__ == '__main__':
     minetorch.core.boot()
-    print(minetorch.core.registed_models)
+    model = minetorch.ModelDecorator.registed_models[0]
+    parameters = {'size': '34'}
+    model.model_class(**parameters)
     # cli()
