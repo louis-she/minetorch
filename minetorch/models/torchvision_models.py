@@ -1,5 +1,3 @@
-
-__package__ = 'models'
 from minetorch import model, option
 from torchvision import models
 import importlib

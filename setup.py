@@ -7,7 +7,7 @@ setuptools.setup(
     name='Minetorch',
     description='A tools collection for pytorch users',
     version='0.3.5',
-    packages=['minetorch'],
+    packages=setuptools.find_packages(),
     url="https://github.com/louis-she/minetorch",
     author='louis',
     author_email='chenglu.she@gmail.com',

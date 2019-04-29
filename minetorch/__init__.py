@@ -1,5 +1,3 @@
-__package__ = __name__
-
 from minetorch.trainer import Trainer
 from minetorch.core import ModelDecorator, OptionDecorator
 
