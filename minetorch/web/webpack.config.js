@@ -4,6 +4,7 @@ const webpack = require('webpack');
 module.exports = {
   entry: './assets/application.js',
   mode: 'development',
+  watch: true,
   output: {
     path: path.resolve(__dirname, 'static'),
     filename: 'main.bundle.js'
@@ -23,9 +24,6 @@ module.exports = {
         "sass-loader"
       ]
     }]
-  },
-  stats: {
-    colors: true
   },
   devtool: 'source-map'
 };

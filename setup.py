@@ -14,7 +14,7 @@ setuptools.setup(
     keywords='pytorch minecraft',
     install_requires=['tensorboardX', 'torch', 'matplotlib', 'albumentations'],
     entry_points = {
-        'console_scripts': ['minetorch=minetorch.command_line:cli'],
+        'console_scripts': ['minetorch=minetorch.cli:cli'],
     }
 )
 

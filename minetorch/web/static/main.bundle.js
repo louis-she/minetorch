@@ -112,6 +112,9 @@ __webpack_require__.r(__webpack_exports__);
 /***/ (function(module, exports) {
 
 console.log('first javascript file');
+console.log('second javascript file');
+console.log('second javascript file');
+console.log('second javascript file');
 
 /***/ }),
 
