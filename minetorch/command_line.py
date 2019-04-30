@@ -1,5 +1,5 @@
 import sys
-sys.path.append('..')
+sys.path.insert(0, '..')
 
 import os
 import minetorch.web as web
@@ -18,9 +18,11 @@ def start_web_server():
 def cli():
     pass
 
+
 @cli.command('ls')
 def ls():
     minetorch.core.boot()
+
 
 @cli.command('run')
 def run():
