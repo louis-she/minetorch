@@ -1,11 +1,14 @@
 import importlib
 import os
 import sys
+import json
 
 def load_default_modules():
     importlib.import_module('minetorch.datasets')
     importlib.import_module('minetorch.dataflows')
     importlib.import_module('minetorch.models')
+    importlib.import_module('minetorch.optimizers')
+    importlib.import_module('minetorch.losses')
 
 def load_external_modules():
     pass
@@ -21,6 +24,12 @@ class Component():
 
     def add_option(self, option):
         self.options.append(option)
+
+    def to_json_serializable(self):
+        return {
+            'name': self.name,
+            'options': list(map(lambda o: o.to_json_serializable(), self.options))
+        }
 
 
 class Model(Component):
@@ -44,6 +53,12 @@ class Option():
     def __init__(self, name, settings):
         self.name = name
         self.settings = settings
+
+    def to_json_serializable(self):
+        return {
+            'name': self.name,
+            'settings': self.settings
+        }
 
 
 class Singleton():

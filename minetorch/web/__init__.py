@@ -1,7 +1,11 @@
 from flask import Flask, render_template, url_for
+from flask.json import JSONEncoder
+
 import minetorch
 from minetorch import model, dataset, dataflow, loss, optimizer
 from .api import api
+
+
 app = Flask(__name__)
 
 app.register_blueprint(api)
