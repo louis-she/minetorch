@@ -1,6 +1,9 @@
 from flask import Flask, render_template, url_for
+import minetorch
 from minetorch import model
 app = Flask(__name__)
+
+minetorch.core.boot()
 
 @app.route('/')
 def index():

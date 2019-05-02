@@ -17,4 +17,3 @@ setuptools.setup(
         'console_scripts': ['minetorch=minetorch.cli:cli'],
     }
 )
-
