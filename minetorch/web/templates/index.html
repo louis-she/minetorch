@@ -21,5 +21,19 @@
     </div>
   </div>
   {% endfor %}
+
+  {% for dataset in dataset.registed_datasets %}
+  <div class="dataset">
+    <h3>模型名称：{{ dataset.name }}</h3>
+    <div class="options">
+      {% for option in dataset.options %}
+      <div class="option">
+        <div class="option-name">参数名：{{ option.name }}</div>
+        <div class="option-setting">参数配置：{{ option.settings }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
 </body>
 </html>

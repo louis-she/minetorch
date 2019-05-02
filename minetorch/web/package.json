@@ -1,5 +1,7 @@
 {
-  "dependencies": {},
+  "dependencies": {
+    "element-ui": "^2.8.2"
+  },
   "devDependencies": {
     "@babel/core": "^7.4.4",
     "@babel/preset-env": "^7.4.4",

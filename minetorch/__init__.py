@@ -1,7 +1,13 @@
 from minetorch.trainer import Trainer
-from minetorch.core import ModelDecorator, OptionDecorator
+from minetorch.core import ModelDecorator, OptionDecorator, \
+        DatasetDecorator, OptimizerDecorator, DataflowDecorator, LossDecorator
 
 model = ModelDecorator()
 option = OptionDecorator()
+dataset = DatasetDecorator()
+dataflow = DataflowDecorator()
+optimizer = OptimizerDecorator()
+loss = LossDecorator()
 
-__all__ = ['Trainer', 'model', 'option']
+# export Trainer for using Minetorch in scripts
+__all__ = ['Trainer', 'model', 'option', 'dataset', 'optimizer', 'dataflow', 'loss']
