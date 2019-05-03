@@ -21,6 +21,9 @@ source .venv/bin/activate
 # install python dependencies
 pip install -r requirements.txt
 
+# init sqlite database
+python3 cli.py db:init
+
 # install frontend dependencies
 cd web; yarn install
 
@@ -30,3 +33,13 @@ cd ..; python cli.py dev
 
 # visit localhost:5000
 ```
+
+# Reset database
+
+If any new fields are been added to ORM, you may want to execute the following commmand to reset the database.
+
+```
+python cli.py db:init
+```
+
+> This command will drop the table first and then create it. So the data in the table will be lossed. If you want to keep the data, just create the new column by sqlite plain sql.

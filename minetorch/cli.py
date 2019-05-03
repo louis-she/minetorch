@@ -6,8 +6,10 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 
 import click
+import peewee
 import minetorch.core
 import minetorch.web as web
+from minetorch.orm.experiment import Experiment
 from flask.cli import run_command
 
 
@@ -46,6 +48,15 @@ def development():
 
     for subproc in subprocs:
         subproc.wait()
+
+
+@cli.command('db:init')
+def db_init():
+    for model_class in [Experiment]:
+        model_class.drop_table()
+        print(f"creating {model_class}")
+        model_class.create_table(safe=False)
+        print(f"{model_class} created")
 
 
 @cli.command('ls')

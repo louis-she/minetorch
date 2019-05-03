@@ -9,3 +9,5 @@ Minetorch.egg-info
 .venv
 .vscode
 node_modules
+minetorch.db
+

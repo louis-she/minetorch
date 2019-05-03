@@ -9,6 +9,7 @@ matplotlib==3.0.3
 numpy==1.16.3
 opencv-python==4.1.0.25
 pandas==0.24.2
+peewee==3.9.5
 Pillow==6.0.0
 protobuf==3.7.1
 pyparsing==2.4.0
