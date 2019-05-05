@@ -1,4 +1,117 @@
-from .experiment import Experiment
-from .component import Component, Model, Dataset, Dataflow, Optimizer, Loss
+from peewee import SqliteDatabase, TimestampField, \
+        CharField, IntegerField, DateTimeField, TextField, ForeignKeyField
+from peewee import Model as PeeweeModel
+from playhouse.shortcuts import model_to_dict
+import datetime
 
-__all__ = ['Experiment', 'Component', 'Model', 'Dataset', 'Dataflow', 'Optimizer', 'Loss']
+db = SqliteDatabase('minetorch.db')
+
+class Base(PeeweeModel):
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = TimestampField()
+
+    def to_json_serializable(self):
+        return model_to_dict(self)
+
+    class Meta:
+        database = db
+        legacy_table_names = False
+
+
+class Experiment(Base):
+    name = CharField(unique=True)
+    total_training_time = IntegerField(default=0)
+    is_training = IntegerField(default=0, null=True)
+    last_stopped_at = DateTimeField(null=True)
+
+    def create_draft_snapshot(self):
+        """Try to create a draft snapshot, if there's already a draft version,
+        should raise an error, otherwise it should check if there already have an
+        current version, if yes, then clone it and return, if no, create a brand new
+        snapshot(this is offen right after the Experiment is been created)
+        """
+        draft_snapshot = self.draft_snapshot()
+        if draft_snapshot:
+            raise 'There is already a draft snapshot'
+        current_snapshot = self.current_snapshot()
+        if current_snapshot:
+            current_snapshot.clone()
+        else:
+            Snapshot.create({ 'experiment_id': self.id })
+
+    def draft_snapshot(self):
+        return self.snapshots.where(Snapshot.category == 0)
+
+    def current_snapshot(self):
+        return self.snapshots.where(Snapshot.category == 1)
+
+
+class Snapshot(Base):
+    name = CharField(unique=True)
+    total_training_time = IntegerField(default=0)
+    stopped_at = DateTimeField(null=True)
+    # 0: draft 1: current 2: archived
+    category = IntegerField(default=0)
+    code = TextField(null=True)
+    experiment = ForeignKeyField(Experiment, backref='snapshots')
+
+    def clone(self):
+        pass
+
+    def is_draft(self):
+        return self.category == 0
+
+    def is_current(self):
+        return self.category == 1
+
+    def is_archived(self):
+        return self.category == 2
+
+
+class Component(Base):
+    name = CharField(unique=True)
+    category = CharField()
+    settings = TextField()
+    snapshot = ForeignKeyField(Snapshot, backref='components')
+
+    def create(self, **query):
+        if 'category' not in query:
+            query['category'] = self.__class__
+
+
+class Model(Component):
+    category = CharField(default='Model')
+    snapshot = ForeignKeyField(Snapshot, backref='models')
+    class Meta:
+        table_name = 'component'
+
+
+class Dataset(Component):
+    category = CharField(default='Dataset')
+    snapshot = ForeignKeyField(Snapshot, backref='Datasets')
+    class Meta:
+        table_name = 'component'
+
+
+class Dataflow(Component):
+    category = CharField(default='Dataflow')
+    snapshot = ForeignKeyField(Snapshot, backref='Dataflows')
+    class Meta:
+        table_name = 'component'
+
+
+class Optimizer(Component):
+    category = CharField(default='Optimizer')
+    snapshot = ForeignKeyField(Snapshot, backref='Optimizers')
+    class Meta:
+        table_name = 'component'
+
+
+class Loss(Component):
+    category = CharField(default='Loss')
+    snapshot = ForeignKeyField(Snapshot, backref='Losses')
+    class Meta:
+        table_name = 'component'
+
+
+__all__ = ['Base', 'Experiment', 'Component', 'Model', 'Dataset', 'Dataflow', 'Optimizer', 'Loss']

@@ -4,7 +4,6 @@ from minetorch import model, dataset, dataflow, loss, optimizer
 from minetorch.orm import Experiment, Model
 from flask import render_template
 
-
 api = Blueprint('api', 'api', url_prefix='/api')
 
 @api.route('/models', methods=['GET'])
@@ -49,6 +48,7 @@ def create_experiment():
     if not name: abort(422)
     try:
         experiment = Experiment.create(name=name)
+        experiment.create_draft_snapshot()
     except peewee.IntegrityError: abort(409)
     return jsonify(experiment.to_json_serializable())
 
