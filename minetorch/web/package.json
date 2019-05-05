@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "webpack-dev-server --progress --color --config build/webpack.dev.conf.js",
-    "build": "webpack --config build/webpack.prod.conf.js",
-    "dll": "webpack --config build/webpack.dll.conf.js",
+    "dev": "webpack-dev-server --progress --color --config _build/webpack.dev.conf.js",
+    "build": "webpack --config _build/webpack.prod.conf.js",
+    "dll": "webpack --config _build/webpack.dll.conf.js",
     "zip": "gulp zip",
-    "auto": "node build/auto_make/index.js",
+    "auto": "node _build/auto_make/index.js",
     "lint": "eslint --ext .js,.vue src",
     "lint:fix": "eslint --ext .js,.vue src --fix"
   },
