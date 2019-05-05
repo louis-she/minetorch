@@ -10,4 +10,4 @@ Minetorch.egg-info
 .vscode
 node_modules
 minetorch.db
-
+.idea
