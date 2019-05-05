@@ -9,7 +9,7 @@ import click
 import peewee
 import minetorch.core
 import minetorch.web as web
-from minetorch.orm.experiment import Experiment
+from minetorch.orm import Experiment, Component, Model, Dataset
 from flask.cli import run_command
 
 
@@ -52,7 +52,7 @@ def development():
 
 @cli.command('db:init')
 def db_init():
-    for model_class in [Experiment]:
+    for model_class in [Experiment, Component, Model, Dataset]:
         model_class.drop_table()
         print(f"creating {model_class}")
         model_class.create_table(safe=False)

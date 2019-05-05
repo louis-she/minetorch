@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, abort
 import peewee
 from minetorch import model, dataset, dataflow, loss, optimizer
-from minetorch.orm import Experiment
+from minetorch.orm import Experiment, Model
 from flask import render_template
 
 
@@ -9,7 +9,16 @@ api = Blueprint('api', 'api', url_prefix='/api')
 
 @api.route('/models', methods=['GET'])
 def models():
+    """List all the available models
+    """
     return jsonify(list(map(lambda m: m.to_json_serializable(), model.registed_models)))
+
+@api.route('/models', methods=['POST'])
+def creat_model():
+    """Pick a model for an experiment
+    """
+    Model.create()
+
 
 @api.route('/datasets', methods=['GET'])
 def datasets():
