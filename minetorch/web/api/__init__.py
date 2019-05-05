@@ -1,10 +1,19 @@
-from flask import Blueprint, jsonify, request, abort
+from flask import Blueprint, jsonify, request, abort, g
 import peewee
 from minetorch import model, dataset, dataflow, loss, optimizer
-from minetorch.orm import Experiment, Model
+from minetorch.orm import Experiment, Model, Snapshot
 from flask import render_template
 
 api = Blueprint('api', 'api', url_prefix='/api')
+experiment = Blueprint('experiment', 'experiment', url_prefix='/api/experiments/<experiment_id>')
+
+@experiment.before_request
+def experiment_before_request():
+    experiment_id = request.view_args['experiment_id']
+    g.experiment = Experiment.get(id=experiment_id)
+    g.snapshot = g.experiment.draft_snapshot()
+    if not g.snapshot:
+        g.snapshot = g.experiment.create_draft_snapshot()
 
 @api.route('/models', methods=['GET'])
 def models():
@@ -12,12 +21,16 @@ def models():
     """
     return jsonify(list(map(lambda m: m.to_json_serializable(), model.registed_models)))
 
-@api.route('/models', methods=['POST'])
-def creat_model():
+@experiment.route('/models', methods=['POST'])
+def creat_model(experiment_id):
     """Pick a model for an experiment
     """
-    Model.create()
-
+    model = Model.create(
+        name=request.values['name'],
+        settings=request.values['settings'],
+        snapshot_id=g.snapshot.id
+    )
+    return jsonify(model.to_json_serializable())
 
 @api.route('/datasets', methods=['GET'])
 def datasets():
@@ -48,8 +61,8 @@ def create_experiment():
     if not name: abort(422)
     try:
         experiment = Experiment.create(name=name)
-        experiment.create_draft_snapshot()
     except peewee.IntegrityError: abort(409)
+    experiment.create_draft_snapshot()
     return jsonify(experiment.to_json_serializable())
 
 @api.errorhandler(422)

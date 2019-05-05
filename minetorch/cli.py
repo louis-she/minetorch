@@ -9,7 +9,7 @@ import click
 import peewee
 import minetorch.core
 import minetorch.web as web
-from minetorch.orm import Experiment, Component, Model, Dataset
+from minetorch.orm import Experiment, Component, Model, Dataset, Snapshot
 from flask.cli import run_command
 
 
@@ -36,7 +36,7 @@ def development():
     os.environ["FLASK_ENV"] = 'development'
 
     subprocs.append(subprocess.Popen(['flask', 'run'], stdout=sys.stdout))
-    subprocs.append(subprocess.Popen(['npx', 'webpack'], cwd=os.path.dirname(os.path.abspath(web.__file__)), stdout=sys.stdout))
+    subprocs.append(subprocess.Popen(['yarn', 'run', 'dev'], cwd=os.path.dirname(os.path.abspath(web.__file__)), stdout=sys.stdout))
 
     def signal_handler(sig, frame):
         print('about to kill child processes')
@@ -52,7 +52,7 @@ def development():
 
 @cli.command('db:init')
 def db_init():
-    for model_class in [Experiment, Component, Model, Dataset]:
+    for model_class in [Experiment, Component, Model, Dataset, Snapshot]:
         model_class.drop_table()
         print(f"creating {model_class}")
         model_class.create_table(safe=False)

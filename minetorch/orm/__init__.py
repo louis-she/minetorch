@@ -1,8 +1,14 @@
+import peewee
 from peewee import SqliteDatabase, TimestampField, \
         CharField, IntegerField, DateTimeField, TextField, ForeignKeyField
 from peewee import Model as PeeweeModel
 from playhouse.shortcuts import model_to_dict
 import datetime
+import logging
+
+logger = logging.getLogger('peewee')
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
 
 db = SqliteDatabase('minetorch.db')
 
@@ -35,19 +41,24 @@ class Experiment(Base):
             raise 'There is already a draft snapshot'
         current_snapshot = self.current_snapshot()
         if current_snapshot:
-            current_snapshot.clone()
+            return current_snapshot.clone()
         else:
-            Snapshot.create({ 'experiment_id': self.id })
+            return Snapshot.create(experiment_id=self.id)
 
     def draft_snapshot(self):
-        return self.snapshots.where(Snapshot.category == 0)
+        try:
+            return self.snapshots.where(Snapshot.category == 0).get()
+        except peewee.DoesNotExist:
+            return None
 
     def current_snapshot(self):
-        return self.snapshots.where(Snapshot.category == 1)
+        try:
+            return self.snapshots.where(Snapshot.category == 1).get()
+        except peewee.DoesNotExist:
+            return None
 
 
 class Snapshot(Base):
-    name = CharField(unique=True)
     total_training_time = IntegerField(default=0)
     stopped_at = DateTimeField(null=True)
     # 0: draft 1: current 2: archived
@@ -71,12 +82,15 @@ class Snapshot(Base):
 class Component(Base):
     name = CharField(unique=True)
     category = CharField()
-    settings = TextField()
+    settings = TextField(null=True)
     snapshot = ForeignKeyField(Snapshot, backref='components')
+    code = TextField(null=True)
 
-    def create(self, **query):
+    @classmethod
+    def create(cls, **query):
         if 'category' not in query:
-            query['category'] = self.__class__
+            query['category'] = cls.__name__
+        return super().create(**query)
 
 
 class Model(Component):

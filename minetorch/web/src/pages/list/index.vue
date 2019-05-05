@@ -1,25 +1,25 @@
 <template>
   <div class="list">
-    <mpanel title="项目管理">
+    <mpanel title="Experiments">
       <!-- 搜索 -->
       <div class="searchpanel">
         <div class="searchpanel-content">
           <el-form
             :inline="true"
             class="demo-form-inline">
-            <el-form-item label="标题">
+            <el-form-item label="experiment name">
               <el-input v-model="searchForm.title" />
             </el-form-item>
-            <el-form-item label="创建时间">
+            <el-form-item label="created at">
               <el-date-picker
                 v-model="searchForm.time"
                 type="date"
-                placeholder="选择日期" />
+                placeholder="select time" />
             </el-form-item>
-            <el-form-item label="状态">
+            <el-form-item label="training status">
               <el-select
                 v-model="searchForm.status"
-                placeholder="请选择">
+                placeholder="select">
                 <el-option
                   v-for="(item, key) in statusText"
                   :key="`status-${key}`"
@@ -30,7 +30,7 @@
             <el-form-item>
               <el-button
                 type="primary"
-                @click="onSearch">查询</el-button>
+                @click="onSearch">filter</el-button>
             </el-form-item>
           </el-form>
         </div>
@@ -39,7 +39,7 @@
       <el-button
         :style="{marginBottom: '20px'}"
         type="primary"
-        @click="onAdd">新建</el-button>
+        @click="onAdd">New Experiment</el-button>
       <!-- 列表 -->
       <el-table
         v-loading="loading"
@@ -48,42 +48,44 @@
         border
         style="width: 100%">
         <el-table-column
-          prop="id"
-          label="ID"
-          align="center"
-          width="100"/>
-        <el-table-column
-          prop="title"
-          label="标题"
+          prop="name"
+          label="experiment name"
           align="center"/>
         <el-table-column
-          label="状态"
+          label="training status"
           align="center">
           <template slot-scope="scope">
-            {{ statusText[0].text }}
+            {{ scope.row.isTraining ? 'training' : 'halt' }}
           </template>
         </el-table-column>
         <el-table-column
-          label="创建时间"
+          label="total training time"
           align="center">
           <template slot-scope="scope">
-            {{ '2019-04-01 18:00' }}
+            {{ scope.row.totalTrainingTime }} hours
           </template>
         </el-table-column>
         <el-table-column
-          label="操作"
+          label="created at"
+          align="center">
+          <template slot-scope="scope">
+            {{ moment(scope.row.createdAt).fromNow() }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="operations"
           align="center"
           width="300">
           <template slot-scope="scope">
             <el-button
               type="success"
-              size="medium">开始训练</el-button>
+              size="medium">start</el-button>
             <el-button
               type="primary"
-              size="medium">编辑</el-button>
+              size="medium">edit</el-button>
             <el-button
               type="danger"
-              size="medium">删除</el-button>
+              size="medium">delete</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -124,6 +126,7 @@
 import mpanel from 'components/_common/mpanel'
 import pagination from 'components/_common/pagination'
 import dateFormat from 'dateformat'
+import moment from 'moment'
 
 export default {
   components: {
@@ -159,15 +162,17 @@ export default {
     }
   },
   mounted () {
-    // this.getData()
+    this.getData()
   },
   methods: {
     dateFormat,
+    moment,
     // 获取列表
     async getData () {
       this.loading = true
-      const category = await this.ajax.post('/api/xxxx', {})
-      console.log(category)
+      const experiments = await this.ajax.get('/api/experiments')
+      this.tableData = experiments
+      this.loading = false
     },
     // 搜索
     onSearch () {

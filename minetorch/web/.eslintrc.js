@@ -26,6 +26,7 @@ module.exports = {
     'generator-star-spacing': 'off',
     'no-unused-vars': 'off',
     'no-mixed-operators': 'off',
+    'space-before-function-paren': 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     'vue/html-self-closing': ['error', {
       'html': {

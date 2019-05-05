@@ -3,12 +3,13 @@ from flask.json import JSONEncoder
 
 import minetorch
 from minetorch import model, dataset, dataflow, loss, optimizer
-from .api import api
+from .api import api, experiment
 
 
 app = Flask(__name__)
 
 app.register_blueprint(api)
+app.register_blueprint(experiment)
 
 minetorch.core.boot()
 
