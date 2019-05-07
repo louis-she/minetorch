@@ -27,6 +27,7 @@ module.exports = {
     'no-unused-vars': 'off',
     'no-mixed-operators': 'off',
     'space-before-function-paren': 'off',
+    'vue/max-attributes-per-line': 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     'vue/html-self-closing': ['error', {
       'html': {

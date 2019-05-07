@@ -49,7 +49,11 @@
               size="mini">start</el-button>
             <el-button
               type="text"
-              size="mini">edit</el-button>
+              size="mini">
+              <router-link :to="{ name: 'EditExperimentDataset', params: { experimentId: scope.row.id }}">
+                config
+              </router-link>
+            </el-button>
             <el-button
               :style="{color: '#F56C6C'}"
               type="text"
