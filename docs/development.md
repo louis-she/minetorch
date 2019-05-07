@@ -18,6 +18,9 @@ cd minetorch/minetorch
 python3 -m venv .venv
 source .venv/bin/activate
 
+# install libomp for PyTorch
+brew install libomp
+
 # install python dependencies
 pip install -r requirements.txt
 
