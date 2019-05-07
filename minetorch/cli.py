@@ -35,7 +35,7 @@ def development():
     os.environ["FLASK_APP"] = web.__file__
     os.environ["FLASK_ENV"] = 'development'
 
-    subprocs.append(subprocess.Popen(['flask', 'run'], stdout=sys.stdout))
+    subprocs.append(subprocess.Popen(['python', '-m', 'flask', 'run'], stdout=sys.stdout))
     subprocs.append(subprocess.Popen(['yarn', 'run', 'dev'], cwd=os.path.dirname(os.path.abspath(web.__file__)), stdout=sys.stdout))
 
     def signal_handler(sig, frame):

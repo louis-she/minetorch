@@ -26,6 +26,10 @@ def delete_experiment(experiment_id):
     g.experiment.delete()
     return jsonify({'message': 'ok'})
 
+@experiment.route('/running', methods=['POST'])
+def train_experiment():
+    pass
+
 @experiment.route('/models', methods=['POST'])
 def creat_model(experiment_id):
     """Pick a model for an experiment
