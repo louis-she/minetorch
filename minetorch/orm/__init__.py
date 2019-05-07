@@ -13,11 +13,16 @@ logger.setLevel(logging.DEBUG)
 db = SqliteDatabase('minetorch.db')
 
 class Base(PeeweeModel):
-    created_at = DateTimeField(default=datetime.datetime.now)
+    created_at = DateTimeField(default=datetime.datetime.now(datetime.timezone.utc))
     updated_at = TimestampField()
+    deleted_at = DateTimeField(null=True)
 
     def to_json_serializable(self):
         return model_to_dict(self)
+
+    def delete(self):
+        self.deleted_at = datetime.datetime.now(datetime.timezone.utc)
+        self.save()
 
     class Meta:
         database = db

@@ -31,7 +31,7 @@ cd web; yarn install
 # this will start a flask web server in development mode and webpack --watch
 cd ..; python cli.py dev
 
-# visit localhost:5000
+# visit localhost:3100
 ```
 
 # Reset database

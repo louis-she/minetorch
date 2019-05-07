@@ -1,51 +1,17 @@
 <template>
   <div class="list">
     <mpanel title="Experiments">
-      <!-- 搜索 -->
-      <div class="searchpanel">
-        <div class="searchpanel-content">
-          <el-form
-            :inline="true"
-            class="demo-form-inline">
-            <el-form-item label="experiment name">
-              <el-input v-model="searchForm.title" />
-            </el-form-item>
-            <el-form-item label="created at">
-              <el-date-picker
-                v-model="searchForm.time"
-                type="date"
-                placeholder="select time" />
-            </el-form-item>
-            <el-form-item label="training status">
-              <el-select
-                v-model="searchForm.status"
-                placeholder="select">
-                <el-option
-                  v-for="(item, key) in statusText"
-                  :key="`status-${key}`"
-                  :label="item.text"
-                  :value="key"/>
-              </el-select>
-            </el-form-item>
-            <el-form-item>
-              <el-button
-                type="primary"
-                @click="onSearch">filter</el-button>
-            </el-form-item>
-          </el-form>
-        </div>
-      </div>
       <!-- 新建 -->
       <el-button
         :style="{marginBottom: '20px'}"
         type="primary"
+        size="mini"
         @click="onAdd">New Experiment</el-button>
       <!-- 列表 -->
       <el-table
         v-loading="loading"
         :data="tableData"
         stripe
-        border
         style="width: 100%">
         <el-table-column
           prop="name"
@@ -78,46 +44,47 @@
           width="300">
           <template slot-scope="scope">
             <el-button
-              type="success"
-              size="medium">start</el-button>
+              :style="{color: '#67C23A'}"
+              type="text"
+              size="mini">start</el-button>
             <el-button
-              type="primary"
-              size="medium">edit</el-button>
+              type="text"
+              size="mini">edit</el-button>
             <el-button
-              type="danger"
-              size="medium">delete</el-button>
+              :style="{color: '#F56C6C'}"
+              type="text"
+              size="mini"
+              @click="delExperiment(scope.row.id)">delete</el-button>
           </template>
         </el-table-column>
       </el-table>
-      <pagination
-        :current-page="currentPage"
-        :page-size="pageSize"
-        :total="total"
-        @change="changePage"/>
     </mpanel>
     <!-- 新建 -->
     <el-dialog
       :visible.sync="addVisible"
       :close-on-click-modal="false"
       class="add-form"
-      title="新建"
+      title="New Experiment"
       width="500px"
       @closed="addCancel">
       <el-form :model="addForm">
-        <el-form-item label="test">
+        <el-form-item
+          label="Experiment Name"
+          required>
           <el-input
-            v-model="addForm.test"
+            v-model="addForm.name"
+            placeholder="Input the experiment name, should be unique from others"
             autocomplete="off"/>
         </el-form-item>
       </el-form>
       <div
         slot="footer"
         class="dialog-footer">
-        <el-button @click="addCancel">取 消</el-button>
+        <el-button @click="addCancel">Cancel</el-button>
         <el-button
           :loading="addForm.loading"
           type="primary"
-          @click="addSure">确 定</el-button>
+          @click="createExperiment">{{ addForm.loading ? 'Creating experiment' : 'Create experiment' }}</el-button>
       </div>
     </el-dialog>
   </div>
@@ -139,7 +106,7 @@ export default {
       loading: false,
       categoryList: [],
       addForm: {
-        test: '',
+        name: '',
         loading: false
       },
       searchForm: {
@@ -193,8 +160,20 @@ export default {
         loading: false
       }
     },
-    addSure () {
+    async createExperiment () {
       this.addForm.loading = true
+      const response = await this.ajax.post('/api/experiments', {
+        name: this.addForm.name
+      })
+      this.addForm.loading = false
+      if (response) {
+        this.getData()
+        this.addCancel()
+      }
+    },
+    async delExperiment(id) {
+      await this.ajax.delete(`/api/experiments/${id}`)
+      this.getData()
     },
     // 翻页
     changePage (page, size) {

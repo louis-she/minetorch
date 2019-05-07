@@ -4,9 +4,6 @@
     style="height: 100%">
     <headers />
     <el-container>
-      <el-aside width="200px">
-        <sidebar />
-      </el-aside>
       <el-container
         direction="vertical"
         class="container">

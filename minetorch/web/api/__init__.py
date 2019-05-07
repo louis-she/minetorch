@@ -21,6 +21,11 @@ def models():
     """
     return jsonify(list(map(lambda m: m.to_json_serializable(), model.registed_models)))
 
+@experiment.route('', methods=['DELETE'])
+def delete_experiment(experiment_id):
+    g.experiment.delete()
+    return jsonify({'message': 'ok'})
+
 @experiment.route('/models', methods=['POST'])
 def creat_model(experiment_id):
     """Pick a model for an experiment
@@ -52,7 +57,7 @@ def optimizers():
 def experiments_list():
     return jsonify(list(map(
         lambda m: m.to_json_serializable(),
-        Experiment.select().order_by(Experiment.updated_at.desc())
+        Experiment.select().where(Experiment.deleted_at == None).order_by(Experiment.updated_at.desc())
     )))
 
 @api.route('/experiments', methods=['POST'])

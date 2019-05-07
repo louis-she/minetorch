@@ -27,11 +27,19 @@ const ajax = {
       this.handleResponseError(err)
     }
   },
+  async delete (url) {
+    try {
+      let res = await axios.delete(url)
+      return new Promise((resolve) => { resolve(toCamelCase(res.data)) })
+    } catch (err) {
+      this.handleResponseError()
+    }
+  },
 
   handleResponseError(err) {
     const errors = {
       500: 'Server Internal Error',
-      422: 'Submittd data is invalid',
+      422: 'Submit data is invalid',
       409: 'Record already exists'
     }
     Message.closeAll()
