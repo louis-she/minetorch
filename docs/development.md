@@ -22,7 +22,7 @@ source .venv/bin/activate
 brew install libomp
 
 # install python dependencies
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 # init sqlite database
 python3 cli.py db:init
@@ -32,7 +32,7 @@ cd web; yarn install
 
 # start the development server
 # this will start a flask web server in development mode and webpack --watch
-cd ..; python cli.py dev
+cd ..; python3 cli.py dev
 
 # visit localhost:3100
 ```
@@ -42,7 +42,7 @@ cd ..; python cli.py dev
 If any new fields are been added to ORM, you may want to execute the following commmand to reset the database.
 
 ```
-python cli.py db:init
+python3 cli.py db:init
 ```
 
 > This command will drop the table first and then create it. So the data in the table will be lossed. If you want to keep the data, just create the new column by sqlite plain sql.
