@@ -41,7 +41,6 @@ def creat_model(experiment_id):
     )
     return jsonify(model.to_json_serializable())
 
-
 @api.route('/dataflows', methods=['GET'])
 def dtaflows():
     return jsonify(list(map(lambda m: m.to_json_serializable(), dataflow.registed_dataflows)))
@@ -87,7 +86,7 @@ def create_dataset():
 
 @experiment.route('/dataset/<dataset_id>', methods=['GET'])
 def get_dataset():
-    """Get a dataset 
+    """Get a dataset
     """
     dataset_id = request.view_args['dataset_id']
     if not dataset_id: abort(422)
@@ -119,7 +118,7 @@ def create_dataflow():
 
 @experiment.route('/dataflow/<dataflow_id>', methods=['GET'])
 def get_dataflow():
-    """Get a dataflow 
+    """Get a dataflow
     """
     dataflow_id = request.view_args['dataflow_id']
     if not dataflow_id: abort(422)
@@ -151,7 +150,7 @@ def create_optimizer():
 
 @experiment.route('/optimizer/<optimizer_id>', methods=['GET'])
 def get_optimizer():
-    """Get a optimizer 
+    """Get a optimizer
     """
     optimizer_id = request.view_args['optimizer_id']
     if not optimizer_id: abort(422)

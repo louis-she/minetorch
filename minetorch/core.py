@@ -17,8 +17,9 @@ def load_external_modules():
 
 class Component():
 
-    def __init__(self, name, component_class):
+    def __init__(self, name, description, component_class):
         self.name = name
+        self.description = description
         self.component_class = component_class
         self.options = []
 
@@ -28,6 +29,7 @@ class Component():
     def to_json_serializable(self):
         return {
             'name': self.name,
+            'description': self.description,
             'options': list(map(lambda o: o.to_json_serializable(), self.options))
         }
 
@@ -79,14 +81,14 @@ class ComponentDecorator(Singleton):
     # should be override in subclass
     component_class = Component
 
-    def __call__(self, name):
+    def __call__(self, name, description=''):
         def inner_decorator(func):
-            nonlocal name
-            model = self.component_class(name, func)
+            nonlocal name, description
+            component = self.component_class(name, description, func)
             for option in OptionDecorator.registed_options:
-                model.add_option(option)
+                component.add_option(option)
             OptionDecorator.registed_options = list()
-            self.register(model)
+            self.register(component)
             def __decorator(**kwargs):
                 return func(**kwargs)
             return __decorator
