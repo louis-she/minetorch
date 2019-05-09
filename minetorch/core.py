@@ -190,7 +190,7 @@ class LossDecorator(ComponentDecorator):
 
 
 class OptionDecorator(Singleton):
-    """Add an option any component.
+    """Add an option to any component.
     A component often come with many options, like `fold` for a Dataset component,
     `learning rate` for Optimizer component. To let user tweak these parameters
     throught the web interface, Minetorch extender should describe what kind option a

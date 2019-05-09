@@ -5,7 +5,7 @@ import importlib
 @model('Torchvision ResNet')
 @option('size', help='Size of ResNet', type='enum', choices=[18, 34, 50, 101, 152], required=True)
 @option('class_num', help='Classification class number', type='number')
-def resnet(size):
+def resnet(size, class_num):
     return getattr(models, f'resnet{size}')()
 
 @model('Torchvision VggNet')
