@@ -52,7 +52,7 @@ def development():
 
 @cli.command('db:init')
 def db_init():
-    for model_class in [Experiment, Component, Model, Dataset, Snapshot]:
+    for model_class in [Experiment, Component, Snapshot]:
         model_class.drop_table()
         print(f"creating {model_class}")
         model_class.create_table(safe=False)
@@ -71,6 +71,6 @@ def run():
 
 
 if __name__ == '__main__':
-    cli.add_command(run)
-    cli.add_command(ls)
+    # cli.add_command(run)
+    # cli.add_command(ls)
     cli()
