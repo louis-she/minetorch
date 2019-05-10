@@ -16,20 +16,14 @@
   </div>
 </template>
 <script>
-import dateFormat from 'dateformat'
-import moment from 'moment'
-
 export default {
-  components: {
-  },
   data () {
     return {
-      experimentName: null
+      experimentName: ''
     }
   },
   mounted () {
-  },
-  methods: {
+    this.experimentName = this.$route.params.componentName || 'datasets'
   }
 }
 </script>

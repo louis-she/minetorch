@@ -10,34 +10,25 @@
            重复步骤 1
       </code>
     </pre>
-
-    <mpanel :title="componentName">
-      <!-- 列表 -->
-      <el-table v-loading="loading" :data="components" stripe style="width: 100%">
-        <el-table-column :label="tableTitle" prop="name" align="center"/>
-        <el-table-column prop="description" label="description" align="center" />
-        <el-table-column label="operations" align="center" width="300">
-          <template slot-scope="scope">
-            <el-button size="mini" @click="handleSelectClicked(scope)">
-              select
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </mpanel>
-    <el-dialog :visible.sync="openDialog" :before-close="handleClose" title="Tips">
-      <dynamic-form />
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="dialogVisible = false">Confirm</el-button>
-      </span>
+    <!-- 列表 -->
+    <el-table v-loading="loading" :data="components" stripe style="width: 100%">
+      <el-table-column :label="tableTitle" prop="name" align="center"/>
+      <el-table-column prop="description" label="description" align="center" />
+      <el-table-column label="operations" align="center" width="300">
+        <template slot-scope="scope">
+          <el-button size="mini" @click="handleSelectClicked(scope)">
+            select
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-dialog :visible.sync="openDialog" :before-close="handleClose" :title="dialogTitle">
+      <dynamic-form :extra-data="{name: selectComponentName}" :schema="schema"
+                    :submit-url="url" @dynamic-form:cancel="openDialog=false" />
     </el-dialog>
   </div>
 </template>
 <script>
-import dateFormat from 'dateformat'
-import moment from 'moment'
-import Vue from 'vue'
 import dynamicForm from 'components/dynamic-form'
 
 export default {
@@ -48,25 +39,48 @@ export default {
     return {
       componentName: '',
       components: [],
-      openDialog: false
+      openDialog: false,
+      dialogTitle: '',
+      schema: [],
+      experimentId: '',
+      componentType: '',
+      selectComponentName: ''
     }
   },
   computed: {
     tableTitle() {
       return `${this.componentName} Name`
+    },
+    url() {
+      return `/api/experiments/${this.experimentId}/${this.componentType}`
     }
   },
   mounted () {
+    this.experimentId = this.$route.params.experimentId
+    this.componentType = this.$route.params.componentType || 'datasets'
     this.getComponents()
   },
   methods: {
     async getComponents() {
       this.loading = true
-      this.components = await this.ajax.get(`/api/experiments/${this.$route.params.experimentId}/datasets`)
+      this.components = await this.ajax.get(this.url)
       this.loading = false
     },
 
     handleSelectClicked(scope) {
+      const component = this.components[scope.$index]
+      const schema = component.options.map((option) => {
+        return {
+          label: option.settings.label || option.name,
+          type: option.settings.type || 'string',
+          name: option.name,
+          ...option.settings
+        }
+      })
+
+      this.dialogTitle = component.name
+      this.schema = schema
+      this.selectComponentName = component.name
       this.openDialog = true
     }
   }
