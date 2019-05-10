@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, abort, g
 import peewee
 from minetorch import model, dataset, dataflow, loss, optimizer
-from minetorch.orm import Experiment, Model, Snapshot, Dataset, Dataflow, Optimizer
+from minetorch.orm import Experiment, Model, Snapshot, Dataset, Dataflow, Optimizer, Loss
 from flask import render_template
 
 api = Blueprint('api', 'api', url_prefix='/api')
@@ -70,165 +70,81 @@ def create_experiment():
     experiment.create_draft_snapshot()
     return jsonify(experiment.to_json_serializable())
 
-@experiment.route('/dataset', methods=['POST'])
-def create_dataset():
-    """Create a dataset for a snapshot
-    """
+def create_component(component_class):
     name = request.values['name']
     if not name: abort(422)
-    dataset = Dataset.create(
-        name = name,
-        settings = request.values['settings'],
-        code = request.values['code'],
+    component = component_class.create(
+        name=name,
+        settings=request.values.get('settings'),
         snapshot_id=g.snapshot.id
     )
-    return jsonify(dataset.to_json_serializable())
+    return jsonify(component.to_json_serializable())
 
-@experiment.route('/dataset/<dataset_id>', methods=['GET'])
-def get_dataset():
-    """Get a dataset
-    """
-    dataset_id = request.view_args['dataset_id']
-    if not dataset_id: abort(422)
+def get_component(component_class, component_id):
     try:
-        dataset = Dataset.get_by_id(dataset_id)
-    except peewee.DoesNotExist: abort(409)
-    return jsonify(dataset.to_json_serializable())
+        component = component_class.get_by_id(component_id)
+    except peewee.DoesNotExist: abort(404)
+    return jsonify(component.to_json_serializable())
 
-@experiment.route('/datasets', mothods=['GET'])
-def datasets_list():
-    """Get all datasets
-    """
+@experiment.route('/datasets', methods=['POST'])
+def create_dataset(experiment_id):
+    return create_component(Dataset)
+
+@experiment.route('/datasets/<dataset_id>', methods=['GET'])
+def get_dataset(experiment_id, dataset_id):
+    return get_component(Dataset, dataset_id)
+
+@experiment.route('/datasets', methods=['GET'])
+def datasets_list(experiment_id):
     return jsonify(list(map(lambda m: m.to_json_serializable(), dataset.registed_datasets)))
 
+@experiment.route('/dataflows', methods=['POST'])
+def create_dataflow(experiment_id):
+    return create_component(Dataflow)
 
-@experiment.route('/dataflow', methods=['POST'])
-def create_dataflow():
-    """Create a dataflow for a snapshot
-    """
-    name = request.values['name']
-    if not name: abort(422)
-    dataflow = Dataflow.create(
-        name = name,
-        settings = request.values['settings'],
-        code = request.values['code'],
-        snapshot_id=g.snapshot.id
-    )
-    return jsonify(dataflow.to_json_serializable())
+@experiment.route('/dataflows/<dataflow_id>', methods=['GET'])
+def get_dataflow(experiment_id, dataflow_id):
+    return get_component(Dataflow, dataflow_id)
 
-@experiment.route('/dataflow/<dataflow_id>', methods=['GET'])
-def get_dataflow():
-    """Get a dataflow
-    """
-    dataflow_id = request.view_args['dataflow_id']
-    if not dataflow_id: abort(422)
-    try:
-        dataflow = Dataset.get_by_id(dataflow_id)
-    except peewee.DoesNotExist: abort(409)
-    return jsonify(dataflow.to_json_serializable())
-
-@experiment.route('/dataflows', mothods=['GET'])
-def dataflows_list():
-    """Get all dataflows
-    """
+@experiment.route('/dataflows', methods=['GET'])
+def dataflows_list(experiment_id):
     return jsonify(list(map(lambda m: m.to_json_serializable(), dataflow.registed_dataflows)))
 
+@experiment.route('/optimizers', methods=['POST'])
+def create_optimizer(experiment_id):
+    return create_component(Optimizer)
 
-@experiment.route('/optimizer', methods=['POST'])
-def create_optimizer():
-    """Create a optimizer for a snapshot
-    """
-    name = request.values['name']
-    if not name: abort(422)
-    optimizer = Optimizer.create(
-        name = name,
-        settings = request.values['settings'],
-        code = request.values['code'],
-        snapshot_id=g.snapshot.id
-    )
-    return jsonify(optimizer.to_json_serializable())
+@experiment.route('/optimizers/<optimizer_id>', methods=['GET'])
+def get_optimizer(experiment_id, optimizer_id):
+    return get_component(Optimizer, optimizer_id)
 
-@experiment.route('/optimizer/<optimizer_id>', methods=['GET'])
-def get_optimizer():
-    """Get a optimizer
-    """
-    optimizer_id = request.view_args['optimizer_id']
-    if not optimizer_id: abort(422)
-    try:
-        optimizer = Optimizer.get_by_id(optimizer_id)
-    except peewee.DoesNotExist: abort(409)
-    return jsonify(optimizer.to_json_serializable())
-
-@experiment.route('/optimizers', mothods=['GET'])
-def optimizers_list():
-    """Get all optimizers
-    """
+@experiment.route('/optimizers', methods=['GET'])
+def optimizers_list(experiment_id):
     return jsonify(list(map(lambda m: m.to_json_serializable(), dataset.registed_optimizers)))
 
-@experiment.route('/loss', methods=['POST'])
-def create_loss():
-    """Create a loss for a snapshot
-    """
-    name = request.values['name']
-    if not name: abort(422)
-    loss = Loss.create(
-        name = name,
-        settings = request.values['settings'],
-        code = request.values['code'],
-        snapshot_id=g.snapshot.id
-    )
-    return jsonify(loss.to_json_serializable())
+@experiment.route('/losses', methods=['POST'])
+def create_loss(experiment_id):
+    return create_component(Loss)
 
-@experiment.route('/loss/<loss_id>', methods=['GET'])
-def get_loss():
-    """Get a loss
-    """
-    loss_id = request.view_args['loss_id']
-    if not loss_id: abort(422)
-    try:
-        loss = Loss.get_by_id(loss_id)
-    except peewee.DoesNotExist: abort(409)
-    return jsonify(loss.to_json_serializable())
+@experiment.route('/losses/<loss_id>', methods=['GET'])
+def get_loss(loss_id):
+    return get_component(Loss, loss_id)
 
-@experiment.route('/losses', mothods=['GET'])
-def losses_list():
-    """Get all losses
-    """
+@experiment.route('/losses', methods=['GET'])
+def losses_list(experiment_id):
     return jsonify(list(map(lambda m: m.to_json_serializable(), loss.registed_losses)))
 
-@experiment.route('/model', methods=['POST'])
-def create_model():
-    """Create a model for a snapshot
-    """
-    name = request.values['name']
-    if not name: abort(422)
-    model = Model.create(
-        name = name,
-        settings = request.values['settings'],
-        code = request.values['code'],
-        snapshot_id=g.snapshot.id
-    )
-    return jsonify(model.to_json_serializable())
+@experiment.route('/models', methods=['POST'])
+def create_model(experiment_id):
+    return create_component(Model)
 
 @experiment.route('/model/<model_id>', methods=['GET'])
-def get_model():
-    """Get a model
-    """
-    model_id = request.view_args['model_id']
-    if not model_id: abort(422)
-    try:
-        model = Model.get_by_id(model_id)
-    except peewee.DoesNotExist: abort(409)
-    return jsonify(model.to_json_serializable())
+def get_model(experiment_id, model_id):
+    return get_component(Model, model_id)
 
-@experiment.route('/models', mothods=['GET'])
-def models_list():
-    """Get all models
-    """
+@experiment.route('/models', methods=['GET'])
+def models_list(experiment_id):
     return jsonify(list(map(lambda m: m.to_json_serializable(), model.registed_models)))
-
-
-
 
 @api.errorhandler(422)
 def entity_not_processable(error):
