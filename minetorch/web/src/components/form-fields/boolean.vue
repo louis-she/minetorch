@@ -7,7 +7,7 @@
 import formFieldMixin from 'components/form-fields/form-field'
 
 export default {
-  mixins: [formFieldMixin],
+  mixins: [formFieldMixin]
 }
 </script>
 <style lang="scss">
