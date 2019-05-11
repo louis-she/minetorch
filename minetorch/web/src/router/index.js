@@ -17,13 +17,9 @@ export default new Router({
       name: 'EditExperiment',
       component: () => import('pages/experiment/edit'),
       children: [{
-        path: 'dataset',
-        name: 'EditExperimentDataset',
-        component: () => import('pages/experiment/edit/dataset')
-      }, {
-        path: 'dataflow',
-        name: 'EditExperimentDataflow',
-        component: () => import('pages/experiment/edit/dataflow')
+        path: ':componentName',
+        name: 'EditExperimentComponent',
+        component: () => import('pages/experiment/edit/component')
       }]
     }]
   }, {

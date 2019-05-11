@@ -1,8 +1,8 @@
 <template>
   <el-form-item :label="label">
     <el-select v-model="formData[name]" :placeholder="help" :multiple="multiple">
-      <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
-        <span>{{ item.label }}</span>
+      <el-option v-for="item in options" :key="itemValue(item)" :label="itemLabel(item)" :value="itemValue(item)">
+        <span>{{ itemLabel(item) }}</span>
       </el-option>
     </el-select>
   </el-form-item>
@@ -22,6 +22,14 @@ export default {
     multiple: {
       type: Boolean,
       default: false
+    }
+  },
+  methods: {
+    itemValue(item) {
+      return item === Object(item) ? item.value : item
+    },
+    itemLabel(item) {
+      return item === Object(item) ? item.label : item
     }
   }
 }

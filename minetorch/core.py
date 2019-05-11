@@ -97,7 +97,7 @@ class ComponentDecorator(Singleton):
 
     def register(self, component):
         if (component not in ComponentDecorator.registed_components):
-            ComponentDecorator.registed_components.append(component)
+            ComponentDecorator.registed_components.insert(0, component)
 
 
 class ModelDecorator(ComponentDecorator):
@@ -111,7 +111,7 @@ class ModelDecorator(ComponentDecorator):
 
     def register(self, model):
         super().register(model)
-        self.registed_models.append(model)
+        self.registed_models.insert(0, model)
 
 
 class DataflowDecorator(ComponentDecorator):
@@ -124,7 +124,7 @@ class DataflowDecorator(ComponentDecorator):
 
     def register(self, dataflow):
         super().register(dataflow)
-        self.registed_dataflows.append(dataflow)
+        self.registed_dataflows.insert(0, dataflow)
 
 
 class DatasetDecorator(ComponentDecorator):
@@ -161,7 +161,7 @@ class DatasetDecorator(ComponentDecorator):
 
     def register(self, dataset):
         super().register(dataset)
-        self.registed_datasets.append(dataset)
+        self.registed_datasets.insert(0, dataset)
 
 
 class OptimizerDecorator(ComponentDecorator):
@@ -174,7 +174,7 @@ class OptimizerDecorator(ComponentDecorator):
 
     def register(self, optimizer):
         super().register(optimizer)
-        self.registed_optimizers.append(optimizer)
+        self.registed_optimizers.insert(0, optimizer)
 
 
 class LossDecorator(ComponentDecorator):
@@ -188,7 +188,7 @@ class LossDecorator(ComponentDecorator):
 
     def register(self, loss):
         super().register(loss)
-        self.registed_losses.append(loss)
+        self.registed_losses.insert(0, loss)
 
 
 class OptionDecorator(Singleton):
@@ -207,7 +207,7 @@ class OptionDecorator(Singleton):
     def __call__(self, name, **settings):
         def inner_decorator(func):
             nonlocal name, settings
-            self.registed_options.append(Option(name, settings))
+            self.registed_options.insert(0, Option(name, settings))
             def __decorator(**kwargs):
                 return func(**kwargs)
             return __decorator

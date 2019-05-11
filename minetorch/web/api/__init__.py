@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request, abort, g
 import peewee
+import json
 from minetorch import model, dataset, dataflow, loss, optimizer
-from minetorch.orm import Experiment, Model, Snapshot, Dataset, Dataflow, Optimizer, Loss
+from minetorch.orm import Experiment, Model, Snapshot, Dataset, Dataflow, Optimizer, Loss, Component
 from flask import render_template
 
 api = Blueprint('api', 'api', url_prefix='/api')
@@ -15,12 +16,6 @@ def experiment_before_request():
     if not g.snapshot:
         g.snapshot = g.experiment.create_draft_snapshot()
 
-@api.route('/models', methods=['GET'])
-def models():
-    """List all the available models
-    """
-    return jsonify(list(map(lambda m: m.to_json_serializable(), model.registed_models)))
-
 @experiment.route('', methods=['DELETE'])
 def delete_experiment(experiment_id):
     g.experiment.delete()
@@ -29,17 +24,6 @@ def delete_experiment(experiment_id):
 @experiment.route('/running', methods=['POST'])
 def train_experiment():
     pass
-
-@experiment.route('/models', methods=['POST'])
-def creat_model(experiment_id):
-    """Pick a model for an experiment
-    """
-    model = Model.create(
-        name=request.values['name'],
-        settings=request.values['settings'],
-        snapshot_id=g.snapshot.id
-    )
-    return jsonify(model.to_json_serializable())
 
 @api.route('/dataflows', methods=['GET'])
 def dtaflows():
@@ -73,78 +57,110 @@ def create_experiment():
 def create_component(component_class):
     name = request.values['name']
     if not name: abort(422)
-    component = component_class.create(
-        name=name,
-        settings=request.values.get('settings'),
-        snapshot_id=g.snapshot.id
-    )
-    return jsonify(component.to_json_serializable())
-
-def get_component(component_class, component_id):
     try:
-        component = component_class.get_by_id(component_id)
-    except peewee.DoesNotExist: abort(404)
+        component = component_class.create(
+            name=name,
+            settings=request.values.get('settings'),
+            snapshot_id=g.snapshot.id
+        )
+    except peewee.IntegrityError: abort(409)
     return jsonify(component.to_json_serializable())
 
-@experiment.route('/datasets', methods=['POST'])
-def create_dataset(experiment_id):
-    return create_component(Dataset)
+def get_component(component_class):
+    try:
+        component = component_class.select().where(component_class.snapshot == g.snapshot).get()
+    except peewee.DoesNotExist:
+        return jsonify({})
+    return jsonify(component.to_json_serializable())
 
-@experiment.route('/datasets/<dataset_id>', methods=['GET'])
-def get_dataset(experiment_id, dataset_id):
-    return get_component(Dataset, dataset_id)
+def update_component(component_class):
+    try:
+        component = component_class.select().where(component_class.snapshot == g.snapshot).get()
+    except peewee.DoesNotExist:
+        return abort(404)
+    component.settings = json.dumps(request.values.to_dict())
+    component.save
+    return jsonify(component.to_json_serializable())
 
 @experiment.route('/datasets', methods=['GET'])
 def datasets_list(experiment_id):
     return jsonify(list(map(lambda m: m.to_json_serializable(), dataset.registed_datasets)))
 
-@experiment.route('/dataflows', methods=['POST'])
-def create_dataflow(experiment_id):
-    return create_component(Dataflow)
+@experiment.route('/datasets', methods=['POST'])
+def create_dataset(experiment_id):
+    return create_component(Dataset)
 
-@experiment.route('/dataflows/<dataflow_id>', methods=['GET'])
-def get_dataflow(experiment_id, dataflow_id):
-    return get_component(Dataflow, dataflow_id)
+@experiment.route('/datasets/selected', methods=['GET'])
+def get_dataset(experiment_id):
+    return get_component(Dataset)
+
+@experiment.route('/datasets/selected', methods=['PATCH'])
+def update_dataset(experiment_id):
+    return update_component(Dataset)
 
 @experiment.route('/dataflows', methods=['GET'])
 def dataflows_list(experiment_id):
     return jsonify(list(map(lambda m: m.to_json_serializable(), dataflow.registed_dataflows)))
 
+@experiment.route('/dataflows', methods=['POST'])
+def create_dataflow(experiment_id):
+    return create_component(Dataflow)
+
+@experiment.route('/dataflows/selected', methods=['GET'])
+def get_dataflow(experiment_id):
+    return get_component(Dataflow)
+
+@experiment.route('/dataflows/selected', methods=['PATCH'])
+def update_dataflow(experiment_id):
+    return update_component(Dataflow)
+
+@experiment.route('/optimizers', methods=['GET'])
+def optimizers_list(experiment_id):
+    return jsonify(list(map(lambda m: m.to_json_serializable(), optimizer.registed_optimizers)))
+
 @experiment.route('/optimizers', methods=['POST'])
 def create_optimizer(experiment_id):
     return create_component(Optimizer)
 
-@experiment.route('/optimizers/<optimizer_id>', methods=['GET'])
-def get_optimizer(experiment_id, optimizer_id):
-    return get_component(Optimizer, optimizer_id)
+@experiment.route('/optimizers/selected', methods=['GET'])
+def get_optimizer(experiment_id):
+    return get_component(Optimizer)
 
-@experiment.route('/optimizers', methods=['GET'])
-def optimizers_list(experiment_id):
-    return jsonify(list(map(lambda m: m.to_json_serializable(), dataset.registed_optimizers)))
+@experiment.route('/optimizers/selected', methods=['PATCH'])
+def update_optimizer(experiment_id):
+    return update_component(Optimizer)
 
 @experiment.route('/losses', methods=['POST'])
 def create_loss(experiment_id):
     return create_component(Loss)
 
-@experiment.route('/losses/<loss_id>', methods=['GET'])
+@experiment.route('/losses/selected', methods=['GET'])
 def get_loss(loss_id):
-    return get_component(Loss, loss_id)
+    return get_component(Loss)
 
 @experiment.route('/losses', methods=['GET'])
 def losses_list(experiment_id):
     return jsonify(list(map(lambda m: m.to_json_serializable(), loss.registed_losses)))
 
+@experiment.route('/losses/selected', methods=['PATCH'])
+def update_loss(experiment_id):
+    return update_component(Loss)
+
 @experiment.route('/models', methods=['POST'])
 def create_model(experiment_id):
     return create_component(Model)
 
-@experiment.route('/model/<model_id>', methods=['GET'])
-def get_model(experiment_id, model_id):
-    return get_component(Model, model_id)
+@experiment.route('/models/selected', methods=['GET'])
+def get_model(experiment_id):
+    return get_component(Model)
 
 @experiment.route('/models', methods=['GET'])
 def models_list(experiment_id):
     return jsonify(list(map(lambda m: m.to_json_serializable(), model.registed_models)))
+
+@experiment.route('/models/selected', methods=['PATCH'])
+def update_model(experiment_id):
+    return update_component(Model)
 
 @api.errorhandler(422)
 def entity_not_processable(error):

@@ -5,7 +5,7 @@
       <el-breadcrumb-item>{{ experimentName }}</el-breadcrumb-item>
     </el-breadcrumb>
 
-    <el-steps :space="200" :active="0" simple>
+    <el-steps :space="200" :active="activateStep" simple>
       <el-step title="Dataset" icon="el-icon-coin" />
       <el-step title="Dataflow" icon="el-icon-setting" />
       <el-step title="Model" icon="el-icon-cpu" />
@@ -19,10 +19,18 @@
 export default {
   data () {
     return {
-      experimentName: ''
+      experimentName: '',
+      activateStep: 0
+    }
+  },
+  watch: {
+    '$route' (to, from) {
+      this.activateStep = this.steps.indexOf(this.$route.params.componentName)
+      this.experimentName = this.$route.params.componentName || 'datasets'
     }
   },
   mounted () {
+    this.activateStep = this.steps.indexOf(this.$route.params.componentName)
     this.experimentName = this.$route.params.componentName || 'datasets'
   }
 }

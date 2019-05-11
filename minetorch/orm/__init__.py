@@ -85,11 +85,20 @@ class Snapshot(Base):
 
 
 class Component(Base):
-    name = CharField(unique=True)
+    name = CharField()
     category = CharField()
     settings = TextField(null=True)
     snapshot = ForeignKeyField(Snapshot, backref='components')
     code = TextField(null=True)
+
+    class Meta:
+        indexes = (
+            (('name', 'snapshot'), True),
+        )
+
+    @classmethod
+    def select(cls):
+        return super().select().where(cls.category == str(cls.__name__))
 
     @classmethod
     def create(cls, **query):
@@ -107,28 +116,28 @@ class Model(Component):
 
 class Dataset(Component):
     category = CharField(default='Dataset')
-    snapshot = ForeignKeyField(Snapshot, backref='Datasets')
+    snapshot = ForeignKeyField(Snapshot, backref='datasets')
     class Meta:
         table_name = 'component'
 
 
 class Dataflow(Component):
     category = CharField(default='Dataflow')
-    snapshot = ForeignKeyField(Snapshot, backref='Dataflows')
+    snapshot = ForeignKeyField(Snapshot, backref='dataflows')
     class Meta:
         table_name = 'component'
 
 
 class Optimizer(Component):
     category = CharField(default='Optimizer')
-    snapshot = ForeignKeyField(Snapshot, backref='Optimizers')
+    snapshot = ForeignKeyField(Snapshot, backref='optimizers')
     class Meta:
         table_name = 'component'
 
 
 class Loss(Component):
     category = CharField(default='Loss')
-    snapshot = ForeignKeyField(Snapshot, backref='Losses')
+    snapshot = ForeignKeyField(Snapshot, backref='losses')
     class Meta:
         table_name = 'component'
 

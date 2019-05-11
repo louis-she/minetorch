@@ -50,7 +50,7 @@
             <el-button
               type="text"
               size="mini">
-              <router-link :to="{ name: 'EditExperimentDataset', params: { experimentId: scope.row.id }}">
+              <router-link :to="{ name: 'EditExperimentComponent', params: { experimentId: scope.row.id, componentName: 'dataset' }}">
                 config
               </router-link>
             </el-button>
