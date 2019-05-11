@@ -27,11 +27,13 @@ export default {
     '$route' (to, from) {
       this.activateStep = this.steps.indexOf(this.$route.params.componentName)
       this.experimentName = this.$route.params.componentName || 'datasets'
+      this.experimentId = this.$route.params.experimentId
     }
   },
   mounted () {
     this.activateStep = this.steps.indexOf(this.$route.params.componentName)
     this.experimentName = this.$route.params.componentName || 'datasets'
+    this.experimentId = this.$route.params.experimentId
   }
 }
 </script>
@@ -42,5 +44,9 @@ export default {
 
 .el-breadcrumb {
   margin-bottom: 30px;
+}
+
+.el-step__head.is-finish, .el-step__title.is-finish {
+  color: #67C23A;
 }
 </style>

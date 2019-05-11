@@ -130,6 +130,10 @@ def get_optimizer(experiment_id):
 def update_optimizer(experiment_id):
     return update_component(Optimizer)
 
+@experiment.route('/losses', methods=['GET'])
+def losses_list(experiment_id):
+    return jsonify(list(map(lambda m: m.to_json_serializable(), loss.registed_losses)))
+
 @experiment.route('/losses', methods=['POST'])
 def create_loss(experiment_id):
     return create_component(Loss)
@@ -137,10 +141,6 @@ def create_loss(experiment_id):
 @experiment.route('/losses/selected', methods=['GET'])
 def get_loss(loss_id):
     return get_component(Loss)
-
-@experiment.route('/losses', methods=['GET'])
-def losses_list(experiment_id):
-    return jsonify(list(map(lambda m: m.to_json_serializable(), loss.registed_losses)))
 
 @experiment.route('/losses/selected', methods=['PATCH'])
 def update_loss(experiment_id):
