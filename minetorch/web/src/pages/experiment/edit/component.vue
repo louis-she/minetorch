@@ -20,9 +20,13 @@
           <el-button v-if="scope.$index !== selectedRowIndex" size="mini" @click="handleSelectClicked(scope)">
             select
           </el-button>
-          <el-button v-else size="mini" type="success" @click="handleSelectClicked(scope, 'edit')">
+          <el-button v-else-if="selectedComponentConfigurable" size="mini" type="success"
+                     @click="handleSelectClicked(scope, 'edit')">
             edit
           </el-button>
+          <el-tooltip v-else content="Top center" placement="top">
+            <el-button disabled size="mini" type="success">edit</el-button>
+          </el-tooltip>
         </template>
       </el-table-column>
     </el-table>
@@ -40,6 +44,7 @@
 </template>
 <script>
 import dynamicForm from 'components/dynamic-form'
+import { camelCase } from 'lodash'
 
 export default {
   components: {
@@ -79,14 +84,9 @@ export default {
         return `${this.componentName}es`
       }
       return `${this.componentName}s`
-    }
-  },
-  watch: {
-    '$route' (to, from) {
-      this.componentName = this.$route.params.componentName
-      this.experimentId = this.$route.params.experimentId
-      this.getComponents()
-      this.getSelectedComponent()
+    },
+    selectedComponentConfigurable() {
+      return !!Object.keys(this.selectedComponent.settings).length
     }
   },
   mounted () {
@@ -134,9 +134,26 @@ export default {
       this.selectedComponent = await this.ajax.get(this.selectedUrl)
     },
 
-    handleSelectClicked(scope, type = 'create') {
+    async handleSelectClicked(scope, type = 'create') {
       const component = this.components[scope.$index]
-      const schema = component.options.map((option) => {
+      const options = component.options.slice()
+      if (!options.length) {
+        // the selected component has no configurable options
+        // create it directly
+        this.selectedComponent = await this.ajax.post(this.url, {name: component.name})
+        this.navigateToNextStep()
+        return
+      }
+
+      if (this.selectedComponent.name === component.name) {
+        // this is **the** selected component, should override default value
+        options.forEach((option) => {
+          const value = this.selectedComponent.settings[camelCase(option.name)]
+          option.settings.default = value === 'true' ? true : value
+        })
+      }
+
+      const schema = options.map((option) => {
         return {
           label: option.settings.label || option.name,
           type: option.settings.type || 'string',

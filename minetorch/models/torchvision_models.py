@@ -4,7 +4,7 @@ import importlib
 
 @model('Torchvision ResNet', 'Simple wrap for torchvisions ResNet')
 @option('size', help='Size of ResNet', type='select', options=['18', '34', '50', '101', '152'], required=True)
-@option('class_num', help='Classification class number', type='number')
+@option('class_num', help='Classification class number', type='number', default=1000)
 def resnet(size, class_num):
     return getattr(models, f'resnet{size}')()
 

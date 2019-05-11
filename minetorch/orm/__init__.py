@@ -1,16 +1,31 @@
 import peewee
-from peewee import SqliteDatabase, TimestampField, \
+from peewee import SqliteDatabase, Field, TimestampField,\
         CharField, IntegerField, DateTimeField, TextField, ForeignKeyField
 from peewee import Model as PeeweeModel
 from playhouse.shortcuts import model_to_dict
 import datetime
 import logging
+import json
 
 logger = logging.getLogger('peewee')
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
 db = SqliteDatabase('minetorch.db')
+
+class JsonField(Field):
+    field_type = 'json'
+
+    def db_value(self, value):
+        if isinstance(value, dict):
+            return json.dumps(value)
+        return value
+
+    def python_value(self, value):
+        if isinstance(value, str):
+            return json.loads(value)
+        return value
+
 
 class Base(PeeweeModel):
     created_at = DateTimeField(default=datetime.datetime.now(datetime.timezone.utc))
@@ -87,7 +102,7 @@ class Snapshot(Base):
 class Component(Base):
     name = CharField()
     category = CharField()
-    settings = TextField(null=True)
+    settings = JsonField(null=True)
     snapshot = ForeignKeyField(Snapshot, backref='components')
     code = TextField(null=True)
 

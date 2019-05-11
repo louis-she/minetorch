@@ -57,10 +57,13 @@ def create_experiment():
 def create_component(component_class):
     name = request.values['name']
     if not name: abort(422)
+
+    settings = request.values.to_dict()
+    settings.pop('name')
     try:
         component = component_class.create(
             name=name,
-            settings=request.values.get('settings'),
+            settings=json.dumps(settings),
             snapshot_id=g.snapshot.id
         )
     except peewee.IntegrityError: abort(409)
@@ -79,7 +82,7 @@ def update_component(component_class):
     except peewee.DoesNotExist:
         return abort(404)
     component.settings = json.dumps(request.values.to_dict())
-    component.save
+    component.save()
     return jsonify(component.to_json_serializable())
 
 @experiment.route('/datasets', methods=['GET'])
@@ -139,7 +142,7 @@ def create_loss(experiment_id):
     return create_component(Loss)
 
 @experiment.route('/losses/selected', methods=['GET'])
-def get_loss(loss_id):
+def get_loss(experiment_id):
     return get_component(Loss)
 
 @experiment.route('/losses/selected', methods=['PATCH'])
