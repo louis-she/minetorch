@@ -9,6 +9,7 @@ const config = require('./config')
 
 module.exports = merge(baseConfig, {
   mode: process.env.NODE_ENV,
+  devtool: 'eval',
   devServer: {
     clientLogLevel: 'none',
     hot: true,

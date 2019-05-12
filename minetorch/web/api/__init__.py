@@ -165,6 +165,9 @@ def models_list(experiment_id):
 def update_model(experiment_id):
     return update_component(Model)
 
+@experiment.route('/start', methods=['CREATE']):
+    minetorch.core.generate_training_config()
+
 @api.errorhandler(422)
 def entity_not_processable(error):
     return jsonify({'message': 'Entity is not processable'}), 422

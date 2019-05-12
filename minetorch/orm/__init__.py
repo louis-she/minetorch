@@ -11,7 +11,7 @@ logger = logging.getLogger('peewee')
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
-db = SqliteDatabase('minetorch.db')
+db = SqliteDatabase('minetorch/minetorch.db')
 
 class JsonField(Field):
     field_type = 'json'
@@ -29,7 +29,6 @@ class JsonField(Field):
 
 class Base(PeeweeModel):
     created_at = DateTimeField(default=datetime.datetime.now(datetime.timezone.utc))
-    updated_at = TimestampField()
     deleted_at = DateTimeField(null=True)
 
     def to_json_serializable(self):

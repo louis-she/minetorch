@@ -17,6 +17,10 @@ export default new Router({
       name: 'EditExperiment',
       component: () => import('pages/experiment/edit'),
       children: [{
+        path: 'coffee',
+        name: 'EditExperimentSummary',
+        component: () => import('pages/experiment/edit/summary')
+      }, {
         path: ':componentName',
         name: 'EditExperimentComponent',
         component: () => import('pages/experiment/edit/component')

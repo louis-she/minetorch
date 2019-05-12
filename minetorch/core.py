@@ -2,6 +2,7 @@ import importlib
 import os
 import sys
 import json
+from minetorch.utils import runtime_file
 
 def load_default_modules():
     importlib.import_module('minetorch.datasets')
@@ -223,9 +224,20 @@ def dataflow():
 def loss():
     pass
 
-class Choice():
-    def __init__(self, collection):
-        self.collection = collection
+def generate_training_config(experiment):
+    snapshot = experiment.current_snapshot()
+    with runtime_file('config.json', 'w') as f:
+        config = json.dumps({
+            'dataset': snapshot.datasets[0].to_json_serializable(),
+            'dataflow': snapshot.dataflows[0].to_json_serializable(),
+            'model': snapshot.models[0].to_json_serializable(),
+            'optimizer': snapshot.optimizers[0].to_json_serializable(),
+            'loss': snapshot.losses[0].to_json_serializable()
+        })
+        print(f)
+        print(f)
+        print(f)
+        f.write(config)
 
 def boot():
     sys.path.insert(0, os.getcwd())

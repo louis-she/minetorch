@@ -11,7 +11,7 @@
       <el-step title="Model" icon="el-icon-cpu" @click.native="handleStepClick(2)"/>
       <el-step title="Optimizer" icon="el-icon-magic-stick" @click.native="handleStepClick(3)"/>
       <el-step title="Loss" icon="el-icon-sugar" @click.native="handleStepClick(4)"/>
-      <el-step title="Coffee" icon="el-icon-coffee-cup" @click.native="handleStepClick(5)"/>
+      <el-step title="Coffee" icon="el-icon-coffee-cup" @click.native="toSummarizePage"/>
     </el-steps>
     <router-view :key="activateStep" />
   </div>
@@ -24,19 +24,33 @@ export default {
       activateStep: 0
     }
   },
+  computed: {
+    componentName() {
+      return this.$route.params.componentName || 'coffee'
+    }
+  },
   watch: {
     '$route' (to, from) {
-      this.activateStep = this.steps.indexOf(this.$route.params.componentName)
-      this.experimentName = this.$route.params.componentName || 'datasets'
+      this.activateStep = this.steps.indexOf(this.componentName)
+      this.experimentName = this.componentName
       this.experimentId = this.$route.params.experimentId
     }
   },
   mounted () {
-    this.activateStep = this.steps.indexOf(this.$route.params.componentName)
-    this.experimentName = this.$route.params.componentName || 'datasets'
+    this.activateStep = this.steps.indexOf(this.componentName)
+    this.experimentName = this.componentName
     this.experimentId = this.$route.params.experimentId
   },
   methods: {
+    toSummarizePage() {
+      this.$router.push({
+        name: 'EditExperimentSummary',
+        params: {
+          experimentId: this.experimentId,
+          componentName: 'coffee'
+        }
+      })
+    },
     handleStepClick(step) {
       this.$router.push({
         name: 'EditExperimentComponent',
