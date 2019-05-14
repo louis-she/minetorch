@@ -9,7 +9,7 @@
         <div class="buttons">
           <el-tooltip class="item" effect="dark" placement="top"
                       content="Will train the model on current machine(which start up this Minetorch Server)">
-            <el-button type="success" size="small">Start Training</el-button>
+            <el-button type="success" size="small" @click="handleTrainingButtonClicked">Start Training</el-button>
           </el-tooltip>
           <h3>Or, if you like to train it on another machine</h3>
           <el-tooltip class="item" effect="dark" placement="top"
@@ -28,10 +28,17 @@ export default {
     }
   },
   computed: {
+    url() {
+      return `/api/experiments/${this.experimentId}/training`
+    }
   },
   mounted () {
+    this.experimentId = this.$route.params.experimentId
   },
   methods: {
+    handleTrainingButtonClicked() {
+      const response = this.ajax.post(this.url)
+    }
   }
 }
 </script>

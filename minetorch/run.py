@@ -1,29 +1,39 @@
 import minetorch
+import torch
+from minetorch import g, utils
 import json
+
 minetorch.core.boot()
 
-def find_component(component_type, component_name):
+def init_component(component_type, component_config):
+    component_name = component_config['name']
+    component_settings = component_config['settings']
     if component_type[-1] == 's':
         plural_component_cls_name = f'{component_type}es'
     else:
         plural_component_cls_name = f'{component_type}s'
     register_components = getattr(getattr(minetorch, component_type), f'registed_{plural_component_cls_name}')
-    return next((component for component in register_components if component.name == component_name), None)
+    component = next((component for component in register_components if component.name == component_name), None)
+    return component.func(**component_settings)
 
 if __name__ == '__main__':
-    with open('config.json', 'r') as f:
-        config = json.load(open('config.json', 'r'))
+    with open('./config.json', 'r') as f:
+        config = json.loads(f.read())
 
-    dataset = find_component('dataset', config['dataset']['name'])
-    dataflow = find_component('dataflow', config['dataflow']['name'])
-    model = find_component('model', config['model']['name'])
-    optimizer = find_component('optimizer', config['optimizer']['name'])
-    loss = find_component('loss', config['loss']['name'])
+    g.dataset = init_component('dataset', config['dataset'])
+    g.dataloader = torch.utils.data.DataLoader(g.dataset, batch_size=256, shuffle=True)
+    # dataflow = init_component('dataflow', config['dataflow'])
+    g.model = init_component('model', config['model'])
+    print(config['model'])
+    g.optimizer = init_component('optimizer', config['optimizer'])
+    g.loss = init_component('loss', config['loss'])
 
     trainer = minetorch.Trainer(
         alchemistic_directory='./log',
-        model=model,
-        optimizer=optimizer,
-        train_dataloader=dataset,
-        loss_func=loss
+        model=g.model,
+        optimizer=g.optimizer,
+        train_dataloader=g.dataloader,
+        loss_func=g.loss
     )
+
+    trainer.train()

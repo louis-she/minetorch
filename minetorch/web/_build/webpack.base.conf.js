@@ -35,7 +35,7 @@ module.exports = {
         enforce: 'pre'
       }, {
         test: /\.vue$/,
-        use: 'vue-loader'        
+        use: 'vue-loader'
       }, {
         test: /\.js$/,
         use: {

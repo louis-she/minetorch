@@ -1,3 +1,4 @@
+from pathlib import Path
 import peewee
 from peewee import SqliteDatabase, Field, TimestampField,\
         CharField, IntegerField, DateTimeField, TextField, ForeignKeyField
@@ -7,11 +8,12 @@ import datetime
 import logging
 import json
 
+
 logger = logging.getLogger('peewee')
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
-db = SqliteDatabase('minetorch/minetorch.db')
+db = SqliteDatabase(Path(__file__).parent / 'minetorch.db')
 
 class JsonField(Field):
     field_type = 'json'
@@ -75,6 +77,15 @@ class Experiment(Base):
             return self.snapshots.where(Snapshot.category == 1).get()
         except peewee.DoesNotExist:
             return None
+
+    def publish(self):
+        draft = self.draft_snapshot()
+        if not draft:
+            return self.current_snapshot()
+            # 还没实现
+            draft = self.create_draft_snapshot()
+        draft.category = 1
+        draft.save()
 
 
 class Snapshot(Base):

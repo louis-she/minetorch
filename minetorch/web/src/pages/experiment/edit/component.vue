@@ -115,11 +115,12 @@ export default {
     },
 
     navigateToNextStep() {
+      const step = this.steps[this.steps.indexOf(this.componentName) + 1]
       this.$router.push({
-        name: 'EditExperimentComponent',
+        name: step === 'summary' ? 'EditExperimentSummary' : 'EditExperimentComponent',
         params: {
           experimentId: this.experimentId,
-          componentName: this.steps[this.steps.indexOf(this.componentName) + 1]
+          componentName: step
         }
       })
     },

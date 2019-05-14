@@ -2,7 +2,9 @@ import importlib
 import os
 import sys
 import json
-from minetorch.utils import runtime_file
+from pathlib import Path
+from shutil import copyfile
+from minetorch.utils import runtime_file, make_runtime_dir
 
 def load_default_modules():
     importlib.import_module('minetorch.datasets')
@@ -18,10 +20,10 @@ def load_external_modules():
 
 class Component():
 
-    def __init__(self, name, description, component_class):
+    def __init__(self, name, description, func):
         self.name = name
         self.description = description
-        self.component_class = component_class
+        self.func = func
         self.options = []
 
     def add_option(self, option):
@@ -224,9 +226,10 @@ def dataflow():
 def loss():
     pass
 
-def generate_training_config(experiment):
+def setup_runtime_directory(experiment):
     snapshot = experiment.current_snapshot()
-    with runtime_file('config.json', 'w') as f:
+    experiment_dir = make_runtime_dir(experiment)
+    with runtime_file(experiment_dir / 'config.json', 'w') as f:
         config = json.dumps({
             'dataset': snapshot.datasets[0].to_json_serializable(),
             'dataflow': snapshot.dataflows[0].to_json_serializable(),
@@ -234,10 +237,12 @@ def generate_training_config(experiment):
             'optimizer': snapshot.optimizers[0].to_json_serializable(),
             'loss': snapshot.losses[0].to_json_serializable()
         })
-        print(f)
-        print(f)
-        print(f)
         f.write(config)
+    copyfile(
+        Path(__file__).parent / 'run.py',
+        experiment_dir / 'run.py'
+    )
+
 
 def boot():
     sys.path.insert(0, os.getcwd())

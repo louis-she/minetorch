@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, abort, g
 import peewee
 import json
+from minetorch.core import setup_runtime_directory
 from minetorch import model, dataset, dataflow, loss, optimizer
 from minetorch.orm import Experiment, Model, Snapshot, Dataset, Dataflow, Optimizer, Loss, Component
 from flask import render_template
@@ -41,7 +42,7 @@ def optimizers():
 def experiments_list():
     return jsonify(list(map(
         lambda m: m.to_json_serializable(),
-        Experiment.select().where(Experiment.deleted_at == None).order_by(Experiment.updated_at.desc())
+        Experiment.select().where(Experiment.deleted_at == None).order_by(Experiment.created_at.desc())
     )))
 
 @api.route('/experiments', methods=['POST'])
@@ -165,8 +166,11 @@ def models_list(experiment_id):
 def update_model(experiment_id):
     return update_component(Model)
 
-@experiment.route('/start', methods=['CREATE']):
-    minetorch.core.generate_training_config()
+@experiment.route('/training', methods=['POST'])
+def start_train(experiment_id):
+    g.experiment.publish()
+    setup_runtime_directory(g.experiment)
+    return jsonify({'message': 'ok'})
 
 @api.errorhandler(422)
 def entity_not_processable(error):

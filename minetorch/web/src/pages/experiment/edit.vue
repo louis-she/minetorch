@@ -26,12 +26,13 @@ export default {
   },
   computed: {
     componentName() {
-      return this.$route.params.componentName || 'coffee'
+      return this.$route.params.componentName || 'summary'
     }
   },
   watch: {
     '$route' (to, from) {
       this.activateStep = this.steps.indexOf(this.componentName)
+      console.log(this.activateStep)
       this.experimentName = this.componentName
       this.experimentId = this.$route.params.experimentId
     }
@@ -47,7 +48,7 @@ export default {
         name: 'EditExperimentSummary',
         params: {
           experimentId: this.experimentId,
-          componentName: 'coffee'
+          componentName: 'summary'
         }
       })
     },

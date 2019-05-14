@@ -18,7 +18,7 @@ Vue.use(ElementUI, {i18n: (key, value) => i18n.t(key, value)})
 Vue.use(MintUI)
 
 Vue.prototype.ajax = ajax
-Vue.prototype.steps = ['dataset', 'dataflow', 'model', 'optimizer', 'loss', 'coffee']
+Vue.prototype.steps = ['dataset', 'dataflow', 'model', 'optimizer', 'loss', 'summary']
 
 const store = new Vuex.Store(storeMain)
 const isDev = process.env.NODE_ENV === 'development'
