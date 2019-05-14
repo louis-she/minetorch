@@ -1,19 +1,21 @@
-from pathlib import Path
-import peewee
-from peewee import SqliteDatabase, Field, TimestampField,\
-        CharField, IntegerField, DateTimeField, TextField, ForeignKeyField
-from peewee import Model as PeeweeModel
-from playhouse.shortcuts import model_to_dict
 import datetime
-import logging
 import json
+import logging
+from pathlib import Path
 
+import peewee
+from peewee import (CharField, DateTimeField, Field, ForeignKeyField,
+                    IntegerField)
+from peewee import Model as PeeweeModel
+from peewee import SqliteDatabase, TextField
+from playhouse.shortcuts import model_to_dict
 
 logger = logging.getLogger('peewee')
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
 db = SqliteDatabase(Path(__file__).parent / 'minetorch.db')
+
 
 class JsonField(Field):
     field_type = 'json'
@@ -36,10 +38,6 @@ class Base(PeeweeModel):
     def to_json_serializable(self):
         return model_to_dict(self)
 
-    def delete(self):
-        self.deleted_at = datetime.datetime.now(datetime.timezone.utc)
-        self.save()
-
     class Meta:
         database = db
         legacy_table_names = False
@@ -59,7 +57,7 @@ class Experiment(Base):
         """
         draft_snapshot = self.draft_snapshot()
         if draft_snapshot:
-            raise 'There is already a draft snapshot'
+            return draft_snapshot
         current_snapshot = self.current_snapshot()
         if current_snapshot:
             return current_snapshot.clone()
@@ -80,12 +78,18 @@ class Experiment(Base):
 
     def publish(self):
         draft = self.draft_snapshot()
+        current = self.current_snapshot()
         if not draft:
-            return self.current_snapshot()
-            # 还没实现
             draft = self.create_draft_snapshot()
         draft.category = 1
         draft.save()
+
+        if current:
+            current.category = 2
+            current.save()
+
+        self.is_training = 1
+        self.save()
 
 
 class Snapshot(Base):
@@ -97,7 +101,14 @@ class Snapshot(Base):
     experiment = ForeignKeyField(Experiment, backref='snapshots')
 
     def clone(self):
-        pass
+        new_snapshot = Snapshot.create(experiment=self.experiment)
+        for component_name in ['datasets', 'dataflows', 'models', 'optimizers', 'losses']:
+            components = getattr(self, component_name)
+            if len(components) == 0:
+                continue
+            components[0].clone(new_snapshot)
+        # force reload
+        return Snapshot.get_by_id(new_snapshot.id)
 
     def is_draft(self):
         return self.category == 0
@@ -121,6 +132,15 @@ class Component(Base):
             (('name', 'snapshot'), True),
         )
 
+    def clone(self, snapshot):
+        return Component.create(
+            snapshot=snapshot,
+            name=self.name,
+            category=self.category,
+            settings=self.settings,
+            code=self.code
+        )
+
     @classmethod
     def select(cls):
         return super().select().where(cls.category == str(cls.__name__))
@@ -135,6 +155,7 @@ class Component(Base):
 class Model(Component):
     category = CharField(default='Model')
     snapshot = ForeignKeyField(Snapshot, backref='models')
+
     class Meta:
         table_name = 'component'
 
@@ -142,6 +163,7 @@ class Model(Component):
 class Dataset(Component):
     category = CharField(default='Dataset')
     snapshot = ForeignKeyField(Snapshot, backref='datasets')
+
     class Meta:
         table_name = 'component'
 
@@ -149,6 +171,7 @@ class Dataset(Component):
 class Dataflow(Component):
     category = CharField(default='Dataflow')
     snapshot = ForeignKeyField(Snapshot, backref='dataflows')
+
     class Meta:
         table_name = 'component'
 
@@ -156,6 +179,7 @@ class Dataflow(Component):
 class Optimizer(Component):
     category = CharField(default='Optimizer')
     snapshot = ForeignKeyField(Snapshot, backref='optimizers')
+
     class Meta:
         table_name = 'component'
 
@@ -163,6 +187,7 @@ class Optimizer(Component):
 class Loss(Component):
     category = CharField(default='Loss')
     snapshot = ForeignKeyField(Snapshot, backref='losses')
+
     class Meta:
         table_name = 'component'
 

@@ -4,19 +4,19 @@ from torch import nn
 import importlib
 import torch.nn.functional as F
 
-@model('Torchvision ResNet', 'Simple wrap for torchvisions ResNet')
-@option('size', help='Size of ResNet', type='select', options=['18', '34', '50', '101', '152'], required=True)
+@model('Torchvision ResNet', 'Simple wrap for torchvisions ResNet, the input should be 224x224x3')
+@option('type', help='Size of ResNet', type='select', options=['18', '34', '50', '101', '152'], required=True)
 @option('class_num', help='Classification class number', type='number', default=1000)
 def resnet(size, class_num):
     return getattr(models, f'resnet{size}')()
 
-@model('Torchvision VggNet', 'Simple wrap for torchvision VggNet')
-@option('size', help='Size of VggNet', type='select', options=['11', '11_bn', '13', '13_bn', '16', '16_bn', '19', '19_bn'], required=True)
+@model('Torchvision VggNet', 'Simple wrap for torchvision VggNet, the input should be 224x224x3')
+@option('type', help='Size of VggNet', type='select', options=['11', '11_bn', '13', '13_bn', '16', '16_bn', '19', '19_bn'], required=True)
 @option('class_num', help='Classification class number', type='number', default=100)
 def vggnet(size, class_num):
     return getattr(models, f'vgg{size}')()
 
-@model('Simple Demo Net', 'A very simple net for demo')
+@model('MNIST Demo Net', 'A very simple net for the MNIST demo, input should be 28x28 with channel')
 def demo():
     class Net(nn.Module):
         def __init__(self):

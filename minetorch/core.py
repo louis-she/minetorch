@@ -6,12 +6,14 @@ from pathlib import Path
 from shutil import copyfile
 from minetorch.utils import runtime_file, make_runtime_dir
 
+
 def load_default_modules():
     importlib.import_module('minetorch.datasets')
     importlib.import_module('minetorch.dataflows')
     importlib.import_module('minetorch.models')
     importlib.import_module('minetorch.optimizers')
     importlib.import_module('minetorch.losses')
+
 
 def load_external_modules():
     pass
@@ -40,14 +42,18 @@ class Component():
 class Model(Component):
     pass
 
+
 class Dataset(Component):
     pass
+
 
 class Dataflow(Component):
     pass
 
+
 class Optimizer(Component):
     pass
+
 
 class Loss(Component):
     pass
@@ -92,11 +98,11 @@ class ComponentDecorator(Singleton):
                 component.add_option(option)
             OptionDecorator.registed_options = list()
             self.register(component)
+
             def __decorator(**kwargs):
                 return func(**kwargs)
             return __decorator
         return inner_decorator
-
 
     def register(self, component):
         if (component not in ComponentDecorator.registed_components):
@@ -211,6 +217,7 @@ class OptionDecorator(Singleton):
         def inner_decorator(func):
             nonlocal name, settings
             self.registed_options.insert(0, Option(name, settings))
+
             def __decorator(**kwargs):
                 return func(**kwargs)
             return __decorator
@@ -220,11 +227,14 @@ class OptionDecorator(Singleton):
 def optimizer():
     pass
 
+
 def dataflow():
     pass
 
+
 def loss():
     pass
+
 
 def setup_runtime_directory(experiment):
     snapshot = experiment.current_snapshot()
