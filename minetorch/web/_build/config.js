@@ -5,7 +5,7 @@ const utils = require('./utils')
 
 const os = require('os')
 const ifaces = os.networkInterfaces()
-let localhost = '0.0.0.0'
+let localhost = '127.0.0.1'
 
 module.exports = {
   devServer: {
