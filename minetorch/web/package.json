@@ -38,6 +38,7 @@
     "nprogress": "^0.2.0",
     "qs": "^6.7.0",
     "sortablejs": "^1.8.0-rc1",
+    "source-map-loader": "^0.2.4",
     "vue": "^2.5.16",
     "vue-i18n": "^8.10.0",
     "vue-router": "^3.0.1",

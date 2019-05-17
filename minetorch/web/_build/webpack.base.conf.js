@@ -13,7 +13,8 @@ module.exports = {
   output: {
     path: config.assetsRoot,
     filename: `./${config.assetsJsPath}[name]/build.js`,
-    chunkFilename: `./${config.assetsJsPath}[name]/build.js`
+    chunkFilename: `./${config.assetsJsPath}[name]/build.js`,
+    sourceMapFilename: `./${config.assetsJsPath}[name]/build.js.map`
   },
   resolve: {
     extensions: ['.js', '.vue', '.json'],

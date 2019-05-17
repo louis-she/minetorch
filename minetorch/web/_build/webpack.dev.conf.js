@@ -9,7 +9,7 @@ const config = require('./config')
 
 module.exports = merge(baseConfig, {
   mode: process.env.NODE_ENV,
-  devtool: 'eval',
+  devtool: 'cheap-module-eval-source-map',
   devServer: {
     clientLogLevel: 'none',
     hot: true,

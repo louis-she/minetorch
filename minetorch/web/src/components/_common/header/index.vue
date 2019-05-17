@@ -7,17 +7,13 @@
       <el-col :span="18">
         <div class="grid-content">
           <div class="user">
-            <el-dropdown
-              trigger="click"
-              @command="handleCommand">
-              <p>
-                <img
-                  class="user-avatar"
-                  src="@/image/common/user.png"
-                >
-                admin
-              </p>
-            </el-dropdown>
+            <p class="el-dropdown-link">
+              <img
+                class="user-avatar"
+                src="@/image/common/user.png"
+              >
+              admin
+            </p>
           </div>
         </div>
       </el-col>
