@@ -3,6 +3,10 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
+
 setuptools.setup(
     name='Minetorch',
     description='A tools collection for pytorch users',
@@ -12,7 +16,7 @@ setuptools.setup(
     author='louis',
     author_email='chenglu.she@gmail.com',
     keywords='pytorch minecraft',
-    install_requires=['tensorboardX', 'torch', 'matplotlib', 'albumentations'],
+    install_requires=required,
     entry_points = {
         'console_scripts': ['minetorch=minetorch.cli:cli'],
     }
