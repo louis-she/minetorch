@@ -37,6 +37,22 @@ cd ..; python3 cli.py dev
 # visit localhost:3100
 ```
 
+# Test training process
+
+When you have used the web dashboard to generate a training config file under `~/.minetorch`, you have 2 choices to test the training process,
+
+1. Install your local version of Minetorch and then run the `run.py` directly
+```
+# Goto the minetorch base dir
+pip install .
+cd ~/.minetorch/${your_experiment_name}_${snapshot_id}; python run.py
+```
+
+2. Just using `cli.py`
+```
+python cli.py runtime:run --config $absolute_path_of_a_config_file
+```
+
 # Reset database
 
 If any new fields are been added to ORM, you may want to execute the following commmand to reset the database.

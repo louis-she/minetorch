@@ -1,27 +1,18 @@
 import minetorch
-import sys
 import torch
 from minetorch import g
 import json
-from minetorch.runtime import RuntimeRpc
+from minetorch.runtime import spawn_rpc_process
 
 
-def init_component(component_type, component_config):
-    component_name = component_config['name']
-    component_settings = component_config['settings']
-    if component_type[-1] == 's':
-        plural_component_cls_name = f'{component_type}es'
-    else:
-        plural_component_cls_name = f'{component_type}s'
-    register_components = getattr(getattr(minetorch, component_type), f'registed_{plural_component_cls_name}')
-    component = next((component for component in register_components if component.name == component_name), None)
-    return component.func(**component_settings)
-
-
-if __name__ == '__main__':
+def main(config_file=None):
     minetorch.core.boot()
 
-    with open('./config.json', 'r') as f:
+    spawn_rpc_process({
+        'server_addr': '127.0.0.1:50051'
+    })
+
+    with open(config_file if config_file else './config.json', 'r') as f:
         config = json.loads(f.read())
 
     g.dataset = init_component('dataset', config['dataset'])
@@ -40,3 +31,19 @@ if __name__ == '__main__':
     )
 
     trainer.train()
+
+
+def init_component(component_type, component_config):
+    component_name = component_config['name']
+    component_settings = component_config['settings']
+    if component_type[-1] == 's':
+        plural_component_cls_name = f'{component_type}es'
+    else:
+        plural_component_cls_name = f'{component_type}s'
+    register_components = getattr(getattr(minetorch, component_type), f'registed_{plural_component_cls_name}')
+    component = next((component for component in register_components if component.name == component_name), None)
+    return component.func(**component_settings)
+
+
+if __name__ == '__main__':
+    main()

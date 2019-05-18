@@ -7,7 +7,6 @@ from pathlib import Path
 import append_sys_path  # noqa: F401
 import click
 import minetorch.core
-import minetorch.rpc_server
 import minetorch.web as web
 from minetorch.orm import Component, Experiment, Snapshot
 
@@ -102,6 +101,14 @@ def proto_compile():
         f"--grpc_python_out=.",
         f"{proto_dir / 'minetorch.proto'}"
     ], stdout=sys.stdout, cwd=minetorch_dir)
+
+
+@cli.command('runtime:run')
+@click.option('--config', help='Absolute path of the config file', required=True)
+def runtime_run(config):
+    from run import main
+    main(config)
+
 
 
 if __name__ == '__main__':
