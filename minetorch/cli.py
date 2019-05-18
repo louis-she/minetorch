@@ -1,22 +1,34 @@
-import io
 import os
 import signal
 import subprocess
 import sys
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
+from pathlib import Path
 
+import append_sys_path  # noqa: F401
 import click
-import peewee
 import minetorch.core
+import minetorch.rpc_server
 import minetorch.web as web
-from minetorch.orm import Experiment, Component, Model, Dataset, Snapshot
-from flask.cli import run_command
+from minetorch.orm import Component, Experiment, Snapshot
+
+
+PYTHON_INTERPRETER = Path(__file__).parent.resolve() / '.venv/bin/python'
 
 
 def start_web_server():
     os.environ["FLASK_APP"] = web.__file__
     os.environ["FLASK_ENV"] = 'development'
     os.system(f'flask run')
+
+
+def start_rpc_server():
+    from rpc import RpcServer
+    child_pid = os.fork()
+    if child_pid == 0:
+        server = RpcServer(10, '[::]:50051')
+        server.serve()
+    if child_pid != 0:
+        return child_pid
 
 
 def start_webpack():
@@ -34,9 +46,18 @@ def development():
 
     os.environ["FLASK_APP"] = web.__file__
     os.environ["FLASK_ENV"] = 'development'
+    start_rpc_server()
 
-    subprocs.append(subprocess.Popen(['python', '-m', 'flask', 'run'], stdout=sys.stdout))
-    subprocs.append(subprocess.Popen(['yarn', 'run', 'dev'], cwd=os.path.dirname(os.path.abspath(web.__file__)), stdout=sys.stdout))
+    subprocs.append(subprocess.Popen(
+        [PYTHON_INTERPRETER, '-m', 'flask', 'run'],
+        stdout=sys.stdout,
+        cwd=Path(__file__).parent
+    ))
+    subprocs.append(subprocess.Popen(
+        ['yarn', 'run', 'dev'],
+        cwd=Path(web.__file__).parent,
+        stdout=sys.stdout
+    ))
 
     def signal_handler(sig, frame):
         print('about to kill child processes')
@@ -45,9 +66,7 @@ def development():
         print('all child processes are existed, exist!')
         sys.exit(0)
     signal.signal(signal.SIGINT, signal_handler)
-
-    for subproc in subprocs:
-        subproc.wait()
+    os.wait()
 
 
 @cli.command('db:init')
@@ -68,6 +87,21 @@ def ls():
 def run():
     minetorch.core.boot()
     start_web_server()
+
+
+@cli.command('proto:compile')
+def proto_compile():
+    minetorch_dir = Path(__file__).resolve().parents[1]
+    proto_dir = Path('minetorch') / 'rpc' / 'grpc'
+    subprocess.Popen([
+        PYTHON_INTERPRETER,
+        "-m",
+        "grpc_tools.protoc",
+        f"-I.",
+        f"--python_out=.",
+        f"--grpc_python_out=.",
+        f"{proto_dir / 'minetorch.proto'}"
+    ], stdout=sys.stdout, cwd=minetorch_dir)
 
 
 if __name__ == '__main__':

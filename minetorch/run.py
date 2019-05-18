@@ -1,9 +1,10 @@
 import minetorch
+import sys
 import torch
-from minetorch import g, utils
+from minetorch import g
 import json
+from minetorch.runtime import RuntimeRpc
 
-minetorch.core.boot()
 
 def init_component(component_type, component_config):
     component_name = component_config['name']
@@ -16,7 +17,13 @@ def init_component(component_type, component_config):
     component = next((component for component in register_components if component.name == component_name), None)
     return component.func(**component_settings)
 
+
 if __name__ == '__main__':
+    minetorch.core.boot()
+    rpc = RuntimeRpc
+    rpc.heyYo()
+    sys.exit(0)
+
     with open('./config.json', 'r') as f:
         config = json.loads(f.read())
 
@@ -24,7 +31,6 @@ if __name__ == '__main__':
     g.dataloader = torch.utils.data.DataLoader(g.dataset, batch_size=256, shuffle=True)
     # dataflow = init_component('dataflow', config['dataflow'])
     g.model = init_component('model', config['model'])
-    print(config['model'])
     g.optimizer = init_component('optimizer', config['optimizer'])
     g.loss = init_component('loss', config['loss'])
 

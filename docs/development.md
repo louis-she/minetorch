@@ -45,6 +45,15 @@ If any new fields are been added to ORM, you may want to execute the following c
 python3 cli.py db:init
 ```
 
+# Generate python proto files
+
+If you have changed any files in `protos` folder, you should use the following command to regenerate the Python proto files.
+
+```
+python3 cli.py proto:compile
+```
+
+
 > This command will drop the table first and then create it. So the data in the table will be lossed. If you want to keep the data, just create the new column by sqlite plain sql.
 
 # API
