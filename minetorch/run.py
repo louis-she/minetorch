@@ -20,9 +20,6 @@ def init_component(component_type, component_config):
 
 if __name__ == '__main__':
     minetorch.core.boot()
-    rpc = RuntimeRpc
-    rpc.heyYo()
-    sys.exit(0)
 
     with open('./config.json', 'r') as f:
         config = json.loads(f.read())
