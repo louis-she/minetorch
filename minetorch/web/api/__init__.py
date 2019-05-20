@@ -217,11 +217,10 @@ def start_train(experiment_id):
     setup_runtime_directory(g.experiment)
     return jsonify({'message': 'ok'})
 
-@experiment.route('/dockerimage/<snapshot_id>', methods=['GET'])
-def create_image(experiment_id, snapshot_id):
-    # snapshot_id = request.values['snapshot_id']
-    snapshot_id = request.view_args['snapshot_id']
-    return jsonify(build_image(g.experiment.name, snapshot_id).to_json_serializable())
+@experiment.route('/dockerimage', methods=['GET'])
+def create_image(experiment_id):
+    img = build_image(g.experiment)
+    return jsonify({'message': 'ok', 'image': img})
 
 @api.errorhandler(422)
 def entity_not_processable(error):
