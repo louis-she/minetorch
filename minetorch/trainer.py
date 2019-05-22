@@ -62,7 +62,7 @@ class Trainer(object):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         self.create_dirs()
-        self.set_logging_config(alchemistic_directory, code, logging_format)
+        # self.set_logging_config(alchemistic_directory, code, logging_format)
         self.create_drawer(drawer)
         self.models_dir = os.path.join(alchemistic_directory, code, 'models')
 

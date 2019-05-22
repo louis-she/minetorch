@@ -1,7 +1,6 @@
 from minetorch.trainer import Trainer
 from minetorch import utils, g
-from minetorch.core import ModelDecorator, OptionDecorator, \
-        DatasetDecorator, OptimizerDecorator, DataflowDecorator, LossDecorator
+from minetorch.core import ModelDecorator, OptionDecorator, DatasetDecorator, OptimizerDecorator, DataflowDecorator, LossDecorator
 
 model = ModelDecorator()
 option = OptionDecorator()

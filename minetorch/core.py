@@ -241,6 +241,11 @@ def setup_runtime_directory(experiment):
     experiment_dir = make_runtime_dir(experiment)
     with runtime_file(experiment_dir / 'config.json', 'w') as f:
         config = json.dumps({
+            'experiment_id': experiment.id,
+            'experiment_name': experiment.name,
+            'snapshot_id': experiment.current_snapshot().id,
+            'hey_yo_interval': 5,
+            'server_addr': '127.0.0.1:50051',
             'dataset': snapshot.datasets[0].to_json_serializable(),
             'dataflow': snapshot.dataflows[0].to_json_serializable(),
             'model': snapshot.models[0].to_json_serializable(),

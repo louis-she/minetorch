@@ -29,7 +29,7 @@ export default {
   },
   computed: {
     url() {
-      return `/api/experiments/${this.experimentId}/training`
+      return `/api/experiments/${this.experimentId}/publish`
     }
   },
   mounted () {

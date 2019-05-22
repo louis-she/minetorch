@@ -209,10 +209,24 @@ def update_model(experiment_id):
     return update_component(Model)
 
 
-@experiment.route('/training', methods=['POST'])
-def start_train(experiment_id):
+@experiment.route('/publish', methods=['POST'])
+def create_publish(experiment_id):
     g.experiment.publish()
     setup_runtime_directory(g.experiment)
+    return jsonify({'message': 'ok'})
+
+
+@experiment.route('/training', methods=['POST'])
+def start_train(experiment_id):
+    g.experiment.is_training = 1
+    g.experiment.save()
+    return jsonify({'message': 'ok'})
+
+
+@experiment.route('/halt', methods=['POST'])
+def halt_train(experiment_id):
+    g.experiment.is_training = 0
+    g.experiment.save()
     return jsonify({'message': 'ok'})
 
 

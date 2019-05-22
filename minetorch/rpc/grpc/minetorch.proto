@@ -7,16 +7,25 @@ service Minetorch {
 }
 
 message HeyMessage {
-  string ip_addr = 1;
   enum Status {
     IDLE = 0;
     TRAINING = 1;
     ERROR = 2;
   };
-  Status status = 2;
+
+  string ip_addr = 1;
+  int32 experiment_id = 2;
+  string experiment_name = 3;
+  Status status = 4;
 }
 
 message YoMessage {
-  bool roger = 1;
-}
+  enum Command {
+    TRAIN = 0;
+    HALT = 1;
+    KILL = 2;
+  }
 
+  bool roger = 1;
+  Command command = 2;
+}

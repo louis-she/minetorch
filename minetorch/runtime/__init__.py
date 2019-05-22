@@ -1,3 +1,3 @@
-from minetorch.runtime.process import spawn_rpc_process
+from minetorch.runtime.process import main_process, spawn_training_process
 
-__all__ = ['spawn_rpc_process']
+__all__ = ['main_process', 'spawn_training_process']
