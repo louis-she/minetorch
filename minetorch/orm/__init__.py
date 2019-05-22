@@ -48,6 +48,7 @@ class Experiment(Base):
     total_training_time = IntegerField(default=0)
     is_training = IntegerField(default=0, null=True)
     last_stopped_at = DateTimeField(null=True)
+    last_started_at = DateTimeField(null=True)
 
     def create_draft_snapshot(self):
         """Try to create a draft snapshot, if there's already a draft version,
