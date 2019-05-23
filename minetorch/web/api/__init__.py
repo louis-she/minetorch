@@ -4,7 +4,7 @@ import peewee
 from flask import Blueprint, abort, g, jsonify, request
 from minetorch import dataflow, dataset, loss, model, optimizer
 from minetorch.core import setup_runtime_directory
-from minetorch.dockerlise import build_image
+from minetorch.dockerize import docker_build
 from minetorch.orm import (Dataflow, Dataset, Experiment, Loss,
                            Model, Optimizer)
 
@@ -217,10 +217,10 @@ def start_train(experiment_id):
     setup_runtime_directory(g.experiment)
     return jsonify({'message': 'ok'})
 
-@experiment.route('/dockerimage', methods=['GET'])
+@experiment.route('/dockerimage', methods=['POST'])
 def create_image(experiment_id):
-    img = build_image(g.experiment)
-    return jsonify({'message': 'ok', 'image': img})
+    command = docker_build(g.experiment)
+    return jsonify({'message': 'ok', 'command': command})
 
 @api.errorhandler(422)
 def entity_not_processable(error):
