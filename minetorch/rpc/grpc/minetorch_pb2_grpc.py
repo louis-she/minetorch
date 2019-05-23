@@ -19,6 +19,11 @@ class MinetorchStub(object):
         request_serializer=minetorch_dot_rpc_dot_grpc_dot_minetorch__pb2.HeyMessage.SerializeToString,
         response_deserializer=minetorch_dot_rpc_dot_grpc_dot_minetorch__pb2.YoMessage.FromString,
         )
+    self.SendLog = channel.unary_unary(
+        '/minetorch.Minetorch/SendLog',
+        request_serializer=minetorch_dot_rpc_dot_grpc_dot_minetorch__pb2.Log.SerializeToString,
+        response_deserializer=minetorch_dot_rpc_dot_grpc_dot_minetorch__pb2.StandardResponse.FromString,
+        )
 
 
 class MinetorchServicer(object):
@@ -32,6 +37,13 @@ class MinetorchServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def SendLog(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_MinetorchServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -39,6 +51,11 @@ def add_MinetorchServicer_to_server(servicer, server):
           servicer.HeyYo,
           request_deserializer=minetorch_dot_rpc_dot_grpc_dot_minetorch__pb2.HeyMessage.FromString,
           response_serializer=minetorch_dot_rpc_dot_grpc_dot_minetorch__pb2.YoMessage.SerializeToString,
+      ),
+      'SendLog': grpc.unary_unary_rpc_method_handler(
+          servicer.SendLog,
+          request_deserializer=minetorch_dot_rpc_dot_grpc_dot_minetorch__pb2.Log.FromString,
+          response_serializer=minetorch_dot_rpc_dot_grpc_dot_minetorch__pb2.StandardResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

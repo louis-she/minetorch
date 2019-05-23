@@ -3,6 +3,25 @@ from pathlib import Path
 import os
 
 
+@contextlib.contextmanager
+def minetorch_server_file(experiment, file_name, mode='a'):
+    if not isinstance(experiment, str):
+        experiment = experiment.name
+
+    experiment_dir = Path.home() / '.minetorch_server' / experiment
+
+    try:
+        os.makedirs(experiment_dir)
+    except FileExistsError:
+        pass
+
+    _file = experiment_dir / file_name
+    if not os.path.isfile(_file):
+        _file.touch()
+    f = open()
+
+
+
 def make_runtime_dir(experiment):
     runtime_dir = Path.home() / '.minetorch'
     if not os.path.isdir(runtime_dir):

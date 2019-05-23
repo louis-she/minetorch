@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import VueI18n from 'vue-i18n'
-import zhCN from './zh-CN'
+import zhCN from './zh-cn'
 import en from './en'
 import enLocale from 'element-ui/lib/locale/lang/en'
 import zhCNLocale from 'element-ui/lib/locale/lang/zh-CN'

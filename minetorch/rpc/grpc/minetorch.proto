@@ -4,6 +4,12 @@ package minetorch;
 
 service Minetorch {
   rpc HeyYo (HeyMessage) returns (YoMessage) {}
+  rpc SendLog (Log) returns (StandardResponse) {}
+}
+
+message StandardResponse {
+  int32 status = 1;
+  string message = 2;
 }
 
 message HeyMessage {
@@ -28,4 +34,9 @@ message YoMessage {
 
   bool roger = 1;
   Command command = 2;
+}
+
+message Log {
+  int32 experiment_id = 1;
+  string log = 2;
 }
