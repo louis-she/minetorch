@@ -53,6 +53,17 @@ cd ~/.minetorch/${your_experiment_name}_${snapshot_id}; python run.py
 python cli.py runtime:run --config $absolute_path_of_a_config_file
 ```
 
+# About logging
+
+Since users can view and filter the log in the web dashboard. So it's really important to decide how and what for logging. There are together 5 level of logging, the following table shows what does they mean and how to use it,
+
+| Level   |  Description    |
+|----------|:-------------|
+| Debug | For developer only. By default, `python3 cli.py dev` will set the log level to this |
+| Info | For all users. The information should let users know what is happenning. By default, `python3 cli.py prod` will set the log level to this |
+| Warn | For all users. |
+| Error | For all users. |
+
 # Reset database
 
 If any new fields are been added to ORM, you may want to execute the following commmand to reset the database.
