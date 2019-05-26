@@ -1,8 +1,11 @@
 
-import docker
-from minetorch.utils import make_runtime_dir, runtime_file
 import socket
 import time
+
+import docker
+
+from minetorch.utils import make_runtime_dir, runtime_file
+
 
 def docker_build(experiment):
     # step 1 make Dockerfile
@@ -23,7 +26,7 @@ CMD ["python3", "run.py"]"""
     docker_tag = img[0].tags[0]
     # step 3 run local registry
     print("step 3 begin")
-    client.containers.run(image='docker.io/registry:latest', detach=True, ports={'5000/tcp': 6000})
+    client.containers.run(image='docker.io/registry:latest', ports={'5000/tcp': 6000})
     # step 4 tag image to local registry
     print("step 4 begin")
     local_ip = socket.gethostbyname(socket.gethostname())
@@ -31,7 +34,6 @@ CMD ["python3", "run.py"]"""
     img[0].tag(repository=local_tag)
     # step 5 push image to local registry
     print("step 5 begin")
-    time.sleep(10)
     client.images.push(repository=local_tag)
     docker_command = f'docker pull {local_tag}'
     return docker_command
