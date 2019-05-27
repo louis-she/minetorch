@@ -22,6 +22,8 @@
   </div>
 </template>
 <script>
+import io from 'socket.io-client'
+
 export default {
   data () {
     return {
@@ -34,6 +36,22 @@ export default {
   },
   mounted () {
     this.experimentId = this.$route.params.experimentId
+
+    // TODO: this should go to env file
+    console.log('init socket')
+    const socket = io('http://127.0.0.1:8000/server_log')
+
+    socket.on('connect', () => {
+      console.log('client connected')
+    })
+
+    socket.on('new_server_log', (data) => {
+      console.log(data)
+    })
+
+    socket.on('disconnect', () => {
+      console.log('client disconnected')
+    })
   },
   methods: {
     handleTrainingButtonClicked() {

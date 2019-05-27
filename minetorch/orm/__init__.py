@@ -14,7 +14,7 @@ logger = logging.getLogger('peewee')
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
-db = SqliteDatabase(Path(__file__).parent / 'minetorch.db')
+db = SqliteDatabase(Path.home() / '.minetorch' / 'minetorch.db')
 
 
 class JsonField(Field):

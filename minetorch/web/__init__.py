@@ -1,13 +1,11 @@
 from flask import Flask, render_template, url_for, send_from_directory
-from flask.json import JSONEncoder
 
 import minetorch
 from minetorch import model, dataset, dataflow, loss, optimizer
-from .api import api, experiment
+from minetorch.web.api import api, experiment
 
 
 app = Flask(__name__, template_folder='dist', static_url_path='')
-
 app.register_blueprint(api)
 app.register_blueprint(experiment)
 
@@ -29,3 +27,7 @@ def index():
 @app.route('/static/<path:path>')
 def send_assets(path):
     return send_from_directory('./dist/static', path)
+
+
+if __name__ == '__main__':
+    app.run()

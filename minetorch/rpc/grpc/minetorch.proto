@@ -39,4 +39,5 @@ message YoMessage {
 message Log {
   int32 experiment_id = 1;
   string log = 2;
+  string level = 3;
 }

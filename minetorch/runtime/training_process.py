@@ -1,9 +1,8 @@
 import minetorch
-import json
 import torch
 from minetorch import g
 import time
-import logging
+import minetorch.runtime.process_env as env
 
 
 def init_component(component_type, component_config):
@@ -20,14 +19,13 @@ def init_component(component_type, component_config):
 
 def main(config_file):
     minetorch.core.boot()
-    with open(config_file if config_file else './config.json', 'r') as f:
-        config = json.loads(f.read())
-    g.dataset = init_component('dataset', config['dataset'])
+    env.init_process_env(config_file)
+    g.dataset = init_component('dataset', env.config['dataset'])
     g.dataloader = torch.utils.data.DataLoader(g.dataset, batch_size=256, shuffle=True)
-    # dataflow = init_component('dataflow', config['dataflow'])
-    g.model = init_component('model', config['model'])
-    g.optimizer = init_component('optimizer', config['optimizer'])
-    g.loss = init_component('loss', config['loss'])
+    # dataflow = init_component('dataflow', env.config['dataflow'])
+    g.model = init_component('model', env.config['model'])
+    g.optimizer = init_component('optimizer', env.config['optimizer'])
+    g.loss = init_component('loss', env.config['loss'])
     trainer = minetorch.Trainer(
         alchemistic_directory='./log',
         model=g.model,
@@ -38,5 +36,5 @@ def main(config_file):
 
     while True:
         time.sleep(5)
-        logging.debug('This is for debug using')
+        env.logger.debug('This is for debug using')
     # trainer.train()

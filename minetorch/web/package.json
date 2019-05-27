@@ -37,6 +37,7 @@
     "moment": "^2.24.0",
     "nprogress": "^0.2.0",
     "qs": "^6.7.0",
+    "socket.io-client": "^2.2.0",
     "sortablejs": "^1.8.0-rc1",
     "source-map-loader": "^0.2.4",
     "vue": "^2.5.16",

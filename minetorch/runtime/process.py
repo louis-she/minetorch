@@ -1,43 +1,35 @@
-import json
-import logging
 import sys
 import time
 from multiprocessing import Process
 
 from minetorch.constants import proto as C
-from minetorch.rpc.grpc import minetorch_pb2
-from minetorch.runtime.rpc import RuntimeRpc
+import minetorch.runtime.process_env as env
 
-current_status = minetorch_pb2.HeyMessage.Status.Value('IDLE')
+current_status = C.STATUS_IDLE
 training_process = None
 
 
 def main_process(config_file):
     global current_status, training_process
-    config_file = config_file if config_file else './config.json'
-    with open(config_file, 'r') as f:
-        config = json.loads(f.read())
+    env.init_process_env(config_file)
 
-    hey_yo_interval = config.get('hey_yo_interval', 10)
-    rpc = RuntimeRpc(config['server_addr'])
+    hey_yo_interval = env.config.get('hey_yo_interval', 10)
+    env.logger.info('runtime main process has started')
 
     while True:
-        time.sleep(hey_yo_interval)
-        logging.debug('say hey to the server')
-        res = rpc.heyYo(config['experiment_id'], current_status)
-        logging.debug(f'server respond with: {res}')
-        logging.debug(f'server command: {res.command}')
-
+        res = env.rpc.heyYo(env.config['experiment_id'], current_status)
         if res.command == C.COMMAND_TRAIN and current_status != C.STATUS_TRAINING:
-            logging.info('start training process!')
+            env.logger.info('start training process')
             current_status = C.STATUS_TRAINING
             training_process = spawn_training_process(config_file)
         elif res.command == C.COMMAND_HALT and current_status != C.STATUS_IDLE:
-            logging.info('kill training process!')
+            env.logger.info('training process has been killed')
             current_status = C.STATUS_IDLE
             training_process.terminate()
         elif res.command == C.COMMAND_KILL:
+            env.logger.info('main process has been killed')
             break
+        time.sleep(hey_yo_interval)
     sys.exit(0)
 
 

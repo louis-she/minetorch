@@ -1,5 +1,4 @@
 import grpc
-import logging
 from minetorch.rpc.grpc import minetorch_pb2_grpc
 from minetorch.rpc.grpc import minetorch_pb2
 
@@ -17,5 +16,12 @@ class RuntimeRpc():
             experiment_id=experiment_id
         )
         response = self.stub.HeyYo(message)
-        logging.debug(f'Server respond with {response}')
         return response
+
+    def log(self, experiment_id, record):
+        message = minetorch_pb2.Log(
+            experiment_id=experiment_id,
+            log=record.msg,
+            level=record.levelname
+        )
+        self.stub.SendLog(message)

@@ -1,5 +1,5 @@
-import logging
 import os
+import minetorch.runtime.process_env as env
 from pathlib import Path
 
 import torch
@@ -48,7 +48,7 @@ class Trainer(object):
         max_epochs ([type], optional):
             Defaults to None. How many epochs to train, None means unlimited.
         logging_format ([type], optional):
-            Defaults to None. logging format
+            Defaults to None. env.logger format
         trival ([Boolean], optional):
             Defaults to False. If true, both training and validation
             process will be breaked in 10 iterations
@@ -62,7 +62,6 @@ class Trainer(object):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         self.create_dirs()
-        # self.set_logging_config(alchemistic_directory, code, logging_format)
         self.create_drawer(drawer)
         self.models_dir = os.path.join(alchemistic_directory, code, 'models')
 
@@ -87,18 +86,6 @@ class Trainer(object):
         self.status = 'init'
         self.trival = trival
 
-    def set_logging_config(self, alchemistic_directory, code, logging_format):
-        self.log_dir = os.path.join(alchemistic_directory, code)
-        log_file = os.path.join(self.log_dir, 'log.txt')
-        logging_format = logging_format if logging_format is not None else \
-            '%(levelname)s %(asctime)s %(message)s'
-        logging.basicConfig(
-            filename=log_file,
-            format=logging_format,
-            datefmt="%m-%d %H:%M:%S",
-            level=logging.INFO
-        )
-
     def create_drawer(self, drawer):
         if drawer == 'tensorboard':
             self.drawer = drawers.TensorboardDrawer(
@@ -118,7 +105,7 @@ class Trainer(object):
                 checkpoint_path = self.model_file_path('latest')
             else:
                 checkpoint_path = None
-                logging.warning('Could not find checkpoint to resume, '
+                env.logger.warning('Could not find checkpoint to resume, '
                                 'train from scratch')
         elif isinstance(self.resume, str):
             checkpoint_path = self.model_file_path(self.resume)
@@ -132,7 +119,7 @@ class Trainer(object):
             raise Exception(f"Could not find model {self.resume}")
 
         if checkpoint_path is not None:
-            logging.info(f"Start to load checkpoint {checkpoint_path}")
+            env.logger.info(f"Start to load checkpoint {checkpoint_path}")
             checkpoint = torch.load(checkpoint_path)
             self.current_epoch = checkpoint['epoch']
             self.lowest_train_loss = checkpoint['lowest_train_loss']
@@ -141,7 +128,7 @@ class Trainer(object):
             try:
                 self.model.load_state_dict(checkpoint['state_dict'], strict=True)
             except:
-                logging.warning(
+                env.logger.warning(
                     'load checkpoint failed, the state in the '
                     'checkpoint is not matched with the model, '
                     'try to reload checkpoint with unstrict mode')
@@ -150,7 +137,7 @@ class Trainer(object):
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             if (self.drawer is not None) and ('drawer_state' in checkpoint):
                 self.drawer.set_state(checkpoint['drawer_state'])
-            logging.info('Checkpoint loaded')
+            env.logger.info('Checkpoint loaded')
 
     def call_hook_func(self, name):
         if name not in self.hook_funcs:
@@ -196,7 +183,7 @@ class Trainer(object):
                 self.lowest_train_loss = total_train_loss
 
             if total_val_loss < self.lowest_val_loss:
-                logging.info(
+                env.logger.info(
                     'current val loss {} is lower than lowest {}, '
                     'persist this model as best one'.format(
                         total_val_loss, self.lowest_val_loss))
@@ -210,7 +197,7 @@ class Trainer(object):
 
             if self.max_epochs is not None and self.current_epoch >= self.max_epochs:
                 self.call_hook_func('before_quit')
-                logging.info('exceed max epochs, quit!')
+                env.logger.info('exceed max epochs, quit!')
                 break
 
     def run_train_iteration(self, index, data, train_iters):
@@ -222,7 +209,7 @@ class Trainer(object):
         loss.backward()
         self.optimizer.step()
         loss = loss.detach()
-        logging.info('[train {}/{}/{}] loss {}'.format(
+        env.logger.info('[train {}/{}/{}] loss {}'.format(
             self.current_epoch, index, train_iters, loss))
         if loss < self.lowest_train_loss:
             self.lowest_train_loss = loss
@@ -235,7 +222,7 @@ class Trainer(object):
         self.call_hook_func('before_val_iteration_start')
         loss = self.loss_func(self, data)
         loss = loss.detach()
-        logging.info('[val {}/{}/{}] loss {}'.format(
+        env.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
 
         self.call_hook_func('after_val_iteration_ended')
@@ -260,7 +247,7 @@ class Trainer(object):
         }
 
         torch.save(state, self.standard_model_path(name))
-        logging.info(f'save checkpoint to {self.standard_model_path(name)}')
+        env.logger.info(f'save checkpoint to {self.standard_model_path(name)}')
         self.call_hook_func('after_checkpoint_persisted')
 
     def standard_model_path(self, model_name):

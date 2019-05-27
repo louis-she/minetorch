@@ -4,12 +4,12 @@ import logging
 from minetorch.orm import Experiment
 import minetorch.constants.protobuf_constants as C
 import peewee
+from minetorch.logger import get_runtime_logger
 
 
 class MinetorchServicer(minetorch_pb2_grpc.MinetorchServicer):
 
     def SendLog(self, request, context):
-        logging.debug(f'Log sent by {request.experiment_id}')
         try:
             experiment = Experiment.get_by_id(request.experiment_id)
         except peewee.DoesNotExist:
@@ -17,7 +17,12 @@ class MinetorchServicer(minetorch_pb2_grpc.MinetorchServicer):
                 status=1,
                 message='Could not find experiment, abort'
             )
-        # TODO: ADD a server log file helper, and write the log to it
+        logger = get_runtime_logger(experiment)
+        getattr(logger, request.level.lower())(request.log)
+        return minetorch_pb2.StandardResponse(
+            status=0,
+            message='ok'
+        )
 
     def HeyYo(self, request, context):
         logging.debug(f'Got a hey from {request.ip_addr}')
