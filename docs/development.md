@@ -12,7 +12,7 @@ After python3 installed, follow the next steps to setup Minetorch development en
 git clone git@github.com:minetorch/minetorch.git
 
 # navigate to minetorch source code dir
-cd minetorch/minetorch
+cd minetorch
 
 # enable python virtual environment
 python3 -m venv .venv
@@ -25,14 +25,14 @@ brew install libomp
 pip3 install -r requirements.txt
 
 # init sqlite database
-python3 cli.py db:init
+python3 minetorch/cli.py db:init
 
 # install frontend dependencies
-cd web; yarn install
+cd minetorch/web; yarn install
 
 # start the development server
 # this will start a flask web server in development mode and webpack --watch
-cd ..; python3 cli.py dev
+cd ../..; python3 minetorch/cli.py dev
 
 # visit localhost:3100
 ```

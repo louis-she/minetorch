@@ -10,7 +10,7 @@ import minetorch.core
 import minetorch.web as web
 from minetorch.orm import Component, Experiment, Snapshot
 
-PYTHON_INTERPRETER = Path(__file__).parent.resolve() / '.venv/bin/python'
+PYTHON_INTERPRETER = 'python3'
 
 
 def start_rpc_server():
