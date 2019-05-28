@@ -23,8 +23,8 @@ def tail_thread():
     def handle_tail(text):
         sio.emit('new_server_log', text, namespace="/server_log")
 
-    test_log_file = Path.home() / '.minetorch_server' / 'new' / 'runtime_log.txt'
-    tail(test_log_file, handle_tail)
+    test_log_file = Path.home() / '.minetorch_server' / 'test' / 'runtime_log.txt'
+    tail(test_log_file, handle_tail, 0.4)
 
 
 eventlet.spawn(tail_thread)

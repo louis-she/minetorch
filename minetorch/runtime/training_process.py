@@ -3,6 +3,7 @@ import torch
 from minetorch import g
 import time
 import minetorch.runtime.process_env as env
+from minetorch.runtime.rpc import grpc
 
 
 def init_component(component_type, component_config):
@@ -20,6 +21,7 @@ def init_component(component_type, component_config):
 def main(config_file):
     minetorch.core.boot()
     env.init_process_env(config_file)
+
     g.dataset = init_component('dataset', env.config['dataset'])
     g.dataloader = torch.utils.data.DataLoader(g.dataset, batch_size=256, shuffle=True)
     # dataflow = init_component('dataflow', env.config['dataflow'])
@@ -35,6 +37,4 @@ def main(config_file):
     )
 
     while True:
-        time.sleep(5)
-        env.logger.debug('This is for debug using')
-    # trainer.train()
+        trainer.train()

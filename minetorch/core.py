@@ -239,7 +239,8 @@ def loss():
 def setup_runtime_directory(experiment):
     snapshot = experiment.current_snapshot()
     experiment_dir = make_runtime_dir(experiment)
-    with runtime_file(experiment_dir / 'config.json', 'w') as f:
+    config_file = runtime_file('config.json', experiment)
+    with open(config_file, 'w') as f:
         config = json.dumps({
             'experiment_id': experiment.id,
             'experiment_name': experiment.name,

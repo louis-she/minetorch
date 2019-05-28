@@ -1,4 +1,5 @@
 import json
+import logging
 
 import peewee
 from flask import Blueprint, abort, g, jsonify, request
@@ -6,6 +7,9 @@ from minetorch import dataflow, dataset, loss, model, optimizer
 from minetorch.core import setup_runtime_directory
 from minetorch.orm import (Dataflow, Dataset, Experiment, Loss,
                            Model, Optimizer)
+from multiprocessing import Process
+from minetorch.runtime import main_process
+from minetorch.utils import runtime_file
 
 api = Blueprint('api', 'api', url_prefix='/api')
 experiment = Blueprint('experiment', 'experiment', url_prefix='/api/experiments/<experiment_id>')
@@ -220,6 +224,7 @@ def create_publish(experiment_id):
 def start_train(experiment_id):
     g.experiment.is_training = 1
     g.experiment.save()
+    create_runtime_process(g.experiment)
     return jsonify({'message': 'ok'})
 
 
@@ -238,3 +243,12 @@ def entity_not_processable(error):
 @api.errorhandler(409)
 def resource_conflict(error):
     return jsonify({'message': 'Resource already exists'}), 409
+
+
+def create_runtime_process(experiment):
+    logging.info('creating runtime')
+    runtime_process = Process(target=main_process, args=(runtime_file('config.json', experiment),))
+    # maybe we should detach the child process
+    # runtime_process.daemon = True
+    runtime_process.start()
+    logging.info('runtime created')

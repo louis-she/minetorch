@@ -13,7 +13,7 @@ def get_runtime_logger(experiment):
         return runtime_loggers[logger_name]
 
     runtime_logger = logging.getLogger(logger_name)
-    handler = logging.FileHandler(server_file(experiment, 'runtime_log.txt'))
+    handler = logging.FileHandler(server_file('runtime_log.txt', experiment))
     handler.setLevel(logging.DEBUG)
     handler.setFormatter(formatter)
 

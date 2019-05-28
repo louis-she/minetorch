@@ -1,7 +1,6 @@
 import datetime
 import json
 import logging
-from pathlib import Path
 
 import peewee
 from peewee import (CharField, DateTimeField, Field, ForeignKeyField,
@@ -9,12 +8,14 @@ from peewee import (CharField, DateTimeField, Field, ForeignKeyField,
 from peewee import Model as PeeweeModel
 from peewee import SqliteDatabase, TextField
 from playhouse.shortcuts import model_to_dict
+from utils import server_file
 
 logger = logging.getLogger('peewee')
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
-db = SqliteDatabase(Path.home() / '.minetorch' / 'minetorch.db')
+db_file = server_file('minetorch.db')
+db = SqliteDatabase(db_file)
 
 
 class JsonField(Field):

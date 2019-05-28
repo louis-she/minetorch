@@ -53,9 +53,9 @@ export default {
 
       this.socket.on('new_server_log', (data) => {
         this.term.write(data)
-        // data.split('\n').forEach((line) => {
-        //   this.term.writeln(line)
-        // })
+        data.split('\n').forEach((line) => {
+          this.term.writeln(line)
+        })
       })
 
       this.socket.on('disconnect', () => {

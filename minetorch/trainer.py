@@ -106,7 +106,7 @@ class Trainer(object):
             else:
                 checkpoint_path = None
                 env.logger.warning('Could not find checkpoint to resume, '
-                                'train from scratch')
+                                   'train from scratch')
         elif isinstance(self.resume, str):
             checkpoint_path = self.model_file_path(self.resume)
         elif isinstance(self.resume, int):

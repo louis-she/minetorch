@@ -1,10 +1,9 @@
-import contextlib
 from pathlib import Path
 import os
 import eventlet
 
 
-def tail(file_path, callback):
+def tail(file_path, callback, internal=1):
     current = open(file_path, 'r')
     curino = os.fstat(current.fileno()).st_ino
     while True:
@@ -22,10 +21,10 @@ def tail(file_path, callback):
                 continue
         except IOError:
             pass
-        eventlet.sleep(1)
+        eventlet.sleep(internal)
 
 
-def server_file(experiment, file_name):
+def server_file(file_name, experiment=''):
     if not isinstance(experiment, str):
         experiment = experiment.name
 
@@ -54,14 +53,19 @@ def make_runtime_dir(experiment):
     return experiment_dir_name
 
 
-@contextlib.contextmanager
-def runtime_file(file_name, mode):
-    runtime_dir = Path.home() / '.minetorch'
-    if not os.path.isdir(runtime_dir):
-        os.mkdir(runtime_dir)
-    _file = runtime_dir / file_name
+def runtime_file(file_name, experiment=''):
+    if not isinstance(experiment, str):
+        experiment = experiment.name
+
+    experiment_dir = Path.home() / '.minetorch' / experiment
+
+    try:
+        os.makedirs(experiment_dir)
+    except FileExistsError:
+        pass
+
+    _file = experiment_dir / file_name
     if not os.path.isfile(_file):
         _file.touch()
-    f = open(_file, mode)
-    yield f
-    f.close()
+
+    return _file.resolve()

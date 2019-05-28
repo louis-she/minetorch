@@ -34,13 +34,11 @@ def init_logger():
         level=logging.DEBUG
     )
 
-    logger = logging.getLogger(f'runtime.{os.getpid()}')
-    logger.addHandler(RuntimeLoggingHandler(rpc, config.get('experiment_id')))
-    print(logger.handlers[0].rpc)
-    print(logger.handlers[0].rpc)
-    print(logger.handlers[0].rpc)
-    print(logger.handlers[0].rpc)
-    return logger
+    logger = logging.getLogger(f'runtime{os.getpid()}')
+    handler = RuntimeLoggingHandler(rpc, config.get('experiment_id'))
+    handler.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
 
 
 def init_rpc():

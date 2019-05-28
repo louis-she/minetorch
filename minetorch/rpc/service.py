@@ -1,6 +1,5 @@
 from .grpc import minetorch_pb2_grpc
 from .grpc import minetorch_pb2
-import logging
 from minetorch.orm import Experiment
 import minetorch.constants.protobuf_constants as C
 import peewee
@@ -17,6 +16,7 @@ class MinetorchServicer(minetorch_pb2_grpc.MinetorchServicer):
                 status=1,
                 message='Could not find experiment, abort'
             )
+        print(f'client send log: {request.log}')
         logger = get_runtime_logger(experiment)
         getattr(logger, request.level.lower())(request.log)
         return minetorch_pb2.StandardResponse(
@@ -25,7 +25,7 @@ class MinetorchServicer(minetorch_pb2_grpc.MinetorchServicer):
         )
 
     def HeyYo(self, request, context):
-        logging.debug(f'Got a hey from {request.ip_addr}')
+        print(f'Got a hey from {request.ip_addr}')
 
         try:
             experiment = Experiment.get_by_id(request.experiment_id)

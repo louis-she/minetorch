@@ -38,18 +38,20 @@ export default {
     }
   },
   computed: {
-    url() {
+    publishUrl() {
       return `/api/experiments/${this.experimentId}/publish`
+    },
+    trainingUrl() {
+      return `/api/experiments/${this.experimentId}/training`
     }
   },
   mounted () {
     this.experimentId = this.$route.params.experimentId
-
-    // TODO: this should go to env file
   },
   methods: {
-    handleTrainingButtonClicked() {
-      const response = this.ajax.post(this.url)
+    async handleTrainingButtonClicked() {
+      await this.ajax.post(this.publishUrl)
+      await this.ajax.post(this.trainingUrl)
       this.termDialogVisible = true
     },
     closeTermDialog() {
