@@ -8,8 +8,8 @@
 
 <script>
 import { Terminal } from 'xterm'
-import * as attach from 'xterm/lib/addons/attach/attach'
-Terminal.applyAddon(attach)
+import io from 'socket.io-client'
+import * as fit from 'xterm/lib/addons/fit/fit'
 
 export default {
   props: {
@@ -37,6 +37,7 @@ export default {
     }
   },
   mounted () {
+    Terminal.applyAddon(fit)
     this.term = new Terminal({
       theme: {
         background: '#212121'
@@ -44,15 +45,27 @@ export default {
     })
 
     if (this.attach) {
-      this.socket = new WebSocket(this.attach)
-      this.term.attach(this.socket)
-    }
+      this.socket = io(this.attach)
 
-    this.term.open(this.$refs.term)
+      this.socket.on('connect', () => {
+        console.log('client connected')
+      })
+
+      this.socket.on('new_server_log', (data) => {
+        this.term.write(data)
+        // data.split('\n').forEach((line) => {
+        //   this.term.writeln(line)
+        // })
+      })
+
+      this.socket.on('disconnect', () => {
+        console.log('client disconnected')
+      })
+    }
   },
-  beforeDestroy () {
-    if (this.attach) {
-      this.term.detach(this.socket)
+  methods: {
+    open() {
+      this.term.open(this.$refs.term)
     }
   }
 }

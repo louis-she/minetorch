@@ -19,14 +19,22 @@
         </div>
       </el-card>
     </div>
+    <el-dialog :visible.sync="termDialogVisible" :close-on-click-modal="false" title="New Experiment" width="820px" @closed="closeTermDialog" @opened="dialogOpen">
+      <xterm ref="xterm" attach="http://127.0.0.1:8000/server_log" />
+    </el-dialog>
   </div>
 </template>
 <script>
 import io from 'socket.io-client'
+import xterm from 'components/term/index'
 
 export default {
+  components: {
+    xterm
+  },
   data () {
     return {
+      termDialogVisible: false
     }
   },
   computed: {
@@ -38,24 +46,17 @@ export default {
     this.experimentId = this.$route.params.experimentId
 
     // TODO: this should go to env file
-    console.log('init socket')
-    const socket = io('http://127.0.0.1:8000/server_log')
-
-    socket.on('connect', () => {
-      console.log('client connected')
-    })
-
-    socket.on('new_server_log', (data) => {
-      console.log(data)
-    })
-
-    socket.on('disconnect', () => {
-      console.log('client disconnected')
-    })
   },
   methods: {
     handleTrainingButtonClicked() {
       const response = this.ajax.post(this.url)
+      this.termDialogVisible = true
+    },
+    closeTermDialog() {
+      this.termDialogVisible = false
+    },
+    dialogOpen() {
+      this.$refs.xterm.open()
     }
   }
 }
