@@ -19,18 +19,18 @@
         </div>
       </el-card>
     </div>
-    <el-dialog :visible.sync="termDialogVisible" :close-on-click-modal="false" title="New Experiment" width="820px" @closed="closeTermDialog" @opened="dialogOpen">
-      <xterm ref="xterm" attach="http://127.0.0.1:8000/server_log" />
+    <el-dialog :visible.sync="termDialogVisible" :close-on-click-modal="false" title="New Experiment" width="820px" @closed="closeTermDialog">
+      <log attach="http://127.0.0.1:8000/server_log" />
     </el-dialog>
   </div>
 </template>
 <script>
 import io from 'socket.io-client'
-import xterm from 'components/term/index'
+import log from 'components/log-com'
 
 export default {
   components: {
-    xterm
+    log
   },
   data () {
     return {
@@ -56,9 +56,6 @@ export default {
     },
     closeTermDialog() {
       this.termDialogVisible = false
-    },
-    dialogOpen() {
-      this.$refs.xterm.open()
     }
   }
 }
