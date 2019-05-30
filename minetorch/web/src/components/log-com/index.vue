@@ -6,7 +6,8 @@
       <div
         v-for="(text, index) in info"
         :key="index"
-        class="log-line"><span class="log-num">{{ index }}</span><span class="log-text">{{ text }}</span></div>
+        class="log-line"
+      ><span class="log-num">{{ index + 1 }}</span><span :class="{'log-text': true, 'debug-log': text.indexOf('DEBUG') === 0, 'warning-log': text.indexOf('WARNING') === 0, 'error-log': text.indexOf('ERROR') === 0}">{{ text }}</span></div>
     </pre>
   </div>
 </template>
@@ -127,6 +128,15 @@ export default {
       &:nth-child(even) {
         background-color: #2b2b2b;
       }
+    }
+    .debug-log {
+      color: #B5DCFE;
+    }
+    .warning-log {
+      color: #FFFF91;
+    }
+    .error-log {
+      color: #FF9B93;
     }
   }
 }
