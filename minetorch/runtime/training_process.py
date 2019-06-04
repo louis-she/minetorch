@@ -1,9 +1,7 @@
 import minetorch
+import minetorch.runtime.process_env as env
 import torch
 from minetorch import g
-import time
-import minetorch.runtime.process_env as env
-from minetorch.runtime.rpc import grpc
 
 
 def init_component(component_type, component_config):

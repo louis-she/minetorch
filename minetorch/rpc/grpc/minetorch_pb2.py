@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='minetorch',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\"minetorch/rpc/grpc/minetorch.proto\x12\tminetorch\"3\n\x10StandardResponse\x12\x0e\n\x06status\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\"\xa8\x01\n\nHeyMessage\x12\x0f\n\x07ip_addr\x18\x01 \x01(\t\x12\x15\n\rexperiment_id\x18\x02 \x01(\x05\x12\x17\n\x0f\x65xperiment_name\x18\x03 \x01(\t\x12,\n\x06status\x18\x04 \x01(\x0e\x32\x1c.minetorch.HeyMessage.Status\"+\n\x06Status\x12\x08\n\x04IDLE\x10\x00\x12\x0c\n\x08TRAINING\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"s\n\tYoMessage\x12\r\n\x05roger\x18\x01 \x01(\x08\x12-\n\x07\x63ommand\x18\x02 \x01(\x0e\x32\x1c.minetorch.YoMessage.Command\"(\n\x07\x43ommand\x12\t\n\x05TRAIN\x10\x00\x12\x08\n\x04HALT\x10\x01\x12\x08\n\x04KILL\x10\x02\"8\n\x03Log\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x0b\n\x03log\x18\x02 \x01(\t\x12\r\n\x05level\x18\x03 \x01(\t2}\n\tMinetorch\x12\x36\n\x05HeyYo\x12\x15.minetorch.HeyMessage\x1a\x14.minetorch.YoMessage\"\x00\x12\x38\n\x07SendLog\x12\x0e.minetorch.Log\x1a\x1b.minetorch.StandardResponse\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\"minetorch/rpc/grpc/minetorch.proto\x12\tminetorch\"3\n\x10StandardResponse\x12\x0e\n\x06status\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\"\xa8\x01\n\nHeyMessage\x12\x0f\n\x07ip_addr\x18\x01 \x01(\t\x12\x15\n\rexperiment_id\x18\x02 \x01(\x05\x12\x17\n\x0f\x65xperiment_name\x18\x03 \x01(\t\x12,\n\x06status\x18\x04 \x01(\x0e\x32\x1c.minetorch.HeyMessage.Status\"+\n\x06Status\x12\x08\n\x04IDLE\x10\x00\x12\x0c\n\x08TRAINING\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"\x8a\x01\n\tYoMessage\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\r\n\x05roger\x18\x02 \x01(\x08\x12-\n\x07\x63ommand\x18\x03 \x01(\x0e\x32\x1c.minetorch.YoMessage.Command\"(\n\x07\x43ommand\x12\t\n\x05TRAIN\x10\x00\x12\x08\n\x04HALT\x10\x01\x12\x08\n\x04KILL\x10\x02\"8\n\x03Log\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x0b\n\x03log\x18\x02 \x01(\t\x12\r\n\x05level\x18\x03 \x01(\t\"\x9e\x01\n\x05Timer\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12+\n\x08\x63\x61tegory\x18\x03 \x01(\x0e\x32\x19.minetorch.Timer.Category\x12\x0f\n\x07\x63urrent\x18\x04 \x01(\x05\"2\n\x08\x43\x61tegory\x12\r\n\tITERATION\x10\x00\x12\t\n\x05\x45POCH\x10\x01\x12\x0c\n\x08SNAPSHOT\x10\x02\"H\n\x05Point\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x12\n\ngraph_name\x18\x02 \x01(\t\x12\t\n\x01x\x18\x03 \x01(\x05\x12\t\n\x01y\x18\x04 \x01(\x02\x32\xf7\x01\n\tMinetorch\x12\x36\n\x05HeyYo\x12\x15.minetorch.HeyMessage\x1a\x14.minetorch.YoMessage\"\x00\x12\x38\n\x07SendLog\x12\x0e.minetorch.Log\x1a\x1b.minetorch.StandardResponse\"\x00\x12;\n\x08SetTimer\x12\x10.minetorch.Timer\x1a\x1b.minetorch.StandardResponse\"\x00\x12;\n\x08\x41\x64\x64Point\x12\x10.minetorch.Point\x1a\x1b.minetorch.StandardResponse\"\x00\x62\x06proto3')
 )
 
 
@@ -72,10 +72,36 @@ _YOMESSAGE_COMMAND = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=348,
-  serialized_end=388,
+  serialized_start=372,
+  serialized_end=412,
 )
 _sym_db.RegisterEnumDescriptor(_YOMESSAGE_COMMAND)
+
+_TIMER_CATEGORY = _descriptor.EnumDescriptor(
+  name='Category',
+  full_name='minetorch.Timer.Category',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='ITERATION', index=0, number=0,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='EPOCH', index=1, number=1,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='SNAPSHOT', index=2, number=2,
+      serialized_options=None,
+      type=None),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=581,
+  serialized_end=631,
+)
+_sym_db.RegisterEnumDescriptor(_TIMER_CATEGORY)
 
 
 _STANDARDRESPONSE = _descriptor.Descriptor(
@@ -177,15 +203,22 @@ _YOMESSAGE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='roger', full_name='minetorch.YoMessage.roger', index=0,
-      number=1, type=8, cpp_type=7, label=1,
+      name='experiment_id', full_name='minetorch.YoMessage.experiment_id', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='roger', full_name='minetorch.YoMessage.roger', index=1,
+      number=2, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='command', full_name='minetorch.YoMessage.command', index=1,
-      number=2, type=14, cpp_type=8, label=1,
+      name='command', full_name='minetorch.YoMessage.command', index=2,
+      number=3, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -203,8 +236,8 @@ _YOMESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=273,
-  serialized_end=388,
+  serialized_start=274,
+  serialized_end=412,
 )
 
 
@@ -248,18 +281,127 @@ _LOG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=390,
-  serialized_end=446,
+  serialized_start=414,
+  serialized_end=470,
+)
+
+
+_TIMER = _descriptor.Descriptor(
+  name='Timer',
+  full_name='minetorch.Timer',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='experiment_id', full_name='minetorch.Timer.experiment_id', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='name', full_name='minetorch.Timer.name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='category', full_name='minetorch.Timer.category', index=2,
+      number=3, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='current', full_name='minetorch.Timer.current', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+    _TIMER_CATEGORY,
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=473,
+  serialized_end=631,
+)
+
+
+_POINT = _descriptor.Descriptor(
+  name='Point',
+  full_name='minetorch.Point',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='experiment_id', full_name='minetorch.Point.experiment_id', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='graph_name', full_name='minetorch.Point.graph_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='x', full_name='minetorch.Point.x', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='y', full_name='minetorch.Point.y', index=3,
+      number=4, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=633,
+  serialized_end=705,
 )
 
 _HEYMESSAGE.fields_by_name['status'].enum_type = _HEYMESSAGE_STATUS
 _HEYMESSAGE_STATUS.containing_type = _HEYMESSAGE
 _YOMESSAGE.fields_by_name['command'].enum_type = _YOMESSAGE_COMMAND
 _YOMESSAGE_COMMAND.containing_type = _YOMESSAGE
+_TIMER.fields_by_name['category'].enum_type = _TIMER_CATEGORY
+_TIMER_CATEGORY.containing_type = _TIMER
 DESCRIPTOR.message_types_by_name['StandardResponse'] = _STANDARDRESPONSE
 DESCRIPTOR.message_types_by_name['HeyMessage'] = _HEYMESSAGE
 DESCRIPTOR.message_types_by_name['YoMessage'] = _YOMESSAGE
 DESCRIPTOR.message_types_by_name['Log'] = _LOG
+DESCRIPTOR.message_types_by_name['Timer'] = _TIMER
+DESCRIPTOR.message_types_by_name['Point'] = _POINT
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 StandardResponse = _reflection.GeneratedProtocolMessageType('StandardResponse', (_message.Message,), dict(
@@ -290,6 +432,20 @@ Log = _reflection.GeneratedProtocolMessageType('Log', (_message.Message,), dict(
   ))
 _sym_db.RegisterMessage(Log)
 
+Timer = _reflection.GeneratedProtocolMessageType('Timer', (_message.Message,), dict(
+  DESCRIPTOR = _TIMER,
+  __module__ = 'minetorch.rpc.grpc.minetorch_pb2'
+  # @@protoc_insertion_point(class_scope:minetorch.Timer)
+  ))
+_sym_db.RegisterMessage(Timer)
+
+Point = _reflection.GeneratedProtocolMessageType('Point', (_message.Message,), dict(
+  DESCRIPTOR = _POINT,
+  __module__ = 'minetorch.rpc.grpc.minetorch_pb2'
+  # @@protoc_insertion_point(class_scope:minetorch.Point)
+  ))
+_sym_db.RegisterMessage(Point)
+
 
 
 _MINETORCH = _descriptor.ServiceDescriptor(
@@ -298,8 +454,8 @@ _MINETORCH = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=448,
-  serialized_end=573,
+  serialized_start=708,
+  serialized_end=955,
   methods=[
   _descriptor.MethodDescriptor(
     name='HeyYo',
@@ -316,6 +472,24 @@ _MINETORCH = _descriptor.ServiceDescriptor(
     index=1,
     containing_service=None,
     input_type=_LOG,
+    output_type=_STANDARDRESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='SetTimer',
+    full_name='minetorch.Minetorch.SetTimer',
+    index=2,
+    containing_service=None,
+    input_type=_TIMER,
+    output_type=_STANDARDRESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='AddPoint',
+    full_name='minetorch.Minetorch.AddPoint',
+    index=3,
+    containing_service=None,
+    input_type=_POINT,
     output_type=_STANDARDRESPONSE,
     serialized_options=None,
   ),

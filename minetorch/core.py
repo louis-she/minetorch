@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from shutil import copyfile
 from minetorch.utils import runtime_file, make_runtime_dir
+from minetorch.runtime import plugins
 
 
 def load_default_modules():
@@ -260,7 +261,51 @@ def setup_runtime_directory(experiment):
     )
 
 
+class Plugin():
+
+    registed_plugins = []
+
+    @classmethod
+    def register(cls, plugin):
+        cls.registed_plugins.append(plugin)
+
+    def after_init(self, payload, trainer):
+        pass
+
+    def before_epoch_start(self, payload, trainer):
+        pass
+
+    def after_epoch_end(self, payload, trainer):
+        pass
+
+    def before_train_iteration_start(self, payload, trainer):
+        pass
+
+    def after_train_iteration_end(self, payload, trainer):
+        pass
+
+    def before_val_iteration_start(self, payload, trainer):
+        pass
+
+    def after_val_iteration_end(self, payload, trainer):
+        pass
+
+    def before_checkpoint_persisted(self, payload, trainer):
+        pass
+
+    def after_checkpoint_persisted(self, payload, trainer):
+        pass
+
+    def before_quit(self, payload, trainer):
+        pass
+
+
+def use(plugin):
+    Plugin.register(plugin)
+
+
 def boot():
     sys.path.insert(0, os.getcwd())
     load_default_modules()
     load_external_modules()
+    use(plugins.CorePlugin())

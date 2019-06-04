@@ -5,6 +5,8 @@ package minetorch;
 service Minetorch {
   rpc HeyYo (HeyMessage) returns (YoMessage) {}
   rpc SendLog (Log) returns (StandardResponse) {}
+  rpc SetTimer (Timer) returns (StandardResponse) {}
+  rpc AddPoint (Point) returns (StandardResponse) {}
 }
 
 message StandardResponse {
@@ -30,14 +32,35 @@ message YoMessage {
     TRAIN = 0;
     HALT = 1;
     KILL = 2;
-  }
+  };
 
-  bool roger = 1;
-  Command command = 2;
+  int32 experiment_id = 1;
+  bool roger = 2;
+  Command command = 3;
 }
 
 message Log {
   int32 experiment_id = 1;
   string log = 2;
   string level = 3;
+}
+
+message Timer {
+  enum Category {
+    ITERATION = 0;
+    EPOCH = 1;
+    SNAPSHOT = 2;
+  };
+
+  int32 experiment_id = 1;
+  string name = 2;
+  Category category = 3;
+  int32 current = 4;
+}
+
+message Point {
+  int32 experiment_id = 1;
+  string graph_name = 2;
+  int32 x = 3;
+  float y = 4;
 }

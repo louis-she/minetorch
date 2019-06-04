@@ -45,20 +45,23 @@ class Trainer(object):
             curves, could be `tensorboard` or self implemented Drawer object
         hooks (dict, optional):
             Defaults to {}. Define hook functions.
-        max_epochs ([type], optional):
+        max_epochs (int, optional):
             Defaults to None. How many epochs to train, None means unlimited.
-        logging_format ([type], optional):
+        logging_format (str, optional):
             Defaults to None. env.logger format
-        trival ([Boolean], optional):
+        trival (bool, optional):
             Defaults to False. If true, both training and validation
             process will be breaked in 10 iterations
+        plugins (list, optional):
+            Defaults to []. This is actually a collection of `hooks`, do not set
+            hooks and plugins the same time.
     """
 
     def __init__(self, alchemistic_directory, model, optimizer, loss_func,
                  code="geass", train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1,
                  drawer=None, hooks={}, max_epochs=None,
-                 logging_format=None, trival=False):
+                 logging_format=None, trival=False, plugins=[]):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         self.create_dirs()
@@ -78,13 +81,15 @@ class Trainer(object):
         self.lowest_train_loss = float('inf')
         self.lowest_val_loss = float('inf')
         self.current_epoch = 0
+        self.current_iteration = 0
         self.hook_funcs = hooks
+        self.plugins = plugins
         self.max_epochs = max_epochs
 
         self.init_model()
-        self.call_hook_func('after_init')
         self.status = 'init'
         self.trival = trival
+        self.call_hook_func('after_init')
 
     def create_drawer(self, drawer):
         if drawer == 'tensorboard':
@@ -127,7 +132,7 @@ class Trainer(object):
 
             try:
                 self.model.load_state_dict(checkpoint['state_dict'], strict=True)
-            except:
+            except Exception:
                 env.logger.warning(
                     'load checkpoint failed, the state in the '
                     'checkpoint is not matched with the model, '
@@ -139,10 +144,12 @@ class Trainer(object):
                 self.drawer.set_state(checkpoint['drawer_state'])
             env.logger.info('Checkpoint loaded')
 
-    def call_hook_func(self, name):
-        if name not in self.hook_funcs:
-            return
-        self.hook_funcs[name](self)
+    def call_hook_func(self, name, payload=None):
+        if name in self.hook_funcs:
+            self.hook_funcs[name](self, payload)
+        else:
+            for plugin in self.plugins:
+                getattr(plugin, name)(self, payload)
 
     def train(self):
         """start to train the model
@@ -172,7 +179,10 @@ class Trainer(object):
                         total_val_loss += self.run_val_iteration(index, data, val_iters)
                 total_val_loss = total_val_loss / val_iters
 
-            self.call_hook_func('after_epoch_end')
+            self.call_hook_func('after_epoch_end', {
+                'train_loss': total_train_loss,
+                'val_loss': total_val_loss,
+            })
 
             if self.drawer is not None:
                 self.drawer.scalars(
@@ -202,7 +212,12 @@ class Trainer(object):
 
     def run_train_iteration(self, index, data, train_iters):
         self.status = 'train'
-        self.call_hook_func('before_train_iteration_start')
+        self.call_hook_func('before_train_iteration_start', {
+            'relative_iteration': index,
+            'batch_data': data,
+            'total_iters': train_iters
+        })
+        self.current_iteration += 1
 
         loss = self.loss_func(self, data)
         self.optimizer.zero_grad()
@@ -214,24 +229,36 @@ class Trainer(object):
         if loss < self.lowest_train_loss:
             self.lowest_train_loss = loss
 
-        self.call_hook_func('after_train_iteration_end')
+        self.call_hook_func('after_train_iteration_end', {
+            'relative_iteration': index,
+            'batch_data': data,
+            'total_iters': train_iters,
+            'loss': loss
+        })
         return loss
 
     def run_val_iteration(self, index, data, val_iters):
         self.status = 'val'
-        self.call_hook_func('before_val_iteration_start')
+        self.call_hook_func('before_val_iteration_start', {
+            'relative_iteration': index,
+            'batch_data': data,
+            'total_iters': val_iters
+        })
         loss = self.loss_func(self, data)
         loss = loss.detach()
         env.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
-
-        self.call_hook_func('after_val_iteration_ended')
+        self.call_hook_func('after_val_iteration_ended', {
+            'relative_iteration': index,
+            'batch_data': data,
+            'total_iters': val_iters,
+            'loss': loss
+        })
         return loss
 
     def persist(self, name):
         """save the model to disk
         """
-        self.call_hook_func('before_checkpoint_persisted')
         if self.drawer is not None:
             drawer_state = self.drawer.get_state()
         else:
@@ -246,9 +273,19 @@ class Trainer(object):
             'drawer_state': drawer_state
         }
 
-        torch.save(state, self.standard_model_path(name))
-        env.logger.info(f'save checkpoint to {self.standard_model_path(name)}')
-        self.call_hook_func('after_checkpoint_persisted')
+        path = self.standard_model_path(name)
+        self.call_hook_func('before_checkpoint_persisted', {
+            'name': name,
+            'path': path,
+            **state,
+        })
+        torch.save(state, path)
+        env.logger.info(f'save checkpoint to {path}')
+        self.call_hook_func('after_checkpoint_persisted', {
+            'name': name,
+            'path': path,
+            **state
+        })
 
     def standard_model_path(self, model_name):
         return os.path.join(self.models_dir, f'{model_name}.pth.tar')

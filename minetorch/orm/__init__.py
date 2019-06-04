@@ -4,7 +4,7 @@ import logging
 
 import peewee
 from peewee import (CharField, DateTimeField, Field, ForeignKeyField,
-                    IntegerField)
+                    IntegerField, FloatField)
 from peewee import Model as PeeweeModel
 from peewee import SqliteDatabase, TextField
 from playhouse.shortcuts import model_to_dict
@@ -194,4 +194,42 @@ class Loss(Component):
         table_name = 'component'
 
 
-__all__ = ['Base', 'Experiment', 'Component', 'Model', 'Dataset', 'Dataflow', 'Optimizer', 'Loss']
+class Timer(Base):
+    experiment = ForeignKeyField(Experiment, backref='timers')
+    snapshot = ForeignKeyField(Snapshot, backref='timers')
+    name = CharField()
+    # 1. iteration 2. epoch 3. snapshot
+    category = CharField()
+    current = IntegerField()
+
+
+class Graph(Base):
+    experiment = ForeignKeyField(Experiment, backref='graphs')
+    snapshot = ForeignKeyField(Snapshot, backref='graphs')
+    timer = ForeignKeyField(Timer, backref='graphs')
+    name = CharField()
+    sequence = FloatField()
+    key = CharField()
+
+    def add_point(self, x, y):
+        Point.create(graph=self, x=x, y=y)
+
+    class Meta:
+        indexes = (
+            (('experiment_id', 'name'), True),
+        )
+
+
+class Point(PeeweeModel):
+    """For performance consideration, this will not inherit from the Base class
+    """
+    graph = ForeignKeyField(Graph, backref='points')
+    x = IntegerField()
+    y = CharField()
+
+    class Meta:
+        database = db
+        legacy_table_names = False
+
+
+__all__ = ['Base', 'Experiment', 'Component', 'Model', 'Dataset', 'Dataflow', 'Optimizer', 'Loss', 'Graph', 'Point', 'Timer']

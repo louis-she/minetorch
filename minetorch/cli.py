@@ -6,9 +6,6 @@ from multiprocessing import Process
 
 import append_sys_path  # noqa: F401
 import click
-import minetorch.core
-import minetorch.web as web
-from minetorch.orm import Component, Experiment, Snapshot
 
 PYTHON_INTERPRETER = 'python3'
 
@@ -20,6 +17,7 @@ def start_rpc_server():
 
 
 def start_web_server():
+    import minetorch.web as web
     os.environ["FLASK_ENV"] = 'development'
     os.environ["FLASK_APP"] = web.__file__
     process = subprocess.Popen(
@@ -31,6 +29,7 @@ def start_web_server():
 
 
 def start_webpack_dev_server():
+    import minetorch.web as web
     process = subprocess.Popen(
         ['yarn', 'run', 'dev'],
         cwd=Path(web.__file__).parent,
@@ -70,16 +69,12 @@ def development():
 
 @cli.command('db:init')
 def db_init():
+    from minetorch.orm import Component, Experiment, Snapshot
     for model_class in [Experiment, Component, Snapshot]:
         model_class.drop_table()
         print(f"creating {model_class}")
         model_class.create_table(safe=False)
         print(f"{model_class} created")
-
-
-@cli.command('ls')
-def ls():
-    minetorch.core.boot()
 
 
 @cli.command('proto:compile')
