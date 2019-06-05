@@ -43,7 +43,7 @@ def init_logger():
 
 def init_rpc():
     global rpc
-    rpc = RuntimeRpc(config['server_addr'])
+    rpc = RuntimeRpc(config['server_addr'], config['experiment_id'])
 
 
 def init_process_env(config_file=None):

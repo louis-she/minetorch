@@ -7,6 +7,7 @@ service Minetorch {
   rpc SendLog (Log) returns (StandardResponse) {}
   rpc SetTimer (Timer) returns (StandardResponse) {}
   rpc AddPoint (Point) returns (StandardResponse) {}
+  rpc CreateGraph (Graph) returns (StandardResponse) {}
 }
 
 message StandardResponse {
@@ -45,16 +46,16 @@ message Log {
   string level = 3;
 }
 
-message Timer {
-  enum Category {
-    ITERATION = 0;
-    EPOCH = 1;
-    SNAPSHOT = 2;
-  };
+enum TimerCategory {
+  ITERATION = 0;
+  EPOCH = 1;
+  SNAPSHOT = 2;
+};
 
+message Timer {
   int32 experiment_id = 1;
   string name = 2;
-  Category category = 3;
+  TimerCategory category = 3;
   int32 current = 4;
 }
 
@@ -63,4 +64,10 @@ message Point {
   string graph_name = 2;
   int32 x = 3;
   float y = 4;
+}
+
+message Graph {
+  int32 experiment_id = 1;
+  string graph_name = 2;
+  TimerCategory timer_category = 3;
 }

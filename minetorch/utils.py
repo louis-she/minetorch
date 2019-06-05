@@ -42,29 +42,18 @@ def server_file(file_name, experiment=''):
     return _file.resolve()
 
 
-def make_runtime_dir(experiment):
-    runtime_dir = Path.home() / '.minetorch'
-    if not os.path.isdir(runtime_dir):
-        os.mkdir(runtime_dir)
-    snapshot = experiment.current_snapshot()
-    experiment_dir_name = runtime_dir / f"{experiment.name}_{snapshot.id}"
-    if not os.path.isdir(experiment_dir_name):
-        os.mkdir(experiment_dir_name)
-    return experiment_dir_name
-
-
 def runtime_file(file_name, experiment=''):
     if not isinstance(experiment, str):
         experiment = experiment.name
 
     experiment_dir = Path.home() / '.minetorch' / experiment
+    _file = experiment_dir / file_name
 
     try:
-        os.makedirs(experiment_dir)
+        os.makedirs(_file.parent)
     except FileExistsError:
         pass
 
-    _file = experiment_dir / file_name
     if not os.path.isfile(_file):
         _file.touch()
 

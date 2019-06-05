@@ -2,12 +2,13 @@ from flask import Flask, render_template, url_for, send_from_directory
 
 import minetorch
 from minetorch import model, dataset, dataflow, loss, optimizer
-from minetorch.web.api import api, experiment
+from minetorch.web.api import api, experiment, graph
 
 
 app = Flask(__name__, template_folder='dist', static_url_path='')
 app.register_blueprint(api)
 app.register_blueprint(experiment)
+app.register_blueprint(graph)
 
 minetorch.core.boot()
 

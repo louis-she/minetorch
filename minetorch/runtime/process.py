@@ -2,7 +2,7 @@ import sys
 import time
 from multiprocessing import Process
 
-from minetorch.constants import proto as C
+import minetorch.constants as C
 import minetorch.runtime.process_env as env
 
 current_status = C.STATUS_IDLE

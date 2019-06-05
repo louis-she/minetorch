@@ -1,18 +1,20 @@
 import json
 import logging
+from pathlib import Path
 
 import peewee
 from flask import Blueprint, abort, g, jsonify, request
 from minetorch import dataflow, dataset, loss, model, optimizer
 from minetorch.core import setup_runtime_directory
 from minetorch.orm import (Dataflow, Dataset, Experiment, Loss,
-                           Model, Optimizer)
+                           Model, Optimizer, Graph)
 from multiprocessing import Process
 from minetorch.runtime import main_process
 from minetorch.utils import runtime_file
 
 api = Blueprint('api', 'api', url_prefix='/api')
 experiment = Blueprint('experiment', 'experiment', url_prefix='/api/experiments/<experiment_id>')
+graph = Blueprint('graph', 'graph', url_prefix='/api/graphs/<graph_id>')
 
 
 @experiment.before_request
@@ -22,6 +24,12 @@ def experiment_before_request():
     g.snapshot = g.experiment.draft_snapshot()
     if not g.snapshot:
         g.snapshot = g.experiment.create_draft_snapshot()
+
+
+@graph.before_request
+def graph_before_request():
+    experiment_id = request.view_args['graph_id']
+    g.graph = Graph.get(id=experiment_id)
 
 
 @experiment.route('', methods=['DELETE'])
@@ -234,6 +242,16 @@ def halt_train(experiment_id):
     g.experiment.save()
     return jsonify({'message': 'ok'})
 
+# Graphs
+@experiment.route('/graphs', methods=['GET'])
+def graphs(experiment_id):
+    return jsonify(list(map(lambda m: m.to_json_serializable(), g.experiment.graphs)))
+
+
+@graph.route('/points', methods=['GET'])
+def points(graph_id):
+    return jsonify(list(map(lambda m: m.to_json_serializable(), g.graph.points)))
+
 
 @api.errorhandler(422)
 def entity_not_processable(error):
@@ -247,8 +265,8 @@ def resource_conflict(error):
 
 def create_runtime_process(experiment):
     logging.info('creating runtime')
-    runtime_process = Process(target=main_process, args=(runtime_file('config.json', experiment),))
-    # maybe we should detach the child process
+    runtime_process = Process(target=main_process, args=(runtime_file(Path(str(experiment.current_snapshot().id)) / 'config.json', experiment),))
+    # TODO: maybe we should detach the child process
     # runtime_process.daemon = True
     runtime_process.start()
     logging.info('runtime created')

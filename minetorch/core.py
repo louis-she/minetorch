@@ -4,8 +4,7 @@ import sys
 import json
 from pathlib import Path
 from shutil import copyfile
-from minetorch.utils import runtime_file, make_runtime_dir
-from minetorch.runtime import plugins
+from minetorch.utils import runtime_file
 
 
 def load_default_modules():
@@ -239,8 +238,8 @@ def loss():
 
 def setup_runtime_directory(experiment):
     snapshot = experiment.current_snapshot()
-    experiment_dir = make_runtime_dir(experiment)
-    config_file = runtime_file('config.json', experiment)
+    config_file = runtime_file(Path(str(experiment.current_snapshot().id)) / 'config.json', experiment)
+    script = runtime_file('run.py', experiment)
     with open(config_file, 'w') as f:
         config = json.dumps({
             'experiment_id': experiment.id,
@@ -257,7 +256,7 @@ def setup_runtime_directory(experiment):
         f.write(config)
     copyfile(
         Path(__file__).parent / 'run.py',
-        experiment_dir / 'run.py'
+        script
     )
 
 
@@ -305,6 +304,7 @@ def use(plugin):
 
 
 def boot():
+    from minetorch.runtime import plugins
     sys.path.insert(0, os.getcwd())
     load_default_modules()
     load_external_modules()

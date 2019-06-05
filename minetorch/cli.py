@@ -53,13 +53,15 @@ def cli():
 
 
 @cli.command('dev')
-def development():
+@click.option('--webpack/--no-webpack', help='should start webpack-dev-server process', default=True)
+def development(webpack):
     subprocs = []
 
     subprocs.append(Process(target=start_rpc_server))
     subprocs.append(Process(target=start_web_server))
     subprocs.append(Process(target=start_socket_server))
-    subprocs.append(Process(target=start_webpack_dev_server))
+    if webpack:
+        subprocs.append(Process(target=start_webpack_dev_server))
 
     for process in subprocs:
         process.start()
@@ -69,8 +71,8 @@ def development():
 
 @cli.command('db:init')
 def db_init():
-    from minetorch.orm import Component, Experiment, Snapshot
-    for model_class in [Experiment, Component, Snapshot]:
+    from minetorch.orm import Component, Experiment, Snapshot, Timer, Graph, Point
+    for model_class in [Component, Experiment, Snapshot, Timer, Graph, Point]:
         model_class.drop_table()
         print(f"creating {model_class}")
         model_class.create_table(safe=False)
@@ -80,7 +82,7 @@ def db_init():
 @cli.command('proto:compile')
 def proto_compile():
     minetorch_dir = Path(__file__).resolve().parents[1]
-    proto_dir = Path('minetorch') / 'rpc' / 'grpc'
+    proto_dir = Path('minetorch') / 'proto'
     subprocess.Popen([
         PYTHON_INTERPRETER,
         "-m",

@@ -1,10 +1,10 @@
-from .grpc import minetorch_pb2_grpc
-from .grpc import minetorch_pb2
-from minetorch.orm import Experiment
-import minetorch.constants.protobuf_constants as C
 import peewee
+
+import minetorch.constants as C
 from minetorch.logger import get_runtime_logger
-from minetorch.orm import Timer, Graph
+from minetorch.orm import Experiment, Graph, Timer
+
+from minetorch.proto import minetorch_pb2, minetorch_pb2_grpc
 
 
 class MinetorchServicer(minetorch_pb2_grpc.MinetorchServicer):
@@ -31,22 +31,65 @@ class MinetorchServicer(minetorch_pb2_grpc.MinetorchServicer):
             )
         return experiment, None
 
+    def CreateGraph(self, request, context):
+        # TODO: performance
+        experiment, err = self._get_experiment(request.experiment_id)
+        if not experiment:
+            return err
+        try:
+            timer = experiment.timers.where(Timer.category == self.timer_mapping[request.timer_category]).get()
+        except peewee.DoesNotExist:
+            # TODO: here we should notify the user to create the timer first!
+            return minetorch_pb2.StandardResponse(
+                status=100,
+                message='Timer does not exists, please create the correct timer before create graph'
+            )
+        try:
+            Graph.create(
+                experiment_id=experiment.id,
+                snapshot_id=experiment.current_snapshot().id,
+                name=request.graph_name,
+                timer=timer
+            )
+        except peewee.IntegrityError:
+            pass
+        return minetorch_pb2.StandardResponse(
+            status=0,
+            message='ok'
+        )
+
     def AddPoint(self, request, context):
+        # TODO: performance
         experiment, err = self._get_experiment(request.experiment_id)
         if not experiment:
             return err
         graph = experiment.graphs.where(Graph.name == request.graph_name).get()
         graph.add_point(graph.timer.current, request.y)
+        return minetorch_pb2.StandardResponse(
+            status=0,
+            message='ok'
+        )
 
     def SetTimer(self, request, context):
+        # TODO: performance
         experiment, err = self._get_experiment(request.experiment_id)
         if not experiment:
             return err
-        # TODO: performance
-        timer = experiment.timers.where(Timer.category == self.timer_mapping[request.category]).get()
-        timer.current += 1
-        # TODO: performance
-        timer.save()
+        try:
+            timer = experiment.timers.where(Timer.category == self.timer_mapping[request.category]).get()
+            timer.current = request.current
+            timer.save()
+        except peewee.DoesNotExist:
+            timer = Timer.create(
+                experiment_id=experiment.id,
+                snapshot_id=experiment.current_snapshot().id,
+                category=self.timer_mapping[request.category],
+                current=request.current
+            )
+        return minetorch_pb2.StandardResponse(
+            status=0,
+            message='ok'
+        )
 
     def SendLog(self, request, context):
         try:

@@ -146,10 +146,10 @@ class Trainer(object):
 
     def call_hook_func(self, name, payload=None):
         if name in self.hook_funcs:
-            self.hook_funcs[name](self, payload)
+            self.hook_funcs[name](payload, self)
         else:
             for plugin in self.plugins:
-                getattr(plugin, name)(self, payload)
+                getattr(plugin, name)(payload, self)
 
     def train(self):
         """start to train the model

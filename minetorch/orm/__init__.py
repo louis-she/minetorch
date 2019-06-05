@@ -197,7 +197,7 @@ class Loss(Component):
 class Timer(Base):
     experiment = ForeignKeyField(Experiment, backref='timers')
     snapshot = ForeignKeyField(Snapshot, backref='timers')
-    name = CharField()
+    name = CharField(null=True)
     # 1. iteration 2. epoch 3. snapshot
     category = CharField()
     current = IntegerField()
@@ -208,8 +208,8 @@ class Graph(Base):
     snapshot = ForeignKeyField(Snapshot, backref='graphs')
     timer = ForeignKeyField(Timer, backref='graphs')
     name = CharField()
-    sequence = FloatField()
-    key = CharField()
+    sequence = FloatField(null=True)
+    key = CharField(null=True)
 
     def add_point(self, x, y):
         Point.create(graph=self, x=x, y=y)
@@ -230,6 +230,12 @@ class Point(PeeweeModel):
     class Meta:
         database = db
         legacy_table_names = False
+
+    def to_json_serializable(self):
+        return {
+            'x': self.x,
+            'y': self.y
+        }
 
 
 __all__ = ['Base', 'Experiment', 'Component', 'Model', 'Dataset', 'Dataflow', 'Optimizer', 'Loss', 'Graph', 'Point', 'Timer']

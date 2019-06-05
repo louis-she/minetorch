@@ -26,12 +26,14 @@ def main(config_file):
     g.model = init_component('model', env.config['model'])
     g.optimizer = init_component('optimizer', env.config['optimizer'])
     g.loss = init_component('loss', env.config['loss'])
+
     trainer = minetorch.Trainer(
         alchemistic_directory='./log',
         model=g.model,
         optimizer=g.optimizer,
         train_dataloader=g.dataloader,
-        loss_func=g.loss
+        loss_func=g.loss,
+        plugins=minetorch.core.Plugin.registed_plugins
     )
 
     while True:

@@ -1,6 +1,6 @@
 import grpc
-from minetorch.rpc.grpc import minetorch_pb2_grpc
-from minetorch.rpc.grpc import minetorch_pb2
+from minetorch.proto import minetorch_pb2_grpc
+from minetorch.proto import minetorch_pb2
 
 
 def retry(number):
@@ -31,6 +31,15 @@ class RuntimeRpc():
         self.channel = grpc.insecure_channel(addr)
         self.stub = minetorch_pb2_grpc.MinetorchStub(self.channel)
         self.experiment_id = experiment_id
+
+    @retry(3)
+    def create_graph(self, graph_name, timer_category):
+        message = minetorch_pb2.Graph(
+            experiment_id=self.experiment_id,
+            graph_name=graph_name,
+            timer_category=timer_category
+        )
+        return self.stub.CreateGraph(message)
 
     @retry(3)
     def add_point(self, graph_name, y):

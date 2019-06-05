@@ -3,9 +3,8 @@ import time
 from concurrent import futures
 
 import grpc
-
-from .grpc import minetorch_pb2_grpc
-from .service import MinetorchServicer
+from minetorch.proto import minetorch_pb2_grpc
+from minetorch.rpc.service import MinetorchServicer
 
 
 class RpcServer():
