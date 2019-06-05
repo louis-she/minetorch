@@ -26,3 +26,12 @@ class CorePlugin(Plugin):
 
     def after_train_iteration_end(self, payload, trainer):
         env.rpc.add_point('train_iteration_loss', payload['loss'])
+
+
+class TestLoggerPlugin(Plugin):
+    """This is just for dev test"""
+    def before_epoch_start(self, payload, trainer):
+        env.logger.error('this is a error')
+        env.logger.debug('this is a debug')
+        env.logger.info('this is a info')
+        env.logger.warn('this is a warning')

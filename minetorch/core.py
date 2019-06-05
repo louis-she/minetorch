@@ -309,3 +309,4 @@ def boot():
     load_default_modules()
     load_external_modules()
     use(plugins.CorePlugin())
+    use(plugins.TestLoggerPlugin())

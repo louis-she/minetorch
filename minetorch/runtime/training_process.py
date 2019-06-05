@@ -36,5 +36,7 @@ def main(config_file):
         plugins=minetorch.core.Plugin.registed_plugins
     )
 
-    while True:
+    try:
         trainer.train()
+    except Exception as e:
+        env.logger.error(f'unexpected error in training process: {e}')
