@@ -246,7 +246,7 @@ def setup_runtime_directory(experiment):
             'experiment_name': experiment.name,
             'snapshot_id': experiment.current_snapshot().id,
             'hey_yo_interval': 5,
-            'server_addr': '127.0.0.1:50051',
+            'server_addr': f"{os.getenv('SERVER_ADDR')}:{os.getenv('RPC_SERVER_PORT')}",
             'dataset': snapshot.datasets[0].to_json_serializable(),
             'dataflow': snapshot.dataflows[0].to_json_serializable(),
             'model': snapshot.models[0].to_json_serializable(),
@@ -257,6 +257,10 @@ def setup_runtime_directory(experiment):
     copyfile(
         Path(__file__).parent / 'run.py',
         script
+    )
+    copyfile(
+        Path(__file__).parent / '..' / '.env',
+        runtime_file('.env', experiment)
     )
 
 

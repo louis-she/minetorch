@@ -8,7 +8,7 @@ from peewee import (CharField, DateTimeField, Field, ForeignKeyField,
 from peewee import Model as PeeweeModel
 from peewee import SqliteDatabase, TextField
 from playhouse.shortcuts import model_to_dict
-from utils import server_file
+from minetorch.utils import server_file
 
 logger = logging.getLogger('peewee')
 logger.addHandler(logging.StreamHandler())

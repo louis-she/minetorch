@@ -63,7 +63,8 @@ class RuntimeRpc():
     @retry(3)
     def heyYo(self, experiment_id, status):
         message = minetorch_pb2.HeyMessage(
-            ip_addr='127.0.0.1',
+            # TODO: we can get ip from server, don't need this
+            ip_addr='client ip addr',
             status=status,
             experiment_id=experiment_id
         )

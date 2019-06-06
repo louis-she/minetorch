@@ -20,7 +20,7 @@
       </el-card>
     </div>
     <el-dialog :visible.sync="termDialogVisible" :close-on-click-modal="false" title="New Experiment" width="820px" @closed="closeTermDialog">
-      <log attach="http://127.0.0.1:8000/server_log" />
+      <log :attach="attach" />
     </el-dialog>
   </div>
 </template>
@@ -34,7 +34,8 @@ export default {
   },
   data () {
     return {
-      termDialogVisible: false
+      termDialogVisible: false,
+      attach: `http://${process.env.SERVER_ADDR}:${process.env.WEB_SOCKET_PORT}/server_log`
     }
   },
   computed: {

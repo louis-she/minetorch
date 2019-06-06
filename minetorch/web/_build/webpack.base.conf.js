@@ -5,9 +5,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
 const config = require('./config')
-
+const Dotenv = require('dotenv-webpack')
 const utils = require('./utils')
-
 
 module.exports = {
   output: {
@@ -96,6 +95,10 @@ module.exports = {
       to: utils.resolve(`dist/${config.assetsJsPath}`),
       toType: 'dir'
     }]),
-    new webpack.DllReferencePlugin({context: __dirname, manifest: require('./vendor-manifest.json')})
+    new webpack.DllReferencePlugin({context: __dirname, manifest: require('./vendor-manifest.json')}),
+    // new Dotenv()
+    new Dotenv({
+      path: utils.resolve('../../.env')
+    })
   ]
 }

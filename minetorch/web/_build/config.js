@@ -1,11 +1,13 @@
 'use strict'
 
-const path = require('path')
 const utils = require('./utils')
+require('dotenv').config({
+  path: utils.resolve('../../.env')
+})
 
 const os = require('os')
 const ifaces = os.networkInterfaces()
-let localhost = '127.0.0.1'
+let localhost = process.env.SERVER_ADDR
 
 module.exports = {
   devServer: {
@@ -13,7 +15,7 @@ module.exports = {
     port: 3100,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        target: `http://${process.env.SERVER_ADDR}:${process.env.WEB_SERVER_PORT}`,
         changeOrigin: true
       }
     }

@@ -1,4 +1,7 @@
 from minetorch.runtime import main_process
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def main(config_file=None):

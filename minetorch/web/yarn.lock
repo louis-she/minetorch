@@ -2481,6 +2481,30 @@ domutils@^1.5.1:
     dom-serializer "0"
     domelementtype "1"
 
+dotenv-defaults@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/dotenv-defaults/-/dotenv-defaults-1.0.2.tgz#441cf5f067653fca4bbdce9dd3b803f6f84c585d"
+  integrity sha512-iXFvHtXl/hZPiFj++1hBg4lbKwGM+t/GlvELDnRtOFdjXyWP7mubkVr+eZGWG62kdsbulXAef6v/j6kiWc/xGA==
+  dependencies:
+    dotenv "^6.2.0"
+
+dotenv-webpack@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/dotenv-webpack/-/dotenv-webpack-1.7.0.tgz#4384d8c57ee6f405c296278c14a9f9167856d3a1"
+  integrity sha512-wwNtOBW/6gLQSkb8p43y0Wts970A3xtNiG/mpwj9MLUhtPCQG6i+/DSXXoNN7fbPCU/vQ7JjwGmgOeGZSSZnsw==
+  dependencies:
+    dotenv-defaults "^1.0.2"
+
+dotenv@^6.2.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-6.2.0.tgz#941c0410535d942c8becf28d3f357dbd9d476064"
+  integrity sha512-HygQCKUBSFl8wKQZBSemMywRWcEDNidvNbjGVyZu3nbZ8qq9ubiPoGLMdRDpfSrpkkm9BXYFkpKxxFX38o/76w==
+
+dotenv@^8.0.0:
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-8.0.0.tgz#ed310c165b4e8a97bb745b0a9d99c31bda566440"
+  integrity sha512-30xVGqjLjiUOArT4+M5q9sYdvuR4riM6yK9wMcas9Vbp6zZa+ocC9dp6QoftuhTPhFAiLK/0C5Ni2nou/Bk8lg==
+
 duplexer2@0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/duplexer2/-/duplexer2-0.0.2.tgz#c614dcf67e2fb14995a91711e5a617e8a60a31db"

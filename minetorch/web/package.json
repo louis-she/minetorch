@@ -23,6 +23,8 @@
     "bootstrap": "^3.3.7",
     "compress.js": "^1.1.2",
     "dateformat": "^3.0.3",
+    "dotenv": "^8.0.0",
+    "dotenv-webpack": "^1.7.0",
     "element-ui": "^2.4.7",
     "exif-js": "^2.3.0",
     "grapesjs": "^0.14.49",

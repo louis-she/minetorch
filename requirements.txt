@@ -3,7 +3,9 @@ Click==7.0
 cycler==0.10.0
 decorator==4.4.0
 dnspython==1.16.0
+entrypoints==0.3
 eventlet==0.25.0
+flake8==3.7.7
 Flask==1.0.2
 Flask-SocketIO==4.0.0
 greenlet==0.4.15
@@ -17,6 +19,7 @@ Jinja2==2.10.1
 kiwisolver==1.1.0
 MarkupSafe==1.1.1
 matplotlib==3.0.3
+mccabe==0.6.1
 Minetorch==0.3.5
 monotonic==1.5
 networkx==2.3
@@ -27,8 +30,11 @@ pandas==0.24.2
 peewee==3.9.5
 Pillow==6.0.0
 protobuf==3.7.1
+pycodestyle==2.5.0
+pyflakes==2.1.1
 pyparsing==2.4.0
 python-dateutil==2.8.0
+python-dotenv==0.10.3
 python-engineio==3.5.2
 python-socketio==4.0.2
 pytz==2019.1

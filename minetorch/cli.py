@@ -6,13 +6,15 @@ from multiprocessing import Process
 
 import append_sys_path  # noqa: F401
 import click
+from dotenv import load_dotenv
 
+load_dotenv()
 PYTHON_INTERPRETER = 'python3'
 
 
 def start_rpc_server():
     from rpc import RpcServer
-    server = RpcServer(10, '[::]:50051')
+    server = RpcServer(10, f"{os.getenv('SERVER_ADDR')}:{os.getenv('RPC_SERVER_PORT')}")
     server.serve()
 
 
@@ -21,7 +23,7 @@ def start_web_server():
     os.environ["FLASK_ENV"] = 'development'
     os.environ["FLASK_APP"] = web.__file__
     process = subprocess.Popen(
-        [PYTHON_INTERPRETER, '-m', 'flask', 'run'],
+        [PYTHON_INTERPRETER, '-m', 'flask', 'run', '-p', os.getenv('WEB_SERVER_PORT')],
         stdout=sys.stdout,
         cwd=Path(__file__).parent
     )
@@ -40,7 +42,7 @@ def start_webpack_dev_server():
 
 def start_socket_server():
     process = subprocess.Popen(
-        ['gunicorn', '--worker-class', 'eventlet', '--reload', 'pusher:app'],
+        ['gunicorn', '-b', f"{os.getenv('SERVER_ADDR')}:{os.getenv('WEB_SOCKET_PORT')}", '--worker-class', 'eventlet', '--reload', 'pusher:app'],
         cwd=Path(__file__).parent,
         stdout=sys.stdout
     )
