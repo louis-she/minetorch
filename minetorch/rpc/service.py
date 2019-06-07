@@ -84,7 +84,8 @@ class MinetorchServicer(minetorch_pb2_grpc.MinetorchServicer):
                 experiment_id=experiment.id,
                 snapshot_id=experiment.current_snapshot().id,
                 category=self.timer_mapping[request.category],
-                current=request.current
+                current=request.current,
+                ratio=request.ratio
             )
         return minetorch_pb2.StandardResponse(
             status=0,

@@ -57,6 +57,7 @@ message Timer {
   string name = 2;
   TimerCategory category = 3;
   int32 current = 4;
+  int32 ratio = 5;
 }
 
 message Point {

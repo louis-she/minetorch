@@ -66,6 +66,15 @@ def experiments_list():
     )))
 
 
+@experiment.route('', methods=['GET'])
+def get_experiment(experiment_id):
+    experiment = g.experiment.to_json_serializable()
+    experiment['snapshot'] = g.experiment.current_snapshot().to_json_serializable()
+    for component in [Dataset, Dataflow, Model, Optimizer, Loss]:
+        experiment[component.__name__.lower()] = get_component(component, False)
+    return jsonify(experiment)
+
+
 @api.route('/experiments', methods=['POST'])
 def create_experiment():
     name = request.values['name']
@@ -103,12 +112,15 @@ def create_component(component_class):
     return jsonify(component.to_json_serializable())
 
 
-def get_component(component_class):
+def get_component(component_class, should_jsonify=True):
     try:
         component = component_class.get(component_class.snapshot == g.snapshot)
     except peewee.DoesNotExist:
         return jsonify({})
-    return jsonify(component.to_json_serializable())
+    component_dict = component.to_json_serializable()
+    if should_jsonify:
+        return jsonify(component_dict)
+    return component_dict
 
 
 def update_component(component_class):

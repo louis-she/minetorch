@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='minetorch',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x1fminetorch/proto/minetorch.proto\x12\tminetorch\"3\n\x10StandardResponse\x12\x0e\n\x06status\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\"\xa8\x01\n\nHeyMessage\x12\x0f\n\x07ip_addr\x18\x01 \x01(\t\x12\x15\n\rexperiment_id\x18\x02 \x01(\x05\x12\x17\n\x0f\x65xperiment_name\x18\x03 \x01(\t\x12,\n\x06status\x18\x04 \x01(\x0e\x32\x1c.minetorch.HeyMessage.Status\"+\n\x06Status\x12\x08\n\x04IDLE\x10\x00\x12\x0c\n\x08TRAINING\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"\x8a\x01\n\tYoMessage\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\r\n\x05roger\x18\x02 \x01(\x08\x12-\n\x07\x63ommand\x18\x03 \x01(\x0e\x32\x1c.minetorch.YoMessage.Command\"(\n\x07\x43ommand\x12\t\n\x05TRAIN\x10\x00\x12\x08\n\x04HALT\x10\x01\x12\x08\n\x04KILL\x10\x02\"8\n\x03Log\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x0b\n\x03log\x18\x02 \x01(\t\x12\r\n\x05level\x18\x03 \x01(\t\"i\n\x05Timer\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12*\n\x08\x63\x61tegory\x18\x03 \x01(\x0e\x32\x18.minetorch.TimerCategory\x12\x0f\n\x07\x63urrent\x18\x04 \x01(\x05\"H\n\x05Point\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x12\n\ngraph_name\x18\x02 \x01(\t\x12\t\n\x01x\x18\x03 \x01(\x05\x12\t\n\x01y\x18\x04 \x01(\x02\"d\n\x05Graph\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x12\n\ngraph_name\x18\x02 \x01(\t\x12\x30\n\x0etimer_category\x18\x03 \x01(\x0e\x32\x18.minetorch.TimerCategory*7\n\rTimerCategory\x12\r\n\tITERATION\x10\x00\x12\t\n\x05\x45POCH\x10\x01\x12\x0c\n\x08SNAPSHOT\x10\x02\x32\xb7\x02\n\tMinetorch\x12\x36\n\x05HeyYo\x12\x15.minetorch.HeyMessage\x1a\x14.minetorch.YoMessage\"\x00\x12\x38\n\x07SendLog\x12\x0e.minetorch.Log\x1a\x1b.minetorch.StandardResponse\"\x00\x12;\n\x08SetTimer\x12\x10.minetorch.Timer\x1a\x1b.minetorch.StandardResponse\"\x00\x12;\n\x08\x41\x64\x64Point\x12\x10.minetorch.Point\x1a\x1b.minetorch.StandardResponse\"\x00\x12>\n\x0b\x43reateGraph\x12\x10.minetorch.Graph\x1a\x1b.minetorch.StandardResponse\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x1fminetorch/proto/minetorch.proto\x12\tminetorch\"3\n\x10StandardResponse\x12\x0e\n\x06status\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\"\xa8\x01\n\nHeyMessage\x12\x0f\n\x07ip_addr\x18\x01 \x01(\t\x12\x15\n\rexperiment_id\x18\x02 \x01(\x05\x12\x17\n\x0f\x65xperiment_name\x18\x03 \x01(\t\x12,\n\x06status\x18\x04 \x01(\x0e\x32\x1c.minetorch.HeyMessage.Status\"+\n\x06Status\x12\x08\n\x04IDLE\x10\x00\x12\x0c\n\x08TRAINING\x10\x01\x12\t\n\x05\x45RROR\x10\x02\"\x8a\x01\n\tYoMessage\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\r\n\x05roger\x18\x02 \x01(\x08\x12-\n\x07\x63ommand\x18\x03 \x01(\x0e\x32\x1c.minetorch.YoMessage.Command\"(\n\x07\x43ommand\x12\t\n\x05TRAIN\x10\x00\x12\x08\n\x04HALT\x10\x01\x12\x08\n\x04KILL\x10\x02\"8\n\x03Log\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x0b\n\x03log\x18\x02 \x01(\t\x12\r\n\x05level\x18\x03 \x01(\t\"x\n\x05Timer\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12*\n\x08\x63\x61tegory\x18\x03 \x01(\x0e\x32\x18.minetorch.TimerCategory\x12\x0f\n\x07\x63urrent\x18\x04 \x01(\x05\x12\r\n\x05ratio\x18\x05 \x01(\x05\"H\n\x05Point\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x12\n\ngraph_name\x18\x02 \x01(\t\x12\t\n\x01x\x18\x03 \x01(\x05\x12\t\n\x01y\x18\x04 \x01(\x02\"d\n\x05Graph\x12\x15\n\rexperiment_id\x18\x01 \x01(\x05\x12\x12\n\ngraph_name\x18\x02 \x01(\t\x12\x30\n\x0etimer_category\x18\x03 \x01(\x0e\x32\x18.minetorch.TimerCategory*7\n\rTimerCategory\x12\r\n\tITERATION\x10\x00\x12\t\n\x05\x45POCH\x10\x01\x12\x0c\n\x08SNAPSHOT\x10\x02\x32\xb7\x02\n\tMinetorch\x12\x36\n\x05HeyYo\x12\x15.minetorch.HeyMessage\x1a\x14.minetorch.YoMessage\"\x00\x12\x38\n\x07SendLog\x12\x0e.minetorch.Log\x1a\x1b.minetorch.StandardResponse\"\x00\x12;\n\x08SetTimer\x12\x10.minetorch.Timer\x1a\x1b.minetorch.StandardResponse\"\x00\x12;\n\x08\x41\x64\x64Point\x12\x10.minetorch.Point\x1a\x1b.minetorch.StandardResponse\"\x00\x12>\n\x0b\x43reateGraph\x12\x10.minetorch.Graph\x1a\x1b.minetorch.StandardResponse\"\x00\x62\x06proto3')
 )
 
 _TIMERCATEGORY = _descriptor.EnumDescriptor(
@@ -45,8 +45,8 @@ _TIMERCATEGORY = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=752,
-  serialized_end=807,
+  serialized_start=767,
+  serialized_end=822,
 )
 _sym_db.RegisterEnumDescriptor(_TIMERCATEGORY)
 
@@ -326,6 +326,13 @@ _TIMER = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ratio', full_name='minetorch.Timer.ratio', index=4,
+      number=5, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -339,7 +346,7 @@ _TIMER = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=469,
-  serialized_end=574,
+  serialized_end=589,
 )
 
 
@@ -390,8 +397,8 @@ _POINT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=576,
-  serialized_end=648,
+  serialized_start=591,
+  serialized_end=663,
 )
 
 
@@ -435,8 +442,8 @@ _GRAPH = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=650,
-  serialized_end=750,
+  serialized_start=665,
+  serialized_end=765,
 )
 
 _HEYMESSAGE.fields_by_name['status'].enum_type = _HEYMESSAGE_STATUS
@@ -512,8 +519,8 @@ _MINETORCH = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=810,
-  serialized_end=1121,
+  serialized_start=825,
+  serialized_end=1136,
   methods=[
   _descriptor.MethodDescriptor(
     name='HeyYo',

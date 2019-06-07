@@ -18,6 +18,9 @@ cd minetorch
 python3 -m venv .venv
 source .venv/bin/activate
 
+# create .env file
+cp .env.example .env
+
 # install libomp for PyTorch
 brew install libomp
 
@@ -39,7 +42,7 @@ cd ../..; python3 minetorch/cli.py dev
 
 # Test training process
 
-When you have used the web dashboard to generate a training config file under `~/.minetorch`, you have 2 choices to test the training process,
+After you have used the web dashboard to generate a training config file under `~/.minetorch`, you have 2 choices to test the training process,
 
 1. Install your local version of Minetorch and then run the `run.py` directly
 ```

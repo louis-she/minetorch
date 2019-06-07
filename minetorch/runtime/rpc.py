@@ -51,12 +51,13 @@ class RuntimeRpc():
         return self.stub.AddPoint(message)
 
     @retry(3)
-    def set_timer(self, current, category, name=None):
+    def set_timer(self, current, category, ratio=None, name=None):
         message = minetorch_pb2.Timer(
             experiment_id=self.experiment_id,
             category=category,
             current=current,
-            name=name
+            name=name,
+            ratio=ratio
         )
         return self.stub.SetTimer(message)
 

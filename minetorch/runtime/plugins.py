@@ -8,14 +8,18 @@ class CorePlugin(Plugin):
     This plugin activate Trainer with the ability to communicate with the
     Minetorch Server with some basic data collection such as loss.
     """
-    def before_epoch_start(self, payload, trainer):
-        env.rpc.set_timer(trainer.current_epoch, C.TIMER_EPOCH)
+    def after_init(self, payload, trainer):
+        ratio = len(trainer.train_dataloader)
+        env.rpc.set_timer(trainer.current_epoch, C.TIMER_EPOCH, ratio)
         env.rpc.set_timer(trainer.current_iteration, C.TIMER_ITERATION)
-        env.rpc.set_timer(None, C.TIMER_SNAPSHOT)
 
         env.rpc.create_graph('train_epoch_loss', C.TIMER_EPOCH)
         env.rpc.create_graph('val_epoch_loss', C.TIMER_EPOCH)
         env.rpc.create_graph('train_iteration_loss', C.TIMER_ITERATION)
+
+    def before_epoch_start(self, payload, trainer):
+        env.rpc.set_timer(trainer.current_epoch, C.TIMER_EPOCH)
+        env.rpc.set_timer(trainer.current_iteration, C.TIMER_ITERATION)
 
     def before_train_iteration_start(self, payload, trainer):
         env.rpc.set_timer(trainer.current_iteration, C.TIMER_ITERATION)

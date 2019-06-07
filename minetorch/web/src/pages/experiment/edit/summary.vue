@@ -35,7 +35,7 @@ export default {
   data () {
     return {
       termDialogVisible: false,
-      attach: `http://${process.env.SERVER_ADDR}:${process.env.WEB_SOCKET_PORT}/server_log`
+      experimentId: ''
     }
   },
   computed: {
@@ -44,6 +44,9 @@ export default {
     },
     trainingUrl() {
       return `/api/experiments/${this.experimentId}/training`
+    },
+    attach() {
+      return `http://${process.env.SERVER_ADDR}:${process.env.WEB_SOCKET_PORT}/server_log?experiment_id=${this.experimentId}`
     }
   },
   mounted () {

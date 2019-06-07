@@ -55,6 +55,7 @@ export default {
       })
 
       this.socket.on('new_server_log', (data) => {
+        console.log(data)
         data.split('\n').forEach((item) => {
           if (item) {
             this.info.push(item)

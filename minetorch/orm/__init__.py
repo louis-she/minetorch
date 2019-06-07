@@ -12,7 +12,7 @@ from minetorch.utils import server_file
 
 logger = logging.getLogger('peewee')
 logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 db_file = server_file('minetorch.db')
 db = SqliteDatabase(db_file)
@@ -201,6 +201,7 @@ class Timer(Base):
     # 1. iteration 2. epoch 3. snapshot
     category = CharField()
     current = IntegerField()
+    ratio = IntegerField(null=True)
 
 
 class Graph(Base):
