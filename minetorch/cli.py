@@ -14,7 +14,7 @@ PYTHON_INTERPRETER = 'python3'
 
 def start_rpc_server():
     from rpc import RpcServer
-    server = RpcServer(10, f"{os.getenv('SERVER_ADDR')}:{os.getenv('RPC_SERVER_PORT')}")
+    server = RpcServer(10, f"{os.getenv('BIND_IP_ADDR')}:{os.getenv('RPC_SERVER_PORT')}")
     server.serve()
 
 
@@ -22,7 +22,7 @@ def start_web_server(prod=False):
     import minetorch.web as web
     if prod:
         process = subprocess.Popen(
-            ['gunicorn', '-b', f"{os.getenv('SERVER_ADDR')}:{os.getenv('WEB_SERVER_PORT')}", 'web:app'],
+            ['gunicorn', '-b', f"{os.getenv('BIND_IP_ADDR')}:{os.getenv('WEB_SERVER_PORT')}", 'web:app'],
             cwd=Path(__file__).parent,
             stdout=sys.stdout
         )
@@ -49,7 +49,7 @@ def start_webpack_dev_server():
 
 def start_socket_server():
     process = subprocess.Popen(
-        ['gunicorn', '-b', f"{os.getenv('SERVER_ADDR')}:{os.getenv('WEB_SOCKET_PORT')}", '--worker-class', 'eventlet', '--reload', 'pusher:app'],
+        ['gunicorn', '-b', f"{os.getenv('BIND_IP_ADDR')}:{os.getenv('WEB_SOCKET_PORT')}", '--worker-class', 'eventlet', '--reload', 'pusher:app'],
         cwd=Path(__file__).parent,
         stdout=sys.stdout
     )
