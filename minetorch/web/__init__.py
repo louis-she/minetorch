@@ -1,4 +1,5 @@
 from flask import Flask, render_template, url_for, send_from_directory
+import append_sys_path  # noqa
 
 import minetorch
 from minetorch import model, dataset, dataflow, loss, optimizer

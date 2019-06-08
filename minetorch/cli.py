@@ -18,15 +18,22 @@ def start_rpc_server():
     server.serve()
 
 
-def start_web_server():
+def start_web_server(prod=False):
     import minetorch.web as web
-    os.environ["FLASK_ENV"] = 'development'
-    os.environ["FLASK_APP"] = web.__file__
-    process = subprocess.Popen(
-        [PYTHON_INTERPRETER, '-m', 'flask', 'run', '-p', os.getenv('WEB_SERVER_PORT')],
-        stdout=sys.stdout,
-        cwd=Path(__file__).parent
-    )
+    if prod:
+        process = subprocess.Popen(
+            ['gunicorn', '-b', f"{os.getenv('SERVER_ADDR')}:{os.getenv('WEB_SERVER_PORT')}", 'web:app'],
+            cwd=Path(__file__).parent,
+            stdout=sys.stdout
+        )
+    else:
+        os.environ["FLASK_ENV"] = 'development'
+        os.environ["FLASK_APP"] = web.__file__
+        process = subprocess.Popen(
+            [PYTHON_INTERPRETER, '-m', 'flask', 'run', '-p', os.getenv('WEB_SERVER_PORT')],
+            stdout=sys.stdout,
+            cwd=Path(__file__).parent
+        )
     process.wait()
 
 
@@ -94,6 +101,18 @@ def proto_compile():
         f"--grpc_python_out=.",
         f"{proto_dir / 'minetorch.proto'}"
     ], stdout=sys.stdout, cwd=minetorch_dir)
+
+
+@cli.command('prod')
+def prod():
+    subprocs = []
+    subprocs.append(Process(target=start_rpc_server))
+    subprocs.append(Process(target=start_web_server, args=(True,)))
+    subprocs.append(Process(target=start_socket_server))
+    for process in subprocs:
+        process.start()
+    for process in subprocs:
+        process.join()
 
 
 @cli.command('runtime:run')
