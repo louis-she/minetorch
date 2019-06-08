@@ -46,7 +46,7 @@ export default {
       return `/api/experiments/${this.experimentId}/training`
     },
     attach() {
-      return `http://${process.env.SERVER_ADDR}:${process.env.WEB_SOCKET_PORT}/server_log?experiment_id=${this.experimentId}`
+      return `http://${process.env.SERVER_ADDR}:${process.env.WEB_SOCKET_PORT}/common?experiment_id=${this.experimentId}`
     }
   },
   mounted () {

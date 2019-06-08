@@ -2,31 +2,38 @@ import socketio
 import append_sys_path  # noqa
 from minetorch.utils import tail
 import eventlet
-import re
 import glob
 from minetorch.orm import Experiment
 from pathlib import Path
+import urllib.parse
 
+# see https://github.com/miguelgrinberg/python-socketio/issues/155
+eventlet.monkey_patch()
 
-sio = socketio.Server()
+sio = socketio.Server(client_manager=socketio.RedisManager('redis://localhost:6379/1'))
 app = socketio.WSGIApp(sio)
 
 
-@sio.on('connect', namespace="/server_log")
+def parse_query_string(query_string):
+    get_arguments = urllib.parse.parse_qs(query_string)
+    return {k: v[0] for k, v in get_arguments.items()}
+
+
+@sio.on('connect', namespace="/common")
 def connect(sid, environ):
-    experiment_id = re.findall(r'experiment_id=(.*?)&', environ.get('QUERY_STRING'))[0]
+    experiment_id = parse_query_string(environ.get('QUERY_STRING')).get('experiment_id')
     experiment = Experiment.get(Experiment.id == experiment_id)
-    sio.enter_room(sid, experiment.name, namespace="/server_log")
+    sio.enter_room(sid, experiment.name, namespace="/common")
 
 
-@sio.on('disconnect', namespace="/server_log")
+@sio.on('disconnect', namespace="/common")
 def disconnect(sid):
     print('disconnect ', sid)
 
 
 def tail_thread(log_file):
     def handle_tail(text):
-        sio.emit('new_server_log', text, namespace="/server_log", room=str(Path(log_file).parent.stem))
+        sio.emit('new_server_log', data=text, namespace="/common", room=str(Path(log_file).parent.stem))
     tail(log_file, handle_tail, 0.4)
 
 

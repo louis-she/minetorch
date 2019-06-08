@@ -5,6 +5,7 @@ from minetorch.logger import get_runtime_logger
 from minetorch.orm import Experiment, Graph, Timer
 
 from minetorch.proto import minetorch_pb2, minetorch_pb2_grpc
+import socketio
 
 
 class MinetorchServicer(minetorch_pb2_grpc.MinetorchServicer):
@@ -17,6 +18,8 @@ class MinetorchServicer(minetorch_pb2_grpc.MinetorchServicer):
         C.TIMER_EPOCH: 2,
         C.TIMER_SNAPSHOT: 3,
     }
+
+    sio = socketio.RedisManager('redis://', write_only=True)
 
     def _get_experiment(self, experiment_id):
         if experiment_id in self.caches:
@@ -65,6 +68,12 @@ class MinetorchServicer(minetorch_pb2_grpc.MinetorchServicer):
             return err
         graph = experiment.graphs.where(Graph.name == request.graph_name).get()
         graph.add_point(graph.timer.current, request.y)
+        self.sio.emit('add_point', {
+            'graph_id': graph.id,
+            'graph_name': graph.name,
+            'x': graph.timer.current,
+            'y': request.y
+        }, room=experiment.name, namespace='/common')
         return minetorch_pb2.StandardResponse(
             status=0,
             message='ok'

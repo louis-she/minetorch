@@ -1,4 +1,6 @@
+aioredis==1.2.0
 albumentations==0.2.3
+async-timeout==3.0.1
 Click==7.0
 cycler==0.10.0
 decorator==4.4.0
@@ -12,6 +14,7 @@ greenlet==0.4.15
 grpcio==1.20.1
 grpcio-tools==1.20.1
 gunicorn==19.9.0
+hiredis==1.0.0
 imageio==2.5.0
 imgaug==0.2.6
 itsdangerous==1.1.0
@@ -39,6 +42,7 @@ python-engineio==3.5.2
 python-socketio==4.0.2
 pytz==2019.1
 PyWavelets==1.0.3
+redis==3.2.1
 scikit-image==0.15.0
 scipy==1.2.1
 six==1.12.0

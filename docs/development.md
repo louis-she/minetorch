@@ -8,6 +8,8 @@ Minetorch is totally python3(not consider python2 at all), so before starting pl
 After python3 installed, follow the next steps to setup Minetorch development environment:
 
 ```shell
+# install redis and using the default configuration
+
 # clone this repo, make sure you have access, or you should fork and clone your own.
 git clone git@github.com:minetorch/minetorch.git
 
