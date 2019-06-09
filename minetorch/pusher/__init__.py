@@ -1,5 +1,4 @@
 import socketio
-import append_sys_path  # noqa
 from minetorch.utils import tail
 import eventlet
 import glob

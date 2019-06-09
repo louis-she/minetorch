@@ -26,7 +26,7 @@ def main_process(config_file):
             elif res.command == C.COMMAND_HALT and current_status != C.STATUS_IDLE:
                 env.logger.info('training process has been killed')
                 current_status = C.STATUS_IDLE
-                training_process.terminate()
+                training_process.kill()
             elif res.command == C.COMMAND_KILL:
                 env.logger.info('main process has been killed')
                 break
