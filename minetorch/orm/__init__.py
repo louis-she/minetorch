@@ -47,7 +47,8 @@ class Base(PeeweeModel):
 class Experiment(Base):
     name = CharField(unique=True)
     total_training_time = IntegerField(default=0)
-    is_training = IntegerField(default=0, null=True)
+    # 1: stopped 2: idle 3: training
+    status = IntegerField(default=1, null=True)
     last_stopped_at = DateTimeField(null=True)
     last_started_at = DateTimeField(null=True)
 
@@ -90,7 +91,6 @@ class Experiment(Base):
             current.category = 2
             current.save()
 
-        self.is_training = 1
         self.save()
 
 

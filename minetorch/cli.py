@@ -12,6 +12,11 @@ load_dotenv()
 PYTHON_INTERPRETER = 'python3'
 
 
+def stop_all_experiment():
+    from minetorch.orm import Experiment
+    Experiment.update({Experiment.status: 1}).execute()
+
+
 def start_rpc_server():
     from rpc import RpcServer
     server = RpcServer(10, f"{os.getenv('BIND_IP_ADDR')}:{os.getenv('RPC_SERVER_PORT')}")
@@ -64,6 +69,7 @@ def cli():
 @cli.command('dev')
 @click.option('--webpack/--no-webpack', help='should start webpack-dev-server process', default=True)
 def development(webpack):
+    stop_all_experiment()
     subprocs = []
 
     subprocs.append(Process(target=start_rpc_server))
@@ -105,6 +111,7 @@ def proto_compile():
 
 @cli.command('prod')
 def prod():
+    stop_all_experiment()
     subprocs = []
     subprocs.append(Process(target=start_rpc_server))
     subprocs.append(Process(target=start_web_server, args=(True,)))

@@ -30,10 +30,15 @@ def disconnect(sid):
     print('disconnect ', sid)
 
 
-def tail_thread(log_file):
-    def handle_tail(text):
-        sio.emit('new_server_log', data=text, namespace="/common", room=str(Path(log_file).parent.stem))
-    tail(log_file, handle_tail, 0.4)
+def create_tail_thread(log_file):
+    def tail_thread():
+        nonlocal log_file
+
+        def handle_tail(text):
+            sio.emit('new_server_log', data=text, namespace="/common", room=str(Path(log_file).parent.stem))
+        tail(log_file, handle_tail, 0.4)
+
+    return tail_thread
 
 
 def get_log_files():
@@ -43,11 +48,13 @@ def get_log_files():
 def watch_thread():
     current_log_files = log_files = get_log_files()
     while True:
+        print(log_files)
         for log_file in log_files:
-            eventlet.spawn(tail_thread(log_file))
+            eventlet.spawn(create_tail_thread(log_file))
         new_log_files = get_log_files()
         log_files = new_log_files - current_log_files
         current_log_files = new_log_files
+        eventlet.sleep(10)
 
 
 eventlet.spawn(watch_thread)

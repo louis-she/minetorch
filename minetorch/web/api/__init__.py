@@ -242,15 +242,16 @@ def create_publish(experiment_id):
 
 @experiment.route('/training', methods=['POST'])
 def start_train(experiment_id):
-    g.experiment.is_training = 1
+    if g.experiment.status == 1:
+        create_runtime_process(g.experiment)
+    g.experiment.status = 3
     g.experiment.save()
-    create_runtime_process(g.experiment)
     return jsonify({'message': 'ok'})
 
 
 @experiment.route('/halt', methods=['POST'])
 def halt_train(experiment_id):
-    g.experiment.is_training = 0
+    g.experiment.status = 2
     g.experiment.save()
     return jsonify({'message': 'ok'})
 
@@ -276,6 +277,7 @@ def resource_conflict(error):
 
 
 def create_runtime_process(experiment):
+    # Check if the experiment status is stopped. if yes, create the training process
     logging.info('creating runtime')
     runtime_process = Process(target=main_process, args=(runtime_file(Path(str(experiment.current_snapshot().id)) / 'config.json', experiment),))
     # TODO: maybe we should detach the child process

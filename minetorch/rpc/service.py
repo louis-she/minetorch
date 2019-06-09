@@ -127,7 +127,7 @@ class MinetorchServicer(minetorch_pb2_grpc.MinetorchServicer):
                 command=C.COMMAND_HALT
             )
 
-        command = C.COMMAND_TRAIN if experiment.is_training == 1 else C.COMMAND_HALT
+        command = C.COMMAND_TRAIN if experiment.status == 3 else C.COMMAND_HALT
         return minetorch_pb2.YoMessage(
             roger=True,
             command=command

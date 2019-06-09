@@ -9,8 +9,8 @@
         <el-table-column label="training status" align="center">
           <template slot-scope="scope">
             <div class="flex-wrapper">
-              <div :style="{background: scope.row.isTraining === 1 ? '#67C23A' : '#E6A23C'}" :class="{ dot: true, breathe: scope.row.isTraining === 1 }" ></div>
-              {{ scope.row.isTraining === 1 ? 'training' : 'halt' }}
+              <div :style="{background: status(scope.row.status).color}" :class="{ dot: true, breathe: scope.row.status === 3 }" ></div>
+              {{ status(scope.row.status).text }}
             </div>
           </template>
         </el-table-column>
@@ -26,10 +26,16 @@
         </el-table-column>
         <el-table-column label="operations" align="center" width="300">
           <template slot-scope="scope">
-            <el-button v-if="scope.row.isTraining === 0" :style="{color: '#67C23A'}" type="text" size="mini"
-                       @click="startTrainingProcess(scope.row.id)">start</el-button>
-            <el-button v-else :style="{color: '#E6A23C'}" type="text" size="mini"
-                       @click="stopTrainingProcess(scope.row.id)">halt</el-button>
+            <template v-if="scope.row.status === 1">
+            </template>
+            <template v-else-if="scope.row.status === 2">
+              <el-button :style="{color: status(3).color}" type="text" size="mini"
+                         @click="startTrainingProcess(scope.row.id)">start</el-button>
+            </template>
+            <template v-else>
+              <el-button :style="{color: status(2).color}" type="text" size="mini"
+                         @click="stopTrainingProcess(scope.row.id)">halt</el-button>
+            </template>
             <el-button type="text" size="mini">
               <router-link :to="{ name: 'EditExperimentComponent', params: { experimentId: scope.row.id, componentName: 'dataset' }}">
                 config
@@ -107,6 +113,22 @@ export default {
       const experiments = await this.ajax.get('/api/experiments')
       this.tableData = experiments
       this.loading = false
+    },
+    status(status) {
+      return {
+        1: {
+          color: '#F56C6C',
+          text: 'stopped'
+        },
+        2: {
+          color: '#E6A23C',
+          text: 'idle'
+        },
+        3: {
+          color: '#67C23A',
+          text: 'running'
+        }
+      }[status]
     },
     // 搜索
     onSearch () {
