@@ -6,8 +6,8 @@ import peewee
 from flask import Blueprint, abort, g, jsonify, request
 from minetorch import dataflow, dataset, loss, model, optimizer
 from minetorch.core import setup_runtime_directory
-from minetorch.orm import (Dataflow, Dataset, Experiment, Loss,
-                           Model, Optimizer, Graph)
+from minetorch.orm import (find_component, Dataflow, Dataset, Experiment, Loss,
+                           Model, Optimizer, Graph, Workflow, Component)
 from multiprocessing import Process
 from minetorch.runtime import main_process
 from minetorch.utils import runtime_file
@@ -15,6 +15,7 @@ from minetorch.utils import runtime_file
 api = Blueprint('api', 'api', url_prefix='/api')
 experiment = Blueprint('experiment', 'experiment', url_prefix='/api/experiments/<experiment_id>')
 graph = Blueprint('graph', 'graph', url_prefix='/api/graphs/<graph_id>')
+workflow = Blueprint('workflow', 'workflow', url_prefix='/api/workflow/<workflow_id>')
 
 
 @experiment.before_request
@@ -99,11 +100,18 @@ def create_component(component_class):
         component = component_class.create(
             name=name,
             settings=json.dumps(settings),
-            snapshot_id=g.snapshot.id
+            snapshot_id=g.snapshot.id,
+            workflow_id=g.workflow.id
         )
     except peewee.IntegrityError:
         abort(409)
 
+    if request.values['prev_component_id']:
+        prev_component = component.set_prev_component(request.values['prev_component_id'])
+        if not prev_component:
+            abort(422)
+
+    # TODO: should we allow the component of the same type being added multiple time?
     component_class.delete().where(
         (component_class.snapshot == g.snapshot) &
         (component_class.id != component.id) &
@@ -254,6 +262,34 @@ def halt_train(experiment_id):
     g.experiment.status = 2
     g.experiment.save()
     return jsonify({'message': 'ok'})
+
+
+@experiment.route('/workflows', methods=['GET'])
+def experiment_workflows(experiment_id):
+    return jsonify(list(map(lambda m: m.to_json_serializable(), g.experiment.workflows)))
+
+
+@experiment.route('/workflows', methods=['POST'])
+def create_workflows(experiment_id):
+    workflow = Workflow.create(
+        name=request.values['name'],
+        snapshot_id=g.snapshot.id,
+    )
+    if request.values['prev_workflow_id']:
+        prev_workflow = workflow.set_prev_workflow(request.values['prev_workflow_id'])
+        if prev_workflow is None:
+            abort(422)
+    return jsonify({'message': 'ok'})
+
+
+@workflow.route('/<component_type>', methods=['POST'])
+def create_workflow_component(experiment_id, component_type):
+    component_type = component_type.capitalize()
+    component_class = find_component(component_type)
+    if component_class is None:
+        abort(422)
+    return create_component(component_class)
+
 
 # Graphs
 @experiment.route('/graphs', methods=['GET'])

@@ -84,10 +84,17 @@ def development(webpack):
         process.join()
 
 
+@cli.command('db:seed')
+@click.option('--name', help='Experiment name')
+def db_seed(name):
+    from seed import create_sample_experiment
+    create_sample_experiment(name)
+
+
 @cli.command('db:init')
 def db_init():
-    from minetorch.orm import Component, Experiment, Snapshot, Timer, Graph, Point
-    for model_class in [Component, Experiment, Snapshot, Timer, Graph, Point]:
+    from minetorch.orm import Component, Experiment, Snapshot, Timer, Graph, Point, Workflow
+    for model_class in [Component, Experiment, Snapshot, Timer, Graph, Point, Workflow]:
         model_class.drop_table()
         print(f"creating {model_class}")
         model_class.create_table(safe=False)

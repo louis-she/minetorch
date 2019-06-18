@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import functools
 
 import peewee
 from peewee import (CharField, DateTimeField, Field, ForeignKeyField,
@@ -122,16 +123,41 @@ class Snapshot(Base):
         return self.category == 2
 
 
+class Workflow(Base):
+    """Workflow is a container of ordered Components. Workflow can be chained
+    to do more complicated stuff. For instance, by most cases, there will be 2
+    workflow in order: train workflow -> val workflow
+    """
+    name = CharField()
+    next_workflow_id = IntegerField(null=True)
+    snapshot = ForeignKeyField(Snapshot, backref='components')
+    plugins = CharField(null=True)
+
+    class Meta:
+        indexes = ('next_workflow_id')
+
+    def set_prev_workflow(self, prev_workflow_id):
+        try:
+            prev_workflow = Workflow.get_by_id(prev_workflow_id)
+        except peewee.DoesNotExist:
+            return None
+        prev_workflow.update(next_workflow_id=self.id).execute()
+        return prev_workflow
+
+
 class Component(Base):
     name = CharField()
     category = CharField()
     settings = JsonField(null=True)
     snapshot = ForeignKeyField(Snapshot, backref='components')
+    workflow = ForeignKeyField(Workflow, backref='components')
+    next_component_id = IntegerField(null=True)
     code = TextField(null=True)
 
     class Meta:
         indexes = (
             (('name', 'snapshot'), True),
+            'next_component_id'
         )
 
     def clone(self, snapshot):
@@ -152,6 +178,14 @@ class Component(Base):
         if 'category' not in query:
             query['category'] = cls.__name__
         return super().create(**query)
+
+    def set_prev_component(self, prev_component_id):
+        try:
+            prev_component = Component.get_by_id(prev_component_id)
+        except peewee.DoesNotExist:
+            return None
+        prev_component.update(next_component_id=self.id).execute()
+        return prev_component
 
 
 class Model(Component):
@@ -239,4 +273,16 @@ class Point(PeeweeModel):
         }
 
 
-__all__ = ['Base', 'Experiment', 'Component', 'Model', 'Dataset', 'Dataflow', 'Optimizer', 'Loss', 'Graph', 'Point', 'Timer']
+def reduce_callback(mapping, model):
+    mapping[model.__name__] = model
+
+
+components_mapping = functools.reduce(reduce_callback, Component.__subclasses__(), {})
+
+
+def find_component(name):
+    return components_mapping.get(name, None)
+
+
+__all__ = ['Base', 'Experiment', 'Component', 'Model', 'Dataset', 'Dataflow',
+           'Optimizer', 'Loss', 'Graph', 'Point', 'Timer', 'Workflow', 'find_component']
