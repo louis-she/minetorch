@@ -275,6 +275,7 @@ class Point(PeeweeModel):
 
 def reduce_callback(mapping, model):
     mapping[model.__name__] = model
+    return mapping
 
 
 components_mapping = functools.reduce(reduce_callback, Component.__subclasses__(), {})
