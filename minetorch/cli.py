@@ -136,5 +136,19 @@ def runtime_run(config):
     main(config)
 
 
+@cli.command('package:add')
+@click.argument('package')
+def add_package(package):
+    from minetorch.package_manager import PackageManager
+    PackageManager().add_package(package)
+
+
+@cli.command('package:remove')
+@click.argument('package')
+def remove_package(package):
+    from minetorch.package_manager import PackageManager
+    PackageManager().remove_package(package)
+
+
 if __name__ == '__main__':
     cli()
