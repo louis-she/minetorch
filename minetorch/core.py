@@ -5,14 +5,12 @@ import json
 from pathlib import Path
 from shutil import copyfile
 from minetorch.utils import runtime_file
+from minetorch.package_manager import package_manager
 
 
 def load_default_modules():
-    importlib.import_module('minetorch.datasets')
-    importlib.import_module('minetorch.dataflows')
-    importlib.import_module('minetorch.models')
-    importlib.import_module('minetorch.optimizers')
-    importlib.import_module('minetorch.losses')
+    for package in package_manager.packages:
+        importlib.import_module(package)
 
 
 def load_external_modules():

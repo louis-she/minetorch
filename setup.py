@@ -12,12 +12,12 @@ setuptools.setup(
     description='A tools collection for pytorch users',
     version='0.3.5',
     packages=setuptools.find_packages(),
-    url="https://github.com/louis-she/minetorch",
+    url="https://github.com/minetorch/minetorch",
     author='louis',
     author_email='chenglu.she@gmail.com',
     keywords='pytorch minecraft',
     install_requires=required,
-    entry_points = {
+    entry_points={
         'console_scripts': ['minetorch=minetorch.cli:cli'],
     }
 )
