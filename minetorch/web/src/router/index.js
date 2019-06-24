@@ -31,6 +31,11 @@ export default new Router({
               component: () => import('pages/experiment/edit/component')
             }
           ]
+        },
+        {
+          path: '/train/:experimentId',
+          name: 'Train',
+          component: () => import('pages/train')
         }
       ]
     },

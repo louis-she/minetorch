@@ -38,10 +38,10 @@ export default {
   height: 100%;
   .el-main {
     padding: 30px;
+    overflow: inherit;
   }
 }
 .container {
-    width: 100%;
-    background-color: #edf0f5;
-    }
+  width: 100%;
+}
 </style>

@@ -16,6 +16,7 @@ export default {
 html, body {
   margin: 0;
   height: 100%;
+  background-color: #edf0f5;
 }
 
 #app {

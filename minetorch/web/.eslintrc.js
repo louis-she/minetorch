@@ -9,9 +9,7 @@ module.exports = {
     mocha: true
   },
   globals: {
-    expect: true,
-    JSONEditor: true,
-    sceditor: true,
+    echarts: true,
     $: true
   },
   extends: [
