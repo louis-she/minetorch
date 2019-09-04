@@ -1,8 +1,11 @@
 import logging
 import os
+import time
 from pathlib import Path
 
 import torch
+import tqdm
+from IPython.core.display import HTML, display
 
 from . import drawers
 
@@ -58,13 +61,14 @@ class Trainer(object):
                  code="geass", train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1,
                  drawer=None, hooks={}, max_epochs=None,
-                 logging_format=None, trival=False):
+                 logging_format=None, trival=False, in_notebook=False):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         self.create_dirs()
         self.set_logging_config(alchemistic_directory, code, logging_format)
         self.create_drawer(drawer)
         self.models_dir = os.path.join(alchemistic_directory, code, 'models')
+        self.in_notebook = in_notebook
 
         self.model = model
         self.optimizer = optimizer
@@ -86,6 +90,14 @@ class Trainer(object):
         self.call_hook_func('after_init')
         self.status = 'init'
         self.trival = trival
+
+        self.set_tqdm()
+
+    def set_tqdm(self):
+        if self.in_notebook:
+            self.tqdm = tqdm.tqdm_notebook
+        else:
+            self.tqdm = lambda x: x
 
     def set_logging_config(self, alchemistic_directory, code, logging_format):
         self.log_dir = os.path.join(alchemistic_directory, code)
@@ -109,6 +121,29 @@ class Trainer(object):
         else:
             self.drawer = drawer
 
+    def notebook_output(self, message, _type='info'):
+        type_config = {
+            'info': ['💬', '#6f818a'],
+            'success': ['✅', '#7cb305'],
+            'error': ['❌', '#cf1322'],
+            'warning': ['⚠️', '#d46b08'],
+        }[_type]
+        if self.in_notebook:
+            display(HTML(
+                f'<div style="font-size: 12px; color: {type_config[1]}">'
+                f'⏰ {time.strftime("%b %d - %H:%M:%S")} >>> '
+                f'{type_config[0]} {message}'
+                '</div>'
+            ))
+
+    def notebook_divide(self, message):
+        if self.in_notebook:
+            display(HTML(
+                '<div style="display: flex; justify-content: center;">'
+                f'<h3 style="color: #7cb305; border-bottom: 4px dashed #91d5ff; padding-bottom: 6px;">{message}</h3>'
+                '</div>'
+            ))
+
     def init_model(self):
         """resume from some checkpoint
         """
@@ -118,8 +153,10 @@ class Trainer(object):
                 checkpoint_path = self.model_file_path('latest')
             else:
                 checkpoint_path = None
-                logging.warning('Could not find checkpoint to resume, '
-                                'train from scratch')
+                msg = ('Could not find checkpoint to resume, '
+                       'train from scratch')
+                logging.warning(msg)
+                self.notebook_output(msg, _type='warning')
         elif isinstance(self.resume, str):
             checkpoint_path = self.model_file_path(self.resume)
         elif isinstance(self.resume, int):
@@ -132,7 +169,9 @@ class Trainer(object):
             raise Exception(f"Could not find model {self.resume}")
 
         if checkpoint_path is not None:
-            logging.info(f"Start to load checkpoint {checkpoint_path}")
+            msg = f"Start to load checkpoint {checkpoint_path}"
+            logging.info(msg)
+            self.notebook_output(msg)
             checkpoint = torch.load(checkpoint_path)
             self.current_epoch = checkpoint['epoch']
             self.lowest_train_loss = checkpoint['lowest_train_loss']
@@ -141,16 +180,18 @@ class Trainer(object):
             try:
                 self.model.load_state_dict(checkpoint['state_dict'], strict=True)
             except:
-                logging.warning(
-                    'load checkpoint failed, the state in the '
-                    'checkpoint is not matched with the model, '
-                    'try to reload checkpoint with unstrict mode')
+                msg = ('load checkpoint failed, the state in the '
+                       'checkpoint is not matched with the model, '
+                       'try to reload checkpoint with unstrict mode')
+                logging.warning(msg)
+                self.notebook_output(msg)
                 self.model.load_state_dict(checkpoint['state_dict'], strict=False)
 
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             if (self.drawer is not None) and ('drawer_state' in checkpoint):
                 self.drawer.set_state(checkpoint['drawer_state'])
-            logging.info('Checkpoint loaded')
+            msg = 'checkpoint loaded'
+            self.notebook_output(msg, _type='success')
 
     def call_hook_func(self, name):
         if name not in self.hook_funcs:
@@ -163,27 +204,34 @@ class Trainer(object):
         while True:
             self.call_hook_func('before_epoch_start')
             self.current_epoch += 1
+            self.notebook_divide(f'Epoch {self.current_epoch}')
 
             self.model.train()
             train_iters = len(self.train_dataloader)
 
             total_train_loss = 0
-            for index, data in enumerate(self.train_dataloader):
+            self.notebook_output(f'start to train epoch {self.current_epoch}')
+            for index, data in enumerate(self.tqdm(self.train_dataloader)):
                 if self.trival is True and index == 10:
                     break
                 total_train_loss += self.run_train_iteration(index, data, train_iters)
             total_train_loss = total_train_loss / train_iters
+            self.notebook_output(f'training of epoch {self.current_epoch} finished, '
+                                 f'loss is {total_train_loss}')
 
             total_val_loss = 0
             if self.val_dataloader is not None:
                 val_iters = len(self.val_dataloader)
                 with torch.set_grad_enabled(False):
                     self.model.eval()
-                    for index, data in enumerate(self.val_dataloader):
+                    self.notebook_output(f'validate epoch {self.current_epoch}')
+                    for index, data in enumerate(self.tqdm(self.val_dataloader)):
                         if self.trival is True and index == 10:
                             break
                         total_val_loss += self.run_val_iteration(index, data, val_iters)
                 total_val_loss = total_val_loss / val_iters
+                self.notebook_output(f'validation of epoch {self.current_epoch} '
+                                     f'finished, loss is {total_val_loss}')
 
             self.call_hook_func('after_epoch_end')
 
@@ -196,10 +244,11 @@ class Trainer(object):
                 self.lowest_train_loss = total_train_loss
 
             if total_val_loss < self.lowest_val_loss:
-                logging.info(
-                    'current val loss {} is lower than lowest {}, '
-                    'persist this model as best one'.format(
-                        total_val_loss, self.lowest_val_loss))
+                message = ('current val loss {} is lower than lowest {}, '
+                           'persist this model as best one'.format(
+                            total_val_loss, self.lowest_val_loss))
+                self.notebook_output(f'{message}', _type='success')
+                logging.info(message)
 
                 self.lowest_val_loss = total_val_loss
                 self.persist('best')
@@ -260,7 +309,9 @@ class Trainer(object):
         }
 
         torch.save(state, self.standard_model_path(name))
-        logging.info(f'save checkpoint to {self.standard_model_path(name)}')
+        message = f'save checkpoint to {self.standard_model_path(name)}'
+        logging.info(message)
+        self.notebook_output(message)
         self.call_hook_func('after_checkpoint_persisted')
 
     def standard_model_path(self, model_name):

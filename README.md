@@ -85,6 +85,7 @@ And that's it, minetorch will take care of others things like `logging`, `resumm
 | max_epochs | int  | How many epochs to train, defaults to None, means unlimited |
 | logging_format | string  | Defaults to '%(levelname)s %(asctime)s %(message)s', same as logging's format |
 | trival | bool  | Defaults to False, if set to True, both training and validation process will be breaked in 10 iterations, useful at development stage |
+| in_notebook | bool  | Defaults to False, if use minetorch in jupyter notebook environment, set this option to True to have a better output |
 
 ## Hooks
 
@@ -107,7 +108,7 @@ Minetorch provided many hook points for users to controller the training behavio
 
 - [x] More hook points.
 - [ ] Number of x axis of Drawer generated images are not changed after resume from checkpoint.
-- [ ] Drawer DB Adapter. To persist drawer data to db and then can be visualization by any tools. 
+- [ ] Drawer DB Adapter. To persist drawer data to db and then can be visualization by any tools.
 - [ ] Graceful exists.
 - [ ] Dockerize.
 
