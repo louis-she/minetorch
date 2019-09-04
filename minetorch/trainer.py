@@ -60,7 +60,7 @@ class Trainer(object):
     def __init__(self, alchemistic_directory, model, optimizer, loss_func,
                  code="geass", train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1,
-                 drawer=None, hooks={}, max_epochs=None, statable={},
+                 drawer='matplotlib', hooks={}, max_epochs=None, statable={},
                  logging_format=None, trival=False, in_notebook=False):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
