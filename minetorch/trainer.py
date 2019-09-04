@@ -60,7 +60,7 @@ class Trainer(object):
     def __init__(self, alchemistic_directory, model, optimizer, loss_func,
                  code="geass", train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1,
-                 drawer=None, hooks={}, max_epochs=None,
+                 drawer=None, hooks={}, max_epochs=None, statable={},
                  logging_format=None, trival=False, in_notebook=False):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
@@ -69,6 +69,7 @@ class Trainer(object):
         self.create_drawer(drawer)
         self.models_dir = os.path.join(alchemistic_directory, code, 'models')
         self.in_notebook = in_notebook
+        self.statable = statable
 
         self.model = model
         self.optimizer = optimizer
@@ -91,9 +92,15 @@ class Trainer(object):
         self.status = 'init'
         self.trival = trival
 
-        self.set_tqdm()
+        self._set_tqdm()
+        self._check_statable()
 
-    def set_tqdm(self):
+    def _check_statable(self):
+        for name, statable in self.statable.items():
+            if not (hasattr(statable, 'state_dict') and hasattr(statable, 'load_state_dict')):
+                raise Exception(f'The {name} is not a statable object')
+
+    def _set_tqdm(self):
         if self.in_notebook:
             self.tqdm = tqdm.tqdm_notebook
         else:
@@ -190,13 +197,21 @@ class Trainer(object):
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             if (self.drawer is not None) and ('drawer_state' in checkpoint):
                 self.drawer.set_state(checkpoint['drawer_state'])
+
+            if 'statable' in checkpoint:
+                for name, statable in self.statable.items():
+                    if name not in checkpoint['statable']:
+                        continue
+                    statable.load_state_dict(checkpoint['statable'][name])
             msg = 'checkpoint loaded'
             self.notebook_output(msg, _type='success')
 
-    def call_hook_func(self, name):
+
+
+    def call_hook_func(self, name, *args, **kwargs):
         if name not in self.hook_funcs:
             return
-        self.hook_funcs[name](self)
+        self.hook_funcs[name](self, *args, **kwargs)
 
     def train(self):
         """start to train the model
@@ -232,8 +247,7 @@ class Trainer(object):
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch} '
                                      f'finished, loss is {total_val_loss}')
-
-            self.call_hook_func('after_epoch_end')
+                self.call_hook_func('after_epoch_end', train_loss=total_train_loss, val_loss=total_val_loss)
 
             if self.drawer is not None:
                 self.drawer.scalars(
@@ -276,7 +290,7 @@ class Trainer(object):
         if loss < self.lowest_train_loss:
             self.lowest_train_loss = loss
 
-        self.call_hook_func('after_train_iteration_end')
+        self.call_hook_func('after_train_iteration_end', loss=loss)
         return loss
 
     def run_val_iteration(self, index, data, val_iters):
@@ -287,7 +301,7 @@ class Trainer(object):
         logging.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
 
-        self.call_hook_func('after_val_iteration_ended')
+        self.call_hook_func('after_val_iteration_ended', loss=loss)
         return loss
 
     def persist(self, name):
@@ -305,8 +319,12 @@ class Trainer(object):
             'epoch': self.current_epoch,
             'lowest_train_loss': self.lowest_train_loss,
             'lowest_val_loss': self.lowest_val_loss,
-            'drawer_state': drawer_state
+            'drawer_state': drawer_state,
+            'statable': {}
         }
+
+        for statable_name, statable in self.statable.items():
+            state['statable'][statable_name] = statable.state_dict()
 
         torch.save(state, self.standard_model_path(name))
         message = f'save checkpoint to {self.standard_model_path(name)}'

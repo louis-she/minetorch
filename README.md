@@ -86,6 +86,7 @@ And that's it, minetorch will take care of others things like `logging`, `resumm
 | logging_format | string  | Defaults to '%(levelname)s %(asctime)s %(message)s', same as logging's format |
 | trival | bool  | Defaults to False, if set to True, both training and validation process will be breaked in 10 iterations, useful at development stage |
 | in_notebook | bool  | Defaults to False, if use minetorch in jupyter notebook environment, set this option to True to have a better output |
+| statable | dict  | Defaults to {}. A statble is an object which has implemented `state_dict` and `load_state_dict`, pass these objects in statable dict will let minetorch handle the load and save operation on it. For instance, Learning Rate Schedular is a tipical statable object. Don't put optimizer and model here, minetorch already know that they are statble.|
 
 ## Hooks
 
