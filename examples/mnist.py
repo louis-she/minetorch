@@ -62,7 +62,7 @@ def compute_loss(trainer, data):
 
 # step 3.5(optional): define a after_epoch_end hook to compute accuracy,
 #                     need some understanding of Trainer class
-def after_epoch_end(trainer):
+def after_epoch_end(trainer, **kwargs):
     trainer.model.eval()
     correct = 0
     with torch.no_grad():
