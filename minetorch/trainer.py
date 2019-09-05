@@ -194,7 +194,15 @@ class Trainer(object):
                 self.notebook_output(msg)
                 self.model.load_state_dict(checkpoint['state_dict'], strict=False)
 
-            self.optimizer.load_state_dict(checkpoint['optimizer'])
+            if 'optimizer' in checkpoint:
+                try:
+                    self.optimizer.load_state_dict(checkpoint['optimizer'])
+                except:
+                    msg = ('load optimizer state failed, will skip this error and continue, '
+                            'stop the process if it is not expected')
+                    logging.warning(msg)
+                    self.notebook_output(msg)
+
             if (self.drawer is not None) and ('drawer_state' in checkpoint):
                 self.drawer.set_state(checkpoint['drawer_state'])
 
@@ -313,8 +321,13 @@ class Trainer(object):
         else:
             drawer_state = {}
 
+        if isinstance(self.model, torch.nn.DataParallel):
+            model_state_dict = self.model.module.state_dict()
+        else:
+            model_state_dict = self.model.state_dict()
+
         state = {
-            'state_dict': self.model.state_dict(),
+            'state_dict': model_state_dict,
             'optimizer': self.optimizer.state_dict(),
             'epoch': self.current_epoch,
             'lowest_train_loss': self.lowest_train_loss,
