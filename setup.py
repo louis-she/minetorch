@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name='Minetorch',
     description='A tools collection for pytorch users',
-    version='0.3.9',
+    version='0.4.0',
     packages=['minetorch'],
     url="https://github.com/louis-she/minetorch",
     author='louis',
