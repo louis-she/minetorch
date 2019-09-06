@@ -59,10 +59,11 @@ class Trainer(object):
 
     def __init__(self, alchemistic_directory, model, optimizer, loss_func,
                  code="geass", train_dataloader=None, val_dataloader=None,
-                 resume=True, eval_stride=1, persist_stride=1,
+                 resume=True, eval_stride=1, persist_stride=1, gpu=True,
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
                  logging_format=None, trival=False, in_notebook=False):
         self.alchemistic_directory = alchemistic_directory
+        self.gpu = gpu
         self.code = code
         self.create_dirs()
         self.set_logging_config(alchemistic_directory, code, logging_format)
@@ -154,6 +155,12 @@ class Trainer(object):
     def init_model(self):
         """resume from some checkpoint
         """
+        if isinstance(self.model, torch.nn.DataParallel):
+            raise Exception(
+                'Don\'t parallel the model yourself, instead, if the '
+                '`gpu` option is true(default), Minetorch will do this for you.'
+            )
+
         if self.resume is True:
             # resume from the newest model
             if self.model_file_path('latest') is not None:
@@ -214,7 +221,19 @@ class Trainer(object):
             msg = 'checkpoint loaded'
             self.notebook_output(msg, _type='success')
 
+        if self.gpu:
+            gpu_count = torch.cuda.device_count()
+            if gpu_count == 0:
+                self.notify('no GPU detected, will train on CPU.')
+            else:
+                self.notify(f'found {gpu_count} GPUs, will use all of them to train')
+                devices = list(map(lambda x: f'cuda:{x}', range(gpu_count)))
+                self.model.cuda()
+                self.model = torch.nn.DataParallel(self.model, devices)
 
+    def notify(self, message, _type='info'):
+        getattr(logging, _type)(message)
+        self.notebook_output(message, _type)
 
     def call_hook_func(self, name, *args, **kwargs):
         if name not in self.hook_funcs:
