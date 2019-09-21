@@ -55,14 +55,18 @@ class Trainer(object):
         trival ([Boolean], optional):
             Defaults to False. If true, both training and validation
             process will be breaked in 10 iterations
+        plugins (list, optional):
+            Defaults to []. This is actually a collection of `hooks`, do not set
+            hooks and plugins the same time.
     """
 
     def __init__(self, alchemistic_directory, model, optimizer, loss_func,
                  code="geass", train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1, gpu=True,
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
-                 logging_format=None, trival=False, in_notebook=False):
+                 logging_format=None, trival=False, in_notebook=False, plugins=[]):
         self.alchemistic_directory = alchemistic_directory
+        self.plugins = pluginsj
         self.gpu = gpu
         self.code = code
         self.create_dirs()
@@ -235,10 +239,12 @@ class Trainer(object):
         getattr(logging, _type)(message)
         self.notebook_output(message, _type)
 
-    def call_hook_func(self, name, *args, **kwargs):
-        if name not in self.hook_funcs:
-            return
-        self.hook_funcs[name](self, *args, **kwargs)
+    def call_hook_func(self, name, payload=None):
+        if name in self.hook_funcs:
+            self.hook_funcs[name](payload, self)
+        else:
+            for plugin in self.plugins:
+                getattr(plugin, name)(payload, self)
 
     def train(self):
         """start to train the model
