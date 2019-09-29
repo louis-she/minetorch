@@ -239,7 +239,7 @@ class Trainer(object):
         getattr(logging, _type)(message)
         self.notebook_output(message, _type)
 
-    def call_hook_func(self, name, payload=None):
+    def call_hook_func(self, name, **payload):
         if name in self.hook_funcs:
             self.hook_funcs[name](payload, self)
         else:
