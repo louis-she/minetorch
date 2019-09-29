@@ -66,7 +66,7 @@ class Trainer(object):
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
                  logging_format=None, trival=False, in_notebook=False, plugins=[]):
         self.alchemistic_directory = alchemistic_directory
-        self.plugins = pluginsj
+        self.plugins = plugins
         self.gpu = gpu
         self.code = code
         self.create_dirs()
