@@ -311,7 +311,8 @@ class Trainer(object):
 
     def run_train_iteration(self, index, data, train_iters):
         self.status = 'train'
-        self.call_hook_func('before_train_iteration_start')
+        self.call_hook_func('before_train_iteration_start',
+                data=data, index=index, train_iters=train_iters)
 
         loss = self.loss_func(self, data)
         self.optimizer.zero_grad()
@@ -323,18 +324,21 @@ class Trainer(object):
         if loss < self.lowest_train_loss:
             self.lowest_train_loss = loss
 
-        self.call_hook_func('after_train_iteration_end', loss=loss)
+        self.call_hook_func('after_train_iteration_end',
+                loss=loss, data=data, index=index, train_iters=train_iters)
         return loss
 
     def run_val_iteration(self, index, data, val_iters):
         self.status = 'val'
-        self.call_hook_func('before_val_iteration_start')
+        self.call_hook_func('before_val_iteration_start',
+                data=data, index=index, train_iters=train_iters)
         loss = self.loss_func(self, data)
         loss = loss.detach()
         logging.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
 
-        self.call_hook_func('after_val_iteration_ended', loss=loss)
+        self.call_hook_func('after_val_iteration_ended',
+                loss=loss, data=data, index=index, train_iters=train_iters)
         return loss
 
     def persist(self, name):
