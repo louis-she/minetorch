@@ -89,6 +89,8 @@ class Trainer(object):
         self.lowest_train_loss = float('inf')
         self.lowest_val_loss = float('inf')
         self.current_epoch = 0
+        self.current_train_iteration = 0
+        self.current_val_iteration = 0
         self.hook_funcs = hooks
         self.max_epochs = max_epochs
 
@@ -192,6 +194,8 @@ class Trainer(object):
             self.notebook_output(msg)
             checkpoint = torch.load(checkpoint_path)
             self.current_epoch = checkpoint['epoch']
+            self.current_train_iteration = checkpoint['train_iteration']
+            self.current_val_iteration = checkpoint['val_iteration']
             self.lowest_train_loss = checkpoint['lowest_train_loss']
             self.lowest_val_loss = checkpoint['lowest_val_loss']
 
@@ -250,8 +254,8 @@ class Trainer(object):
         """start to train the model
         """
         while True:
-            self.call_hook_func('before_epoch_start')
             self.current_epoch += 1
+            self.call_hook_func('before_epoch_start', epoch=self.current_epoch)
             self.notebook_divide(f'Epoch {self.current_epoch}')
 
             self.model.train()
@@ -280,7 +284,8 @@ class Trainer(object):
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch} '
                                      f'finished, loss is {total_val_loss}')
-                self.call_hook_func('after_epoch_end', train_loss=total_train_loss, val_loss=total_val_loss)
+                self.call_hook_func('after_epoch_end',
+                        train_loss=total_train_loss, val_loss=total_val_loss, epoch=self.current_epoch)
 
             if self.drawer is not None:
                 self.drawer.scalars(
@@ -311,8 +316,10 @@ class Trainer(object):
 
     def run_train_iteration(self, index, data, train_iters):
         self.status = 'train'
-        self.call_hook_func('before_train_iteration_start',
-                data=data, index=index, train_iters=train_iters)
+        self.current_train_iteration += 1
+        self.call_hook_func('before_train_iteration_start', data=data,
+                index=index, total_iters=train_iters,
+                iteration=self.current_train_iteration)
 
         loss = self.loss_func(self, data)
         self.optimizer.zero_grad()
@@ -325,20 +332,24 @@ class Trainer(object):
             self.lowest_train_loss = loss
 
         self.call_hook_func('after_train_iteration_end',
-                loss=loss, data=data, index=index, train_iters=train_iters)
+                loss=loss, data=data, index=index, total_iters=train_iters,
+                iteration=self.current_train_iteration)
         return loss
 
     def run_val_iteration(self, index, data, val_iters):
         self.status = 'val'
+        self.current_val_iteration += 1
         self.call_hook_func('before_val_iteration_start',
-                data=data, index=index, train_iters=train_iters)
+                data=data, index=index, total_iters=val_iters,
+                iteration=self.current_val_iteration)
         loss = self.loss_func(self, data)
         loss = loss.detach()
         logging.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
 
         self.call_hook_func('after_val_iteration_ended',
-                loss=loss, data=data, index=index, train_iters=train_iters)
+                loss=loss, data=data, index=index, total_iters=val_iters,
+                iteration=self.current_val_iteration)
         return loss
 
     def persist(self, name):
@@ -359,6 +370,8 @@ class Trainer(object):
             'state_dict': model_state_dict,
             'optimizer': self.optimizer.state_dict(),
             'epoch': self.current_epoch,
+            'train_iteration': self.current_train_iteration,
+            'val_iteration': self.current_val_iteration,
             'lowest_train_loss': self.lowest_train_loss,
             'lowest_val_loss': self.lowest_val_loss,
             'drawer_state': drawer_state,
