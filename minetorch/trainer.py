@@ -284,8 +284,8 @@ class Trainer(object):
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch} '
                                      f'finished, loss is {total_val_loss}')
-                self.call_hook_func('after_epoch_end',
-                        train_loss=total_train_loss, val_loss=total_val_loss, epoch=self.current_epoch)
+            self.call_hook_func('after_epoch_end',
+                    train_loss=total_train_loss, val_loss=total_val_loss, epoch=self.current_epoch)
 
             if self.drawer is not None:
                 self.drawer.scalars(
