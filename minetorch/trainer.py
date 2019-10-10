@@ -64,13 +64,18 @@ class Trainer(object):
                  code="geass", train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1, gpu=True,
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
-                 logging_format=None, trival=False, in_notebook=False, plugins=[]):
+                 logging_format=None, trival=False, in_notebook=False, plugins=[],
+                 logger=None):
+        self.logger = logger
+        if self.logger is None:
+            self.set_logging_config(alchemistic_directory, code, logging_format)
+            self.logger = logging
+
         self.alchemistic_directory = alchemistic_directory
         self.plugins = plugins
         self.gpu = gpu
         self.code = code
         self.create_dirs()
-        self.set_logging_config(alchemistic_directory, code, logging_format)
         self.create_drawer(drawer)
         self.models_dir = os.path.join(alchemistic_directory, code, 'models')
         self.in_notebook = in_notebook
@@ -175,7 +180,7 @@ class Trainer(object):
                 checkpoint_path = None
                 msg = ('Could not find checkpoint to resume, '
                        'train from scratch')
-                logging.warning(msg)
+                self.logger.warning(msg)
                 self.notebook_output(msg, _type='warning')
         elif isinstance(self.resume, str):
             checkpoint_path = self.model_file_path(self.resume)
@@ -190,7 +195,7 @@ class Trainer(object):
 
         if checkpoint_path is not None:
             msg = f"Start to load checkpoint {checkpoint_path}"
-            logging.info(msg)
+            self.logger.info(msg)
             self.notebook_output(msg)
             checkpoint = torch.load(checkpoint_path)
             self.current_epoch = checkpoint['epoch']
@@ -205,7 +210,7 @@ class Trainer(object):
                 msg = ('load checkpoint failed, the state in the '
                        'checkpoint is not matched with the model, '
                        'try to reload checkpoint with unstrict mode')
-                logging.warning(msg)
+                self.logger.warning(msg)
                 self.notebook_output(msg)
                 self.model.load_state_dict(checkpoint['state_dict'], strict=False)
 
@@ -215,7 +220,7 @@ class Trainer(object):
                 except:
                     msg = ('load optimizer state failed, will skip this error and continue, '
                             'stop the process if it is not expected')
-                    logging.warning(msg)
+                    self.logger.warning(msg)
                     self.notebook_output(msg)
 
             if (self.drawer is not None) and ('drawer_state' in checkpoint):
@@ -240,7 +245,7 @@ class Trainer(object):
                 self.model = torch.nn.DataParallel(self.model, devices)
 
     def notify(self, message, _type='info'):
-        getattr(logging, _type)(message)
+        getattr(self.logger, _type)(message)
         self.notebook_output(message, _type)
 
     def call_hook_func(self, name, **payload):
@@ -300,7 +305,7 @@ class Trainer(object):
                            'persist this model as best one'.format(
                             total_val_loss, self.lowest_val_loss))
                 self.notebook_output(f'{message}', _type='success')
-                logging.info(message)
+                self.logger.info(message)
 
                 self.lowest_val_loss = total_val_loss
                 self.persist('best')
@@ -311,7 +316,7 @@ class Trainer(object):
 
             if self.max_epochs is not None and self.current_epoch >= self.max_epochs:
                 self.call_hook_func('before_quit')
-                logging.info('exceed max epochs, quit!')
+                self.logger.info('exceed max epochs, quit!')
                 break
 
     def run_train_iteration(self, index, data, train_iters):
@@ -325,8 +330,8 @@ class Trainer(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        loss = loss.detach()
-        logging.info('[train {}/{}/{}] loss {}'.format(
+        loss = loss.detach().cpu().item()
+        self.logger.info('[train {}/{}/{}] loss {}'.format(
             self.current_epoch, index, train_iters, loss))
         if loss < self.lowest_train_loss:
             self.lowest_train_loss = loss
@@ -343,8 +348,8 @@ class Trainer(object):
                 data=data, index=index, total_iters=val_iters,
                 iteration=self.current_val_iteration)
         loss = self.loss_func(self, data)
-        loss = loss.detach()
-        logging.info('[val {}/{}/{}] loss {}'.format(
+        loss = loss.detach().cpu().item()
+        self.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
 
         self.call_hook_func('after_val_iteration_ended',
@@ -383,7 +388,7 @@ class Trainer(object):
 
         torch.save(state, self.standard_model_path(name))
         message = f'save checkpoint to {self.standard_model_path(name)}'
-        logging.info(message)
+        self.logger.info(message)
         self.notebook_output(message)
         self.call_hook_func('after_checkpoint_persisted')
 
