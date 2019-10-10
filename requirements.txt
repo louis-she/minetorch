@@ -113,3 +113,4 @@ Werkzeug==0.14.1
 widgetsnbextension==3.4.2
 wrapt==1.11.1
 zope.interface==4.6.0
+tqdm>=4.36.1
