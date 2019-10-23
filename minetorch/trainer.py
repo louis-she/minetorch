@@ -60,7 +60,7 @@ class Trainer(object):
             hooks and plugins the same time.
     """
 
-    def __init__(self, alchemistic_directory, model, optimizer, loss_func,
+    def __init__(self, alchemistic_directory, model, optimizer, loss_func, metrics,
                  code="geass", train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1, gpu=True,
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
@@ -87,6 +87,7 @@ class Trainer(object):
         self.val_dataloader = val_dataloader
 
         self.loss_func = loss_func
+        self.metrics = metrics
         self.resume = resume
         self.eval_stride = eval_stride
         self.persist_stride = persist_stride
@@ -98,6 +99,7 @@ class Trainer(object):
         self.current_val_iteration = 0
         self.hook_funcs = hooks
         self.max_epochs = max_epochs
+        self.metrics_metadata = {}
 
         self.init_model()
         self.call_hook_func('after_init')
@@ -326,7 +328,10 @@ class Trainer(object):
                 index=index, total_iters=train_iters,
                 iteration=self.current_train_iteration)
 
-        loss = self.loss_func(self, data)
+        loss = self.loss_func(data[0], data[1])
+        metrics = {}
+        for metric in self.metrics:
+            metrics[metric.name] = metric(data[0], data[1])
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -339,7 +344,7 @@ class Trainer(object):
         self.call_hook_func('after_train_iteration_end',
                 loss=loss, data=data, index=index, total_iters=train_iters,
                 iteration=self.current_train_iteration)
-        return loss
+        return loss, metrics
 
     def run_val_iteration(self, index, data, val_iters):
         self.status = 'val'
