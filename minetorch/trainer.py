@@ -334,8 +334,8 @@ class Trainer(object):
                 index=index, total_iters=train_iters,
                 iteration=self.current_train_iteration)
 
-        predict = self.model(data[0])
-        loss = self.loss_func(predict, data[1])
+        predict = self.model(data[0].cuda())
+        loss = self.loss_func()(predict, data[1].cuda())
         
         metrics = {}
         for metric in self.metrics:
@@ -362,8 +362,8 @@ class Trainer(object):
                 data=data, index=index, total_iters=val_iters,
                 iteration=self.current_val_iteration)
         
-        predict = self.model(data[0])
-        loss = self.loss_func(predict, data[1])
+        predict = self.model(data[0].cuda())
+        loss = self.loss_func()(predict, data[1].cuda())
         
         metrics = {}
         for metric in self.metrics:
