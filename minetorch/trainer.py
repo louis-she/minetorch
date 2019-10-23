@@ -304,7 +304,11 @@ class Trainer(object):
                 self.drawer.scalars(
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
-
+                for train_batch_metric, val_batch_metric in zip(total_train_metrics, total_val_metrics):
+                    for i,j in zip(train_batch_metric, val_batch_metric):
+                        self.drawer.scalars(
+                            {'train': train_batch_metric[i], 'val': val_batch_metric[j]}, i
+                            )
             if total_train_loss < self.lowest_train_loss:
                 self.lowest_train_loss = total_train_loss
 
@@ -334,8 +338,8 @@ class Trainer(object):
                 index=index, total_iters=train_iters,
                 iteration=self.current_train_iteration)
 
-        predict = self.model(data[0].cuda())
-        loss = self.loss_func()(predict, data[1].cuda())
+        predict = self.model(data[0])
+        loss = self.loss_func(predict, data[1])
         
         metrics = {}
         for metric in self.metrics:
@@ -362,8 +366,8 @@ class Trainer(object):
                 data=data, index=index, total_iters=val_iters,
                 iteration=self.current_val_iteration)
         
-        predict = self.model(data[0].cuda())
-        loss = self.loss_func()(predict, data[1].cuda())
+        predict = self.model(data[0])
+        loss = self.loss_func(predict, data[1])
         
         metrics = {}
         for metric in self.metrics:
