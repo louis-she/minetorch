@@ -5,7 +5,6 @@ import torch
 class dice(object):
     
     def __init__(self, logits, targets, threshold=0.5, separate_class=False):
-        self.name = 'dice'
         self.logits = logits
         self.targets = targets
         self.separate_class = separate_class
@@ -30,7 +29,6 @@ class dice(object):
 class iou(object):
     
     def __init__(self, logits, targets, threshold=0.5, separate_class=False):
-        self.name = 'iou'
         self.logits = logits
         self.targets = targets
         self.separate_class = separate_class

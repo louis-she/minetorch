@@ -339,7 +339,7 @@ class Trainer(object):
         
         metrics = {}
         for metric in self.metrics:
-            metrics[metric.name] = metric(predict, data[1])
+            metrics[metric.__name__] = metric(predict, data[1])
         
         self.optimizer.zero_grad()
         loss.backward()
@@ -367,7 +367,7 @@ class Trainer(object):
         
         metrics = {}
         for metric in self.metrics:
-            metrics[metric.name] = metric(predict, data[1])
+            metrics[metric.__name__] = metric(predict, data[1])
         
         loss = loss.detach().cpu().item()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
