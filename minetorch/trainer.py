@@ -334,11 +334,12 @@ class Trainer(object):
                 index=index, total_iters=train_iters,
                 iteration=self.current_train_iteration)
 
-        loss = self.loss_func(data[0], data[1])
+        predict = self.model(data[0])
+        loss = self.loss_func(predict, data[1])
         
         metrics = {}
         for metric in self.metrics:
-            metrics[metric.name] = metric(data[0], data[1])
+            metrics[metric.name] = metric(predict, data[1])
         
         self.optimizer.zero_grad()
         loss.backward()
@@ -361,11 +362,12 @@ class Trainer(object):
                 data=data, index=index, total_iters=val_iters,
                 iteration=self.current_val_iteration)
         
-        loss = self.loss_func(data[0], data[1])
+        predict = self.model(data[0])
+        loss = self.loss_func(predict, data[1])
         
         metrics = {}
         for metric in self.metrics:
-            metrics[metric.name] = metric(data[0], data[1])
+            metrics[metric.name] = metric(predict, data[1])
         
         loss = loss.detach().cpu().item()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
