@@ -12,8 +12,9 @@ class dice(object):
         assert(self.logits.shape == self.targets.shape)
         self.classes = self.logits.shape[1]
 
-    def dice_batch(self):
+    def compute_batch(self):
         dices = []
+        dice_cls = 0
         if self.separate_class == True:
              for cls in range(self.classes):
                 dice_cls = dice_single_class_batch(self.logits[:,cls], self.targets[:,cls], self.threshold)
@@ -21,7 +22,7 @@ class dice(object):
         else:
             for cls in range(self.logits.shape[1]):
                 dice_cls += dice_single_class_batch(self.logits[:,cls], self.targets[:,cls], self.threshold)
-                dices.append(dice_cls/self.classes)
+            dices.append(dice_cls/self.classes)
 
         return dices
 
@@ -36,17 +37,17 @@ class iou(object):
         assert(self.logits.shape == self.targets.shape)
         self.classes = self.logits.shape[1]
 
-    def iou_batch(self):
+    def compute_batch(self):
         ious = []
+        iou_cls = 0
         if self.separate_class == True:
             for cls in range(self.classes):
                 iou_cls = iou_single_class_batch(self.logits[:,cls], self.targets[:,cls], self.threshold)
                 ious.append(iou_cls)
         else:
-            iou_cls = 0
             for cls in range(self.logits.shape[1]):
                 iou_cls += iou_single_class_batch(self.logits[:,cls], self.targets[:,cls], self.threshold)
-                ious.append(iou_cls/self.classes)
+            ious.append(iou_cls/self.classes)
         
         return ious
 
@@ -64,7 +65,7 @@ def iou_single_class_batch(logits, targets, threshold):
     
     iou = (intersection + 1e-7) / (union + 1e-7)
     
-    return iou
+    return iou.mean()
 
 def dice_single_class_batch(logits, targets, threshold):
     
@@ -79,4 +80,4 @@ def dice_single_class_batch(logits, targets, threshold):
     B = targets.sum()
     dice = 2*(intersection + 1e-7) / (A + B + 1e-7)
     
-    return dice
+    return dice.mean()

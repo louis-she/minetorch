@@ -6,7 +6,7 @@ from pathlib import Path
 import torch
 import tqdm
 from IPython.core.display import HTML, display
-
+import numpy as np
 from . import drawers
 
 
@@ -297,18 +297,38 @@ class Trainer(object):
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch} '
                                      f'finished, loss is {total_val_loss}')
-            self.call_hook_func('after_epoch_end',
-                    train_loss=total_train_loss, val_loss=total_val_loss, train_metric=total_train_metrics, val_metric=total_val_metrics, epoch=self.current_epoch)
-
+            self.call_hook_func(
+                'after_epoch_end',
+                train_loss=total_train_loss,
+                val_loss=total_val_loss,
+                train_metric=total_train_metrics,
+                val_metric=total_val_metrics,
+                epoch=self.current_epoch
+                )
+            
+            def clear_metrics(inputs):
+                tmp = {}
+                for i in inputs:
+                    for j in i.keys():
+                        if j not in tmp.keys():
+                            tmp[j] = []
+                            tmp[j].append(i[j][0])
+                    else:
+                            tmp[j].append(i[j][0])
+                return tmp
+            
+            total_train_metrics = clear_metrics(total_train_metrics)
+            total_val_metrics = clear_metrics(total_val_metrics)
+            
             if self.drawer is not None:
                 self.drawer.scalars(
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
-                for train_batch_metric, val_batch_metric in zip(total_train_metrics, total_val_metrics):
-                    for i,j in zip(train_batch_metric, val_batch_metric):
-                        self.drawer.scalars(
-                            {'train': train_batch_metric[i], 'val': val_batch_metric[j]}, i
-                            )
+                for metric in total_train_metrics:
+                    self.drawer.scalars(
+                        {'train': np.mean(total_train_metrics[metric]), 'val': np.mean(total_val_metrics[metric])}, metric
+                    )
+
             if total_train_loss < self.lowest_train_loss:
                 self.lowest_train_loss = total_train_loss
 
@@ -338,12 +358,12 @@ class Trainer(object):
                 index=index, total_iters=train_iters,
                 iteration=self.current_train_iteration)
 
-        predict = self.model(data[0])
-        loss = self.loss_func(predict, data[1])
+        predict = self.model(data[0].cuda())
+        loss = self.loss_func()(predict, data[1].cuda())
         
         metrics = {}
         for metric in self.metrics:
-            metrics[metric.__name__] = metric(predict, data[1])
+            metrics[metric.__name__] = metric(predict.detach().cpu(), data[1]).compute_batch()
         
         self.optimizer.zero_grad()
         loss.backward()
@@ -366,12 +386,12 @@ class Trainer(object):
                 data=data, index=index, total_iters=val_iters,
                 iteration=self.current_val_iteration)
         
-        predict = self.model(data[0])
-        loss = self.loss_func(predict, data[1])
+        predict = self.model(data[0].cuda())
+        loss = self.loss_func()(predict, data[1].cuda())
         
         metrics = {}
         for metric in self.metrics:
-            metrics[metric.__name__] = metric(predict, data[1])
+            metrics[metric.__name__] = metric(predict.detach().cpu(), data[1]).compute_batch()
         
         loss = loss.detach().cpu().item()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
