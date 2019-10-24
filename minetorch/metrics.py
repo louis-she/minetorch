@@ -30,7 +30,7 @@ def dice(separate_class=False):
     @rename('dice')
     def compute_dice(logits, targets, threshold=0.5, separate_class_=separate_class):
         # be with the C x H x W shape
-        logits = torch.sigmoid(logits)  # BATCH x 1 x H x W => BATCH x H x W
+        logits = torch.sigmoid(logits)
         logits = logits > torch.Tensor([threshold])
         targets = targets > torch.Tensor([0.5])
         
@@ -44,3 +44,21 @@ def dice(separate_class=False):
             dice = dice.mean()
         return dice
     return compute_dice
+
+def accuracy(separate_class=False):
+    @rename('accuracy')
+    def compute_accuracy(logits, targets, threshold=0.5, separate_class_=separate_class):
+        # be with the C x H x W shape
+        logits = torch.sigmoid(logits)
+        logits = logits > torch.Tensor([threshold])
+        targets = targets > torch.Tensor([0.5])
+
+        true_prediction = (~(logits ^ targets)).double().sum((1, 2))
+        total = len(logits.view(-1))
+        acc = true_prediction / total
+        if separate_class:
+            acc = acc
+        else:
+            acc = acc.mean()
+        return acc
+    return compute_accuracy     
