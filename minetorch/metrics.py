@@ -54,7 +54,7 @@ def accuracy(separate_class=False):
         targets = targets > torch.Tensor([0.5])
 
         true_prediction = (~(logits ^ targets)).double().sum((1, 2))
-        total = len(logits.view(-1))
+        total = logits.view(logits.shape[0],-1).shape[1]
         acc = true_prediction / total
         if separate_class:
             acc = acc
