@@ -75,9 +75,9 @@ def dice_single_class_batch(logits, targets, threshold):
     
     targets = targets.squeeze(1) > torch.Tensor([0.5])
     
-    intersection = (logits & targets).float().sum((1, 2))  # Will be zero if Truth=0 or Prediction=0
-    A = logits.sum()         # Will be zero if both are 0
-    B = targets.sum()
+    intersection = (logits & targets).double().sum((1, 2))  # Will be zero if Truth=0 or Prediction=0
+    A = logits.double().sum()         # Will be zero if both are 0
+    B = targets.double().sum()
     dice = 2*(intersection + 1e-7) / (A + B + 1e-7)
     
     return dice.mean()
