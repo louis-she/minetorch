@@ -74,6 +74,7 @@ class Trainer(object):
         self.alchemistic_directory = alchemistic_directory
         self.plugins = plugins
         self.gpu = gpu
+        self.devices = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
         self.code = code
         self.create_dirs()
         self.create_drawer(drawer)
@@ -242,9 +243,9 @@ class Trainer(object):
                 self.notify('no GPU detected, will train on CPU.')
             else:
                 self.notify(f'found {gpu_count} GPUs, will use all of them to train')
-                self.devices = list(map(lambda x: f'cuda:{x}', range(gpu_count)))
+                devices = list(map(lambda x: f'cuda:{x}', range(gpu_count)))
                 self.model.cuda()
-                self.model = torch.nn.DataParallel(self.model, self.devices)
+                self.model = torch.nn.DataParallel(self.model, devices)
 
     def notify(self, message, _type='info'):
         getattr(self.logger, _type)(message)
@@ -264,25 +265,32 @@ class Trainer(object):
             self.current_epoch += 1
             self.call_hook_func('before_epoch_start', epoch=self.current_epoch)
             self.notebook_divide(f'Epoch {self.current_epoch}')
-            self.train_metrics = {}
-            self.val_metrics = {}
             self.model.train()
             train_iters = len(self.train_dataloader)
 
             total_train_loss = 0
-
+            total_train_metrics = {}
             self.notebook_output(f'start to train epoch {self.current_epoch}')
             for index, data in enumerate(self.tqdm(self.train_dataloader)):
                 if self.trival is True and index == 10:
                     break
-                train_loss = self.run_train_iteration(index, data, train_iters)
+                train_loss, train_metrics = self.run_train_iteration(index, data, train_iters)
                 total_train_loss += train_loss
+                for metric in train_metrics:
+                    if metric not in total_train_metrics.keys():
+                        total_train_metrics[metric] = 0
+                        total_train_metrics[metric] += train_metrics[metric]
+                    else:
+                        total_train_metrics[metric] += train_metrics[metric]
+
+            for i in total_train_metrics:
+                total_train_metrics[i] = total_train_metrics[i] / train_iters
             total_train_loss = total_train_loss / train_iters
             self.notebook_output(f'training of epoch {self.current_epoch} finished, '
                                  f'loss is {total_train_loss}')
 
             total_val_loss = 0
-
+            total_val_metrics = {}
             if self.val_dataloader is not None:
                 val_iters = len(self.val_dataloader)
                 with torch.set_grad_enabled(False):
@@ -291,8 +299,16 @@ class Trainer(object):
                     for index, data in enumerate(self.tqdm(self.val_dataloader)):
                         if self.trival is True and index == 10:
                             break
-                        val_loss = self.run_val_iteration(index, data, val_iters)
+                        val_loss, val_metrics = self.run_val_iteration(index, data, val_iters)
                         total_val_loss += val_loss
+                        for metric in val_metrics:
+                            if metric not in total_val_metrics.keys():
+                                total_val_metrics[metric] = 0
+                                total_val_metrics[metric] += val_metrics[metric]
+                            else:
+                                total_val_metrics[metric] += val_metrics[metric]
+                for i in total_val_metrics:
+                    total_val_metrics[i] = total_val_metrics[i] / train_iters                
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch} '
                                      f'finished, loss is {total_val_loss}')
@@ -300,8 +316,8 @@ class Trainer(object):
                 'after_epoch_end',
                 train_loss=total_train_loss,
                 val_loss=total_val_loss,
-                train_metric=self.train_metrics,
-                val_metric=self.val_metrics,
+                train_metric=train_metrics,
+                val_metric=val_metrics,
                 epoch=self.current_epoch
                 )
             
@@ -309,18 +325,15 @@ class Trainer(object):
                 self.drawer.scalars(
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
-                for metric in self.train_metrics:
-                    train_mean = sum(self.train_metrics[metric])/len(self.train_metrics[metric])
-                    val_mean = sum(self.val_metrics[metric])/len(self.val_metrics[metric])
-                    
-                    if train_mean.shape.numel() != 1:
-                        for i in range(train_mean.shape.numel()):
+                for metric in self.metrics:
+                    if total_train_metrics[metric.__name__].shape.numel() != 1:
+                        for i in range(total_train_metrics[metric.__name__].shape.numel()):
                             self.drawer.scalars(
-                                {'train': train_mean[i], 'val': val_mean[i]}, metric+'_class_{}'.format(i+1)
+                                {'train': total_train_metrics[metric.__name__][i], 'val': total_val_metrics[metric.__name__][i]}, metric.__name__+'_class_{}'.format(i+1)
                                 )
                     else:
                         self.drawer.scalars(
-                            {'train': train_mean, 'val': val_mean}, metric
+                            {'train': total_train_metrics[metric.__name__], 'val': total_val_metrics[metric.__name__]}, metric.__name__
                         )
 
             if total_train_loss < self.lowest_train_loss:
@@ -354,15 +367,11 @@ class Trainer(object):
         self.batch = data[0].shape[0]
         predict = self.model(data[0].to(self.devices))
         loss = self.loss_func(predict, data[1].to(self.devices))
-        
-        self.train_metrics = {}
-        for metric in self.train_metrics:
+        train_metrics = {}
+        for metric in self.metrics:
+            train_metrics[metric.__name__] = 0
             for batch in range(self.batch):
-                if metric.__name__ not in metrics.keys():
-                    self.train_metrics[metric.__name__] = []
-                    self.train_metrics[metric.__name__].append(metric(predict[batch].detach().cpu(), data[1])) #predict.shape = [B,C,H,W]
-                else:
-                    self.train_metrics[metric.__name__].append(metric(predict[batch].detach().cpu(), data[1]))
+                train_metrics[metric.__name__] += metric(predict[batch].detach().cpu(), data[1][batch]) #predict.shape = [B,C,H,W]
         
         self.optimizer.zero_grad()
         loss.backward()
@@ -376,7 +385,7 @@ class Trainer(object):
         self.call_hook_func('after_train_iteration_end',
                 loss=loss, data=data, index=index, total_iters=train_iters,
                 iteration=self.current_train_iteration)
-        return loss
+        return loss, train_metrics
 
     def run_val_iteration(self, index, data, val_iters):
         self.status = 'val'
@@ -387,14 +396,12 @@ class Trainer(object):
         
         predict = self.model(data[0].to(self.devices))
         loss = self.loss_func(predict, data[1].to(self.devices))
-        
-        for metric in self.val_metrics:
+        val_metrics = {}
+        for metric in self.metrics:
+            val_metrics[metric.__name__] = 0
             for batch in range(self.batch):
-                if metric.__name__ not in self.val_metrics.keys():
-                    self.val_metrics[metric.__name__] = []
-                    self.val_metrics[metric.__name__].append(metric(predict[batch].detach().cpu(), data[1])) #predict.shape = [B,C,H,W]
-                else:
-                    self.val_metrics[metric.__name__].append(metric(predict[batch].detach().cpu(), data[1]))
+                val_metrics[metric.__name__] += metric(predict[batch].detach().cpu(), data[1][batch]) #predict.shape = [B,C,H,W]
+
        
         loss = loss.detach().cpu().item()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
@@ -403,7 +410,7 @@ class Trainer(object):
         self.call_hook_func('after_val_iteration_ended',
                 loss=loss, data=data, index=index, total_iters=val_iters,
                 iteration=self.current_val_iteration)
-        return loss
+        return loss, val_metrics
 
     def persist(self, name):
         """save the model to disk
