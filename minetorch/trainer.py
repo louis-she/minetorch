@@ -6,7 +6,7 @@ from pathlib import Path
 import torch
 import tqdm
 from IPython.core.display import HTML, display
-
+import numpy as np
 from . import drawers
 
 
@@ -60,7 +60,7 @@ class Trainer(object):
             hooks and plugins the same time.
     """
 
-    def __init__(self, alchemistic_directory, model, optimizer, loss_func,
+    def __init__(self, alchemistic_directory, model, optimizer, loss_func, metrics,
                  code="geass", train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1, gpu=True,
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
@@ -87,6 +87,7 @@ class Trainer(object):
         self.val_dataloader = val_dataloader
 
         self.loss_func = loss_func
+        self.metrics = metrics
         self.resume = resume
         self.eval_stride = eval_stride
         self.persist_stride = persist_stride
@@ -98,6 +99,7 @@ class Trainer(object):
         self.current_val_iteration = 0
         self.hook_funcs = hooks
         self.max_epochs = max_epochs
+        self.metrics_metadata = {}
 
         self.init_model()
         self.call_hook_func('after_init')
@@ -267,16 +269,20 @@ class Trainer(object):
             train_iters = len(self.train_dataloader)
 
             total_train_loss = 0
+            total_train_metrics = []
             self.notebook_output(f'start to train epoch {self.current_epoch}')
             for index, data in enumerate(self.tqdm(self.train_dataloader)):
                 if self.trival is True and index == 10:
                     break
-                total_train_loss += self.run_train_iteration(index, data, train_iters)
+                train_loss, train_metric = self.run_train_iteration(index, data, train_iters)
+                total_train_loss += train_loss
+                total_train_metrics.append(train_metric)
             total_train_loss = total_train_loss / train_iters
             self.notebook_output(f'training of epoch {self.current_epoch} finished, '
                                  f'loss is {total_train_loss}')
 
             total_val_loss = 0
+            total_val_metrics = []
             if self.val_dataloader is not None:
                 val_iters = len(self.val_dataloader)
                 with torch.set_grad_enabled(False):
@@ -285,17 +291,43 @@ class Trainer(object):
                     for index, data in enumerate(self.tqdm(self.val_dataloader)):
                         if self.trival is True and index == 10:
                             break
-                        total_val_loss += self.run_val_iteration(index, data, val_iters)
+                        val_loss, val_metric = self.run_val_iteration(index, data, val_iters)
+                        total_val_loss += val_loss
+                        total_val_metrics.append(val_metric)
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch} '
                                      f'finished, loss is {total_val_loss}')
-            self.call_hook_func('after_epoch_end',
-                    train_loss=total_train_loss, val_loss=total_val_loss, epoch=self.current_epoch)
-
+            self.call_hook_func(
+                'after_epoch_end',
+                train_loss=total_train_loss,
+                val_loss=total_val_loss,
+                train_metric=total_train_metrics,
+                val_metric=total_val_metrics,
+                epoch=self.current_epoch
+                )
+            
+            def clear_metrics(inputs):
+                tmp = {}
+                for i in inputs:
+                    for j in i.keys():
+                        if j not in tmp.keys():
+                            tmp[j] = []
+                            tmp[j].append(i[j][0])
+                    else:
+                            tmp[j].append(i[j][0])
+                return tmp
+            
+            total_train_metrics = clear_metrics(total_train_metrics)
+            total_val_metrics = clear_metrics(total_val_metrics)
+            
             if self.drawer is not None:
                 self.drawer.scalars(
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
+                for metric in total_train_metrics:
+                    self.drawer.scalars(
+                        {'train': np.mean(total_train_metrics[metric]), 'val': np.mean(total_val_metrics[metric])}, metric
+                    )
 
             if total_train_loss < self.lowest_train_loss:
                 self.lowest_train_loss = total_train_loss
@@ -326,7 +358,13 @@ class Trainer(object):
                 index=index, total_iters=train_iters,
                 iteration=self.current_train_iteration)
 
-        loss = self.loss_func(self, data)
+        predict = self.model(data[0].cuda())
+        loss = self.loss_func()(predict, data[1].cuda())
+        
+        metrics = {}
+        for metric in self.metrics:
+            metrics[metric.__name__] = metric(predict.detach().cpu(), data[1]).compute_batch()
+        
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -339,7 +377,7 @@ class Trainer(object):
         self.call_hook_func('after_train_iteration_end',
                 loss=loss, data=data, index=index, total_iters=train_iters,
                 iteration=self.current_train_iteration)
-        return loss
+        return loss, metrics
 
     def run_val_iteration(self, index, data, val_iters):
         self.status = 'val'
@@ -347,7 +385,14 @@ class Trainer(object):
         self.call_hook_func('before_val_iteration_start',
                 data=data, index=index, total_iters=val_iters,
                 iteration=self.current_val_iteration)
-        loss = self.loss_func(self, data)
+        
+        predict = self.model(data[0].cuda())
+        loss = self.loss_func()(predict, data[1].cuda())
+        
+        metrics = {}
+        for metric in self.metrics:
+            metrics[metric.__name__] = metric(predict.detach().cpu(), data[1]).compute_batch()
+        
         loss = loss.detach().cpu().item()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
@@ -355,7 +400,7 @@ class Trainer(object):
         self.call_hook_func('after_val_iteration_ended',
                 loss=loss, data=data, index=index, total_iters=val_iters,
                 iteration=self.current_val_iteration)
-        return loss
+        return loss, metrics
 
     def persist(self, name):
         """save the model to disk
