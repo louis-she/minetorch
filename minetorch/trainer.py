@@ -285,6 +285,7 @@ class Trainer(object):
 
             for i in total_train_metrics:
                 total_train_metrics[i] = total_train_metrics[i] / train_iters
+
             total_train_loss = total_train_loss / train_iters
             self.notebook_output(f'training of epoch {self.current_epoch} finished, '
                                  f'loss is {total_train_loss}')
@@ -364,14 +365,15 @@ class Trainer(object):
         self.call_hook_func('before_train_iteration_start', data=data,
                 index=index, total_iters=train_iters,
                 iteration=self.current_train_iteration)
-        self.batch = data[0].shape[0]
+        batch_size = data[0].shape[0]
         predict = self.model(data[0].to(self.devices))
         loss = self.loss_func(predict, data[1].to(self.devices))
         train_metrics = {}
         for metric in self.metrics:
             train_metrics[metric.__name__] = 0
-            for batch in range(self.batch):
+            for batch in range(batch_size):
                 train_metrics[metric.__name__] += metric(predict[batch].detach().cpu(), data[1][batch]) #predict.shape = [B,C,H,W]
+            train_metrics[metric.__name__] /= batch_size
         
         self.optimizer.zero_grad()
         loss.backward()
@@ -393,14 +395,15 @@ class Trainer(object):
         self.call_hook_func('before_val_iteration_start',
                 data=data, index=index, total_iters=val_iters,
                 iteration=self.current_val_iteration)
-        
+        batch_size = data[0].shape[0]
         predict = self.model(data[0].to(self.devices))
         loss = self.loss_func(predict, data[1].to(self.devices))
         val_metrics = {}
         for metric in self.metrics:
             val_metrics[metric.__name__] = 0
-            for batch in range(self.batch):
+            for batch in range(batch_size):
                 val_metrics[metric.__name__] += metric(predict[batch].detach().cpu(), data[1][batch]) #predict.shape = [B,C,H,W]
+            val_metrics[metric.__name__] /= batch_size
 
        
         loss = loss.detach().cpu().item()
