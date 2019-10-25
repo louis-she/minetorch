@@ -309,9 +309,9 @@ class Trainer(object):
                             else:
                                 total_val_metrics[metric] += val_metrics[metric]
                 for i in total_val_metrics:
-                    total_val_metrics[i] = total_val_metrics[i] / train_iters                
+                    total_val_metrics[i] = total_val_metrics[i] / val_iters
                 total_val_loss = total_val_loss / val_iters
-                self.notebook_output(f'validation of epoch {self.current_epoch} '
+                self.notebook_output(f'validation of epoch {self.current_epoch}'
                                      f'finished, loss is {total_val_loss}')
             self.call_hook_func(
                 'after_epoch_end',
@@ -404,6 +404,7 @@ class Trainer(object):
             for batch in range(batch_size):
                 val_metrics[metric.__name__] += metric(predict[batch].detach().cpu(), data[1][batch]) #predict.shape = [B,C,H,W]
             val_metrics[metric.__name__] /= batch_size
+
 
        
         loss = loss.detach().cpu().item()
