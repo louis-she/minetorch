@@ -35,8 +35,8 @@ def dice(separate_class=False):
         targets = targets > torch.Tensor([0.5])
         
         intersection = (logits & targets).double().sum((1, 2))
-        A = logits.double().sum()
-        B = targets.double().sum()
+        A = logits.double().sum((1, 2))
+        B = targets.double().sum((1, 2))
         dice = 2*(intersection + 1e-7) / (A + B + 1e-7)
         if separate_class:
             dice = dice
@@ -62,3 +62,23 @@ def accuracy(separate_class=False):
             acc = acc.mean()
         return acc
     return compute_accuracy     
+
+import numpy as np
+def dice_coef(logits,targets,smooth=1e-9):
+    a = logits.reshape(-1,1)
+    b = targets.reshape(-1,1)
+    inter = np.sum(a*b)
+    return (2.*inter+smooth)/(np.sum(a)+np.sum(b)+smooth)
+
+import torch
+from minetorch.metrics import *
+a = torch.ones(4,256,1600)
+#a = a > torch.Tensor([0.5])
+b = torch.ones(4,192,1600)
+c = torch.zeros(4,64,1600)
+d = torch.cat((b,c),axis=1)
+e = torch.cat((c,b),axis=1)
+#d = d > torch.Tensor([0.5])
+#e = e > torch.Tensor([0.5])
+dice(True)(d,e)
+dice_coef(d.numpy(),e.numpy())
