@@ -321,7 +321,7 @@ class Trainer(object):
                 val_metric=val_metrics,
                 epoch=self.current_epoch
                 )
-            
+
             if self.drawer is not None:
                 self.drawer.scalars(
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
@@ -330,8 +330,10 @@ class Trainer(object):
                     if total_train_metrics[metric.__name__].shape.numel() != 1:
                         for i in range(total_train_metrics[metric.__name__].shape.numel()):
                             self.drawer.scalars(
-                                {'train': total_train_metrics[metric.__name__][i],
-                                'val': total_val_metrics[metric.__name__][i]},
+                                {
+                                    'train': total_train_metrics[metric.__name__][i],
+                                    'val': total_val_metrics[metric.__name__][i]
+                                    },
                                 metric.__name__+'_class_{}'.format(i+1)
                                 )
                     else:
