@@ -30,12 +30,7 @@ def dice(logits, targets, threshold=0.5, separate_class=False):
     intersection = (logits & targets).double().sum((1, 2))
     A = logits.double().sum((1, 2))
     B = targets.double().sum((1, 2))
-    print('logtis pixel sum',A)
-    print('targets pixel sum',B)
-    print('intersection:',intersection)
-    print('sum of A and B',A+B)
     dice = (2 * intersection + 1e-7) / (A + B + 1e-7)
-    print('dice', dice)
     if separate_class:
         dice = dice
     else:
