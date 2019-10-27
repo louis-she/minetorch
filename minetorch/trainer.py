@@ -380,6 +380,7 @@ class Trainer(object):
         loss = self.loss_func(predict, data[1].to(self.devices))
         train_metrics = {}
         for metric in self.metrics:
+            print(metric.func.__name__)
             train_metrics[metric.func.__name__] = 0
             for batch in range(batch_size):
                 train_metrics[metric.func.__name__] += metric(predict[batch].detach().cpu(), data[1][batch])  # predict.shape = [B,C,H,W]
