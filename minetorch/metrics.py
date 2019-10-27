@@ -3,7 +3,7 @@ import torch
 import functools
 
 
-def compute_iou(logits, targets, threshold=0.5, separate_class=False):
+def iou(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
     logits = torch.sigmoid(logits)
     logits = logits > torch.Tensor([threshold])
@@ -18,11 +18,11 @@ def compute_iou(logits, targets, threshold=0.5, separate_class=False):
     return iou
 
 
-single_class_iou = functools.partial(compute_iou, separate_class=False)
-multi_class_iou = functools.partial(compute_iou, separate_class=True)
+single_class_iou = functools.partial(iou, separate_class=False)
+multi_class_iou = functools.partial(iou, separate_class=True)
 
 
-def compute_dice(logits, targets, threshold=0.5, separate_class=False):
+def dice(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
     logits = torch.sigmoid(logits)
     logits = logits > torch.Tensor([threshold])
@@ -38,11 +38,11 @@ def compute_dice(logits, targets, threshold=0.5, separate_class=False):
     return dice
 
 
-single_class_dice = functools.partial(compute_dice, separate_class=False)
-multi_class_dice = functools.partial(compute_dice, separate_class=True)
+single_class_dice = functools.partial(dice, separate_class=False)
+multi_class_dice = functools.partial(dice, separate_class=True)
 
 
-def compute_accuracy(logits, targets, threshold=0.5, separate_class=False):
+def accuracy(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
     logits = torch.sigmoid(logits)
     logits = logits > torch.Tensor([threshold])
@@ -51,15 +51,15 @@ def compute_accuracy(logits, targets, threshold=0.5, separate_class=False):
     true_prediction = (~(logits ^ targets)).double().sum((1, 2))
     total = logits.view(logits.shape[0], -1).shape[1]
     acc = true_prediction / total
-    if separate_class_:
+    if separate_class:
         acc = acc
     else:
         acc = acc.mean()
     return acc
 
 
-single_class_accuracy = functools.partial(compute_accuracy, separate_class=False)
-multi_class_accuracy = functools.partial(compute_accuracy, separate_class=True)
+single_class_accuracy = functools.partial(accuracy, separate_class=False)
+multi_class_accuracy = functools.partial(accuracy, separate_class=True)
 
 '''
 import numpy as np
