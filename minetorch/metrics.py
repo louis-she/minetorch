@@ -5,7 +5,7 @@ import functools
 
 def iou(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
-    #logits = torch.sigmoid(logits)
+    # logits = torch.sigmoid(logits)
     logits = logits > threshold
     targets = targets > 0.5
     intersection = (logits & targets).double().sum((1, 2))
@@ -34,7 +34,7 @@ def dice(logits, targets, threshold=0.5, separate_class=False):
     print('targets pixel sum',B)
     print('intersection:',intersection)
     print('sum of A and B',A+B)
-    dice = 2 * (intersection) / (A + B + 1e-7)
+    dice = (2 * intersection + 1e-7) / (A + B + 1e-7)
     print('dice', dice)
     if separate_class:
         dice = dice
