@@ -5,9 +5,9 @@ import functools
 
 def iou(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
-    logits = torch.sigmoid(logits)
-    logits = logits > torch.Tensor([threshold])
-    targets = targets > torch.Tensor([0.5])
+    # logits = torch.sigmoid(logits)
+    logits = logits > threshold
+    targets = targets > 0.5
     intersection = (logits & targets).double().sum((1, 2))
     union = (logits | targets).double().sum((1, 2))
     iou = (intersection + 1e-7) / (union + 1e-7)
@@ -24,13 +24,14 @@ multi_class_iou = functools.partial(iou, separate_class=True)
 
 def dice(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
-    logits = torch.sigmoid(logits)
-    logits = logits > torch.Tensor([threshold])
-    targets = targets > torch.Tensor([0.5])
+    # logits = torch.sigmoid(logits)
+    logits = logits > threshold
+    targets = targets > 0.5
     intersection = (logits & targets).double().sum((1, 2))
     A = logits.double().sum((1, 2))
     B = targets.double().sum((1, 2))
     dice = 2 * (intersection + 1e-7) / (A + B + 1e-7)
+    print(dice)
     if separate_class:
         dice = dice
     else:
@@ -44,9 +45,9 @@ multi_class_dice = functools.partial(dice, separate_class=True)
 
 def accuracy(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
-    logits = torch.sigmoid(logits)
-    logits = logits > torch.Tensor([threshold])
-    targets = targets > torch.Tensor([0.5])
+    # logits = torch.sigmoid(logits)
+    logits = logits > threshold
+    targets = targets > 0.5
 
     true_prediction = (~(logits ^ targets)).double().sum((1, 2))
     total = logits.view(logits.shape[0], -1).shape[1]
