@@ -5,7 +5,7 @@ import functools
 
 def iou(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
-    # logits = torch.sigmoid(logits)
+    #logits = torch.sigmoid(logits)
     logits = logits > threshold
     targets = targets > 0.5
     intersection = (logits & targets).double().sum((1, 2))
@@ -24,14 +24,18 @@ multi_class_iou = functools.partial(iou, separate_class=True)
 
 def dice(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
-    # logits = torch.sigmoid(logits)
+    #logits = torch.sigmoid(logits)
     logits = logits > threshold
     targets = targets > 0.5
     intersection = (logits & targets).double().sum((1, 2))
     A = logits.double().sum((1, 2))
     B = targets.double().sum((1, 2))
+    print('logtis pixel sum',A)
+    print('targets pixel sum',B)
+    print('intersection:',intersection)
+    print('sum of A and B',A+B)
     dice = 2 * (intersection + 1e-7) / (A + B + 1e-7)
-    print(dice)
+    print('dice', dice)
     if separate_class:
         dice = dice
     else:
@@ -45,7 +49,7 @@ multi_class_dice = functools.partial(dice, separate_class=True)
 
 def accuracy(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
-    # logits = torch.sigmoid(logits)
+    #logits = torch.sigmoid(logits)
     logits = logits > threshold
     targets = targets > 0.5
 
