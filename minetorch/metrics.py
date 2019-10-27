@@ -3,7 +3,7 @@ import torch
 import functools
 
 
-def compute_iou(logits, targets, threshold=0.5, separate_class_=separate_class):
+def compute_iou(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
     logits = torch.sigmoid(logits)
     logits = logits > torch.Tensor([threshold])
@@ -22,7 +22,7 @@ single_class_iou = functools.partial(compute_iou, separate_class=False)
 multi_class_iou = functools.partial(compute_iou, separate_class=True)
 
 
-def compute_dice(logits, targets, threshold=0.5, separate_class_=separate_class):
+def compute_dice(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
     logits = torch.sigmoid(logits)
     logits = logits > torch.Tensor([threshold])
@@ -42,7 +42,7 @@ single_class_dice = functools.partial(compute_dice, separate_class=False)
 multi_class_dice = functools.partial(compute_dice, separate_class=True)
 
 
-def compute_accuracy(logits, targets, threshold=0.5, separate_class_=separate_class):
+def compute_accuracy(logits, targets, threshold=0.5, separate_class=False):
     # be with the C x H x W shape
     logits = torch.sigmoid(logits)
     logits = logits > torch.Tensor([threshold])
