@@ -384,16 +384,7 @@ class Trainer(object):
             train_metrics[metric.func.__name__] = 0
             for batch in range(batch_size):
                 train_metrics[metric.func.__name__] += metric(predict[batch].detach().cpu(), data[1][batch])  # predict.shape = [B,C,H,W]
-                print('predict pixels',torch.sigmoid(predict[batch].detach().cpu()).sum())
-                print('mask pixels', data[1][batch].sum())
-                print('batch #',batch)
-                print('current image pair', metric(predict[batch].detach().cpu(), data[1][batch]))
-                print('accumulated result', train_metrics[metric.func.__name__])
-            print('batch_size',batch_size)
             train_metrics[metric.func.__name__] /= batch_size
-            print('iteration finished for {}'.format(metric.func.__name__))
-            print('current metric result', train_metrics[metric.func.__name__])
-            print('#########################################################')
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
