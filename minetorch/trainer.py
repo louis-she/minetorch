@@ -60,23 +60,23 @@ class Trainer(object):
             hooks and plugins the same time.
     """
 
-    def __init__(self, alchemistic_directory, model, optimizer, loss_func, metrics,
+    def __init__(self, alchemistic_directory, model, optimizer, loss_func, metrics=[],
                  code="geass", train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1, gpu=True,
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
                  logging_format=None, trival=False, in_notebook=False, plugins=[],
                  logger=None):
+
+        self.alchemistic_directory = alchemistic_directory
+        self.code = code
+        self.create_dirs()
+        self.plugins = plugins
+        self.gpu = gpu
+        self.devices = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
         self.logger = logger
         if self.logger is None:
             self.set_logging_config(alchemistic_directory, code, logging_format)
             self.logger = logging
-
-        self.alchemistic_directory = alchemistic_directory
-        self.plugins = plugins
-        self.gpu = gpu
-        self.devices = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
-        self.code = code
-        self.create_dirs()
         self.create_drawer(drawer)
         self.models_dir = os.path.join(alchemistic_directory, code, 'models')
         self.in_notebook = in_notebook
