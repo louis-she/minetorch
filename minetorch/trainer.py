@@ -277,12 +277,9 @@ class Trainer(object):
                 train_loss, train_metrics = self.run_train_iteration(index, data, train_iters)
                 total_train_loss += train_loss
                 for metric in train_metrics:
-                    if metric not in total_train_metrics.keys():
+                    if metric not in total_train_metrics:
                         total_train_metrics[metric] = 0
-                        total_train_metrics[metric] += train_metrics[metric]
-                    else:
-                        total_train_metrics[metric] += train_metrics[metric]
-
+                    total_train_metrics[metric] += train_metrics[metric]
             for i in total_train_metrics:
                 total_train_metrics[i] = total_train_metrics[i] / train_iters
 
