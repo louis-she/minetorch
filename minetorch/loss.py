@@ -19,9 +19,9 @@ def dicebce_loss(inputs, targets, smooth=1):
     targets = targets.view(-1)
     intersection = (inputs * targets).sum()
     dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)
-    BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')
-    Dice_BCE = BCE + dice_loss
-    return Dice_BCE
+    bce = F.binary_cross_entropy(inputs, targets, reduction='mean')
+    dice_bce = bce + dice_loss
+    return dice_bce
 
 
 def iou_loss(inputs, targets, smooth=1):
@@ -31,17 +31,17 @@ def iou_loss(inputs, targets, smooth=1):
     intersection = (inputs * targets).sum()
     total = (inputs + targets).sum()
     union = total - intersection
-    IoU = (intersection + smooth)/(union + smooth)
-    return 1 - IoU
+    iou = (intersection + smooth)/(union + smooth)
+    return 1 - iou
 
 
 def focal_loss(inputs, targets, alpha=0.8, gamma=2, smooth=1):
     inputs = torch.sigmoid(inputs)
     inputs = inputs.view(-1)
     targets = targets.view(-1)
-    BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')
-    BCE_EXP = torch.exp(-BCE)
-    focal_loss = alpha * (1-BCE_EXP)**gamma * BCE
+    bce = F.binary_cross_entropy(inputs, targets, reduction='mean')
+    bce_exp = torch.exp(-bce)
+    focal_loss = alpha * (1-bce_exp)**gamma * bce
     return focal_loss
 
 
@@ -49,29 +49,29 @@ def tversky_loss(inputs, targets, smooth=1, alpha=0.5, beta=0.5):
     inputs = torch.sigmoid(inputs)
     inputs = inputs.view(-1)
     targets = targets.view(-1)
-    TP = (inputs * targets).sum()
-    FP = ((1-targets) * inputs).sum()
-    FN = (targets * (1-inputs)).sum()
-    Tversky = (TP + smooth) / (TP + alpha*FP + beta*FN + smooth)
-    return 1 - Tversky
+    tp = (inputs * targets).sum()
+    fp = ((1-targets) * inputs).sum()
+    fn = (targets * (1-inputs)).sum()
+    tversky = (tp + smooth) / (tp + alpha * fp + beta * fn + smooth)
+    return 1 - tversky
 
 
 def focaltversky_loss(inputs, targets, smooth=1, alpha=0.5, beta=0.5, gamma=1):
     inputs = torch.sigmoid(inputs)
     inputs = inputs.view(-1)
     targets = targets.view(-1)
-    TP = (inputs * targets).sum()
-    FP = ((1-targets) * inputs).sum()
-    FN = (targets * (1-inputs)).sum()
-    Tversky = (TP + smooth) / (TP + alpha*FP + beta*FN + smooth)
-    FocalTversky = (1 - Tversky)**gamma
-    return FocalTversky
+    tp = (inputs * targets).sum()
+    fp = ((1-targets) * inputs).sum()
+    fn = (targets * (1-inputs)).sum()
+    tversky = (tp + smooth) / (tp + alpha * fp + beta * fn + smooth)
+    focaltversky = (1 - tversky)**gamma
+    return focaltversky
 
 
 def lovaszhingeLoss(inputs, targets):
     inputs = torch.sigmoid(inputs)
-    Lovasz = lovasz_hinge(inputs, targets, per_image=False)
-    return Lovasz
+    lovasz = lovasz_hinge(inputs, targets, per_image=False)
+    return lovasz
 
 
 def flatten_binary_scores(scores, labels, ignore=None):
