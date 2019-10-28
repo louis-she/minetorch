@@ -1,83 +1,62 @@
 
 import torch
+import functools
 
 
-class dice(object):
-    
-    def __init__(self, logits, targets, threshold=0.5, separate_class=False):
-        self.logits = logits
-        self.targets = targets
-        self.separate_class = separate_class
-        self.threshold = threshold
-        assert(self.logits.shape == self.targets.shape)
-        self.classes = self.logits.shape[1]
-
-    def compute_batch(self):
-        dices = []
-        dice_cls = 0
-        if self.separate_class == True:
-             for cls in range(self.classes):
-                dice_cls = dice_single_class_batch(self.logits[:,cls], self.targets[:,cls], self.threshold)
-                dices.append(dice_cls)           
-        else:
-            for cls in range(self.logits.shape[1]):
-                dice_cls += dice_single_class_batch(self.logits[:,cls], self.targets[:,cls], self.threshold)
-            dices.append(dice_cls/self.classes)
-
-        return dices
-
-
-class iou(object):
-    
-    def __init__(self, logits, targets, threshold=0.5, separate_class=False):
-        self.logits = logits
-        self.targets = targets
-        self.separate_class = separate_class
-        self.threshold = threshold
-        assert(self.logits.shape == self.targets.shape)
-        self.classes = self.logits.shape[1]
-
-    def compute_batch(self):
-        ious = []
-        iou_cls = 0
-        if self.separate_class == True:
-            for cls in range(self.classes):
-                iou_cls = iou_single_class_batch(self.logits[:,cls], self.targets[:,cls], self.threshold)
-                ious.append(iou_cls)
-        else:
-            for cls in range(self.logits.shape[1]):
-                iou_cls += iou_single_class_batch(self.logits[:,cls], self.targets[:,cls], self.threshold)
-            ious.append(iou_cls/self.classes)
-        
-        return ious
-
-
-def iou_single_class_batch(logits, targets, threshold):
-    
-    # be with the BATCH x H x W shape
-    logits = torch.sigmoid(logits.squeeze(1))  # BATCH x 1 x H x W => BATCH x H x W
-    logits = logits > torch.Tensor([threshold])
-    
-    targets = targets.squeeze(1) > torch.Tensor([0.5])
-    
-    intersection = (logits & targets).float().sum((1, 2))  # Will be zero if Truth=0 or Prediction=0
-    union = (logits | targets).float().sum((1, 2))         # Will be zero if both are 0
-    
+def iou(logits, targets, threshold=0.5, separate_class=False):
+    # be with the C x H x W shape
+    logits = torch.sigmoid(logits)
+    logits = logits > threshold
+    targets = targets > 0.5
+    intersection = (logits & targets).double().sum((1, 2))
+    union = (logits | targets).double().sum((1, 2))
     iou = (intersection + 1e-7) / (union + 1e-7)
-    
-    return iou.mean()
+    if separate_class:
+        iou = iou
+    else:
+        iou = iou.mean()
+    return iou
 
-def dice_single_class_batch(logits, targets, threshold):
-    
-    # be with the BATCH x H x W shape
-    logits = torch.sigmoid(logits.squeeze(1))  # BATCH x 1 x H x W => BATCH x H x W
-    logits = logits > torch.Tensor([threshold])
-    
-    targets = targets.squeeze(1) > torch.Tensor([0.5])
-    
-    intersection = (logits & targets).double().sum((1, 2))  # Will be zero if Truth=0 or Prediction=0
-    A = logits.double().sum()         # Will be zero if both are 0
-    B = targets.double().sum()
-    dice = 2*(intersection + 1e-7) / (A + B + 1e-7)
-    
-    return dice.mean()
+
+single_class_iou = functools.partial(iou, separate_class=False)
+multi_class_iou = functools.partial(iou, separate_class=True)
+
+
+def dice(logits, targets, threshold=0.5, separate_class=False):
+    # be with the C x H x W shape
+    logits = torch.sigmoid(logits)
+    logits = logits > threshold
+    targets = targets > 0.5
+    intersection = (logits & targets).double().sum((1, 2))
+    A = logits.double().sum((1, 2))
+    B = targets.double().sum((1, 2))
+    dice = (2 * intersection + 1e-7) / (A + B + 1e-7)
+    if separate_class:
+        dice = dice
+    else:
+        dice = dice.mean()
+    return dice
+
+
+single_class_dice = functools.partial(dice, separate_class=False)
+multi_class_dice = functools.partial(dice, separate_class=True)
+
+
+def accuracy(logits, targets, threshold=0.5, separate_class=False):
+    # be with the C x H x W shape
+    logits = torch.sigmoid(logits)
+    logits = logits > threshold
+    targets = targets > 0.5
+
+    true_prediction = (~(logits ^ targets)).double().sum((1, 2))
+    total = logits.view(logits.shape[0], -1).shape[1]
+    acc = true_prediction / total
+    if separate_class:
+        acc = acc
+    else:
+        acc = acc.mean()
+    return acc
+
+
+single_class_accuracy = functools.partial(accuracy, separate_class=False)
+multi_class_accuracy = functools.partial(accuracy, separate_class=True)
