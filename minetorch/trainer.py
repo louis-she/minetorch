@@ -72,7 +72,7 @@ class Trainer(object):
         self.create_dirs()
         self.plugins = plugins
         self.gpu = gpu
-        self.devices = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+        self.devices = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.logger = logger
         if self.logger is None:
             self.set_logging_config(alchemistic_directory, code, logging_format)
@@ -256,7 +256,8 @@ class Trainer(object):
             self.hook_funcs[name](payload, self)
         else:
             for plugin in self.plugins:
-                getattr(plugin, name)(payload, self)
+                if hasattr(plugin, name):
+                    getattr(plugin, name)(payload, self)
 
     def train(self):
         """start to train the model
