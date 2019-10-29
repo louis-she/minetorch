@@ -17,7 +17,7 @@ def shape_norm(logits, targets):
     return logits, targets
 
 
-def iou(logits, targets, threshold=0.5, separate_class=False):
+def compute_iou(logits, targets, threshold=0.5, separate_class=False):
     logits, targets = shape_norm(logits, targets)
     logits = logits > threshold
     targets = targets > 0.5
@@ -31,11 +31,7 @@ def iou(logits, targets, threshold=0.5, separate_class=False):
     return iou
 
 
-single_class_iou = functools.partial(iou, separate_class=False)
-multi_class_iou = functools.partial(iou, separate_class=True)
-
-
-def dice(logits, targets, threshold=0.5, separate_class=False):
+def compute_dice(logits, targets, threshold=0.5, separate_class=False):
     logits, targets = shape_norm(logits, targets)
     logits = logits > threshold
     targets = targets > 0.5
@@ -50,11 +46,31 @@ def dice(logits, targets, threshold=0.5, separate_class=False):
     return dice
 
 
-single_class_dice = functools.partial(dice, separate_class=False)
-multi_class_dice = functools.partial(dice, separate_class=True)
+def compute_mse(logits, targets, separate_class=False):
+    logits, targets = shape_norm(logits, targets)
+    error = (abs(logits - targets) ** 2).double().sum((1, 2))
+    total = logits.view(logits.shape[0], -1).shape[1]
+    mse = error / total
+    if separate_class:
+        mse = mse
+    else:
+        mse = mse.mean()
+    return mse
 
 
-def accuracy(logits, targets, threshold=0.5, separate_class=False):
+def compute_mae(logits, targets, separate_class=False):
+    logits, targets = shape_norm(logits, targets)
+    error = (abs(logits - targets)).double().sum((1, 2))
+    total = logits.view(logits.shape[0], -1).shape[1]
+    mae = error / total
+    if separate_class:
+        mae = mae
+    else:
+        mae = mae.mean()
+    return mae
+
+
+def compute_accuracy(logits, targets, threshold=0.5, separate_class=False):
     logits, targets = shape_norm(logits, targets)
     logits = logits > threshold
     targets = targets > 0.5
@@ -68,11 +84,7 @@ def accuracy(logits, targets, threshold=0.5, separate_class=False):
     return acc
 
 
-single_class_accuracy = functools.partial(accuracy, separate_class=False)
-multi_class_accuracy = functools.partial(accuracy, separate_class=True)
-
-
-def precision(logits, targets, threshold=0.5, separate_class=False):
+def compute_precision(logits, targets, threshold=0.5, separate_class=False):
     smooth = 1e-7
     logits, targets = shape_norm(logits, targets)
     logits = logits > threshold
@@ -87,11 +99,7 @@ def precision(logits, targets, threshold=0.5, separate_class=False):
     return prec
 
 
-single_class_precission = functools.partial(precision, separate_class=False)
-multi_class_precission = functools.partial(precision, separate_class=True)
-
-
-def recall(logits, targets, threshold=0.5, separate_class=False):
+def compute_recall(logits, targets, threshold=0.5, separate_class=False):
     smooth = 1e-7
     logits, targets = shape_norm(logits, targets)
     logits = logits > threshold
@@ -105,38 +113,28 @@ def recall(logits, targets, threshold=0.5, separate_class=False):
         recall = recall.mean()
     return recall
 
+iou = functools.partial(compute_iou, separate_class=False)
+dice = functools.partial(compute_dice, separate_class=False)
+mse = functools.partial(compute_mse, separate_class=False)
+mae = functools.partial(compute_mae, separate_class=False)
+accuracy = functools.partial(compute_accuracy, separate_class=False)
+precission = functools.partial(compute_precision, separate_class=False)
+recall = functools.partial(compute_recall, separate_class=False)
 
-single_class_recall = functools.partial(recall, separate_class=False)
-multi_class_recall = functools.partial(recall, separate_class=True)
 
-
-def mse(logits, targets, separate_class=False):
+def confusion_matrix(logits, targets, threshold=0.5, separate_class=False, func=lambda x: x):
     logits, targets = shape_norm(logits, targets)
-    error = (abs(logits - targets) ** 2).double().sum((1, 2))
-    total = logits.view(logits.shape[0], -1).shape[1]
-    mse = error / total
-    if separate_class:
-        mse = mse
-    else:
-        mse = mse.mean()
-    return mse
+    logits = logits > threshold
+    targets = targets > 0.5
+    tp = ((logits == 1) & (targets == 1)).double().sum((1, 2)).unsqueeze(0)
+    fp = ((logits == 1) & (targets == 0)).double().sum((1, 2)).unsqueeze(0)
+    fn = ((logits == 0) & (targets == 1)).double().sum((1, 2)).unsqueeze(0)
+    tn = ((logits == 0) & (targets == 0)).double().sum((1, 2)).unsqueeze(0)
+    return torch.cat((tp, fp, fn, tn), 0), func
 
 
-single_class_mse = functools.partial(mse, separate_class=False)
-multi_class_mse = functools.partial(mse, separate_class=True)
+def compute_precision(c_matrix):
+    return c_matrix[0] / (c_matrix[0] + c_matrix[1])
 
 
-def mae(logits, targets, separate_class=False):
-    logits, targets = shape_norm(logits, targets)
-    error = (abs(logits - targets)).double().sum((1, 2))
-    total = logits.view(logits.shape[0], -1).shape[1]
-    mae = error / total
-    if separate_class:
-        mae = mae
-    else:
-        mae = mae.mean()
-    return mae
-
-
-single_class_mae = functools.partial(mae, separate_class=False)
-multi_class_mae = functools.partial(mae, separate_class=True)
+precision = functools.partial(confusion_matrix, func=compute_precision, separate_class=False)

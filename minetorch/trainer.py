@@ -280,8 +280,9 @@ class Trainer(object):
                     if metric not in total_train_metrics:
                         total_train_metrics[metric] = 0
                     total_train_metrics[metric] += train_metrics[metric]
-            for i in total_train_metrics:
-                total_train_metrics[i] = total_train_metrics[i] / train_iters
+            for i,j in enumerate(total_train_metrics):
+                total_train_metrics[j] = total_train_metrics[j] / train_iters
+                total_train_metrics[j] = self.metrics[i].keywords['func'](total_train_metrics[j])
 
             total_train_loss = total_train_loss / train_iters
             self.notebook_output(f'training of epoch {self.current_epoch} finished, '
@@ -305,8 +306,10 @@ class Trainer(object):
                                 total_val_metrics[metric] += val_metrics[metric]
                             else:
                                 total_val_metrics[metric] += val_metrics[metric]
-                for i in total_val_metrics:
-                    total_val_metrics[i] = total_val_metrics[i] / val_iters
+                for i, j in enumerate(total_val_metrics):
+                    total_val_metrics[j] = total_val_metrics[j] / val_iters
+                    total_val_metrics[j] = self.metrics[i].keywords['func'](total_val_metrics[j])
+                    
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch}'
                                      f'finished, loss is {total_val_loss}')
@@ -376,11 +379,13 @@ class Trainer(object):
         predict = self.model(data[0].to(self.devices))
         loss = self.loss_func(predict, data[1].to(self.devices))
         train_metrics = {}
-        for metric in self.metrics:
+        for metric in self.metrics: # iterate metrics specified by users
             train_metrics[metric.func.__name__] = 0
-            for batch in range(batch_size):
-                train_metrics[metric.func.__name__] += metric(predict[batch].detach().cpu(), data[1][batch])  # predict.shape = [B,C,H,W]
+            for batch in range(batch_size): # iterate data from the dataloader
+                values, func = metric(predict[batch].detach().cpu(), data[1][batch]) # return confusion_matrix and specific functions
+                train_metrics[metric.func.__name__] += values  # predict.shape = [B,C,H,W]
             train_metrics[metric.func.__name__] /= batch_size
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
