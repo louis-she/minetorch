@@ -3,6 +3,7 @@ import os
 import time
 from pathlib import Path
 
+import functools
 import torch
 import tqdm
 from IPython.core.display import HTML, display
@@ -89,6 +90,10 @@ class Trainer(object):
 
         self.loss_func = loss_func
         self.metrics = metrics
+        for metric in self.metrics:
+            if not hasattr(metric, 'keywords'):
+                metric = functools.partial(metric, func=lambda x: x, separate_class=True)
+
         self.resume = resume
         self.eval_stride = eval_stride
         self.persist_stride = persist_stride
@@ -281,8 +286,9 @@ class Trainer(object):
                     if metric not in total_train_metrics:
                         total_train_metrics[metric] = 0
                     total_train_metrics[metric] += train_metrics[metric]
-            for i in total_train_metrics:
-                total_train_metrics[i] = total_train_metrics[i] / train_iters
+            for i, j in enumerate(total_train_metrics):
+                total_train_metrics[j] = total_train_metrics[j] / train_iters
+                total_train_metrics[j] = self.metrics[i].keywords['func'](total_train_metrics[j])
 
             total_train_loss = total_train_loss / train_iters
             self.notebook_output(f'training of epoch {self.current_epoch} finished, '
@@ -306,8 +312,10 @@ class Trainer(object):
                                 total_val_metrics[metric] += val_metrics[metric]
                             else:
                                 total_val_metrics[metric] += val_metrics[metric]
-                for i in total_val_metrics:
-                    total_val_metrics[i] = total_val_metrics[i] / val_iters
+                for i, j in enumerate(total_val_metrics):
+                    total_val_metrics[j] = total_val_metrics[j] / val_iters
+                    total_val_metrics[j] = self.metrics[i].keywords['func'](total_val_metrics[j])
+                    
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch}'
                                      f'finished, loss is {total_val_loss}')
@@ -325,20 +333,20 @@ class Trainer(object):
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
                 for metric in self.metrics:
-                    if total_train_metrics[metric.func.__name__].shape.numel() != 1:
-                        for i in range(total_train_metrics[metric.func.__name__].shape.numel()):
+                    if total_train_metrics[metric.keywords['func'].__name__].shape.numel() != 1:
+                        for i in range(total_train_metrics[metric.keywords['func'].__name__].shape.numel()):
                             self.drawer.scalars(
                                 {
-                                    'train': total_train_metrics[metric.func.__name__][i],
-                                    'val': total_val_metrics[metric.func.__name__][i]
+                                    'train': total_train_metrics[metric.keywords['func'].__name__][i],
+                                    'val': total_val_metrics[metric.keywords['func'].__name__][i]
                                     },
-                                metric.func.__name__+'_class_{}'.format(i+1)
+                                metric.keywords['func'].__name__+'_class_{}'.format(i+1)
                                 )
                     else:
                         self.drawer.scalars(
-                            {'train': total_train_metrics[metric.func.__name__],
-                            'val': total_val_metrics[metric.func.__name__]},
-                            metric.func.__name__
+                            {'train': total_train_metrics[metric.keywords['func'].__name__],
+                            'val': total_val_metrics[metric.keywords['func'].__name__]},
+                            metric.keywords['func'].__name__
                             )
 
             if total_train_loss < self.lowest_train_loss:
@@ -377,11 +385,13 @@ class Trainer(object):
         predict = self.model(data[0].to(self.devices))
         loss = self.loss_func(predict, data[1].to(self.devices))
         train_metrics = {}
-        for metric in self.metrics:
-            train_metrics[metric.func.__name__] = 0
-            for batch in range(batch_size):
-                train_metrics[metric.func.__name__] += metric(predict[batch].detach().cpu(), data[1][batch])  # predict.shape = [B,C,H,W]
-            train_metrics[metric.func.__name__] /= batch_size
+        for metric in self.metrics: # iterate metrics specified by users
+            train_metrics[metric.keywords['func'].__name__] = 0
+            for batch in range(batch_size): # iterate data from the dataloader
+                values, _ = metric(predict[batch].detach().cpu(), data[1][batch]) # return confusion_matrix and specific functions
+                train_metrics[metric.keywords['func'].__name__] += values  # predict.shape = [B,C,H,W]
+            train_metrics[metric.keywords['func'].__name__] /= batch_size
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -416,10 +426,11 @@ class Trainer(object):
         loss = self.loss_func(predict, data[1].to(self.devices))
         val_metrics = {}
         for metric in self.metrics:
-            val_metrics[metric.func.__name__] = 0
+            val_metrics[metric.keywords['func'].__name__] = 0
             for batch in range(batch_size):
-                val_metrics[metric.func.__name__] += metric(predict[batch].detach().cpu(), data[1][batch])  # predict.shape = [B,C,H,W]
-            val_metrics[metric.func.__name__] /= batch_size
+                values, func = metric(predict[batch].detach().cpu(), data[1][batch])
+                val_metrics[metric.keywords['func'].__name__] += values  # predict.shape = [B,C,H,W]
+            val_metrics[metric.keywords['func'].__name__] /= batch_size
         loss = loss.detach().cpu().item()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
