@@ -3,6 +3,7 @@ import os
 import time
 from pathlib import Path
 
+import functools
 import torch
 import tqdm
 from IPython.core.display import HTML, display
@@ -89,6 +90,10 @@ class Trainer(object):
 
         self.loss_func = loss_func
         self.metrics = metrics
+        for metric in self.metrics:
+            if not hasattr(metric, 'keywords'):
+                metric = functools.partial(metric, func=lambda x: x, separate_class=True)
+
         self.resume = resume
         self.eval_stride = eval_stride
         self.persist_stride = persist_stride
@@ -280,7 +285,7 @@ class Trainer(object):
                     if metric not in total_train_metrics:
                         total_train_metrics[metric] = 0
                     total_train_metrics[metric] += train_metrics[metric]
-            for i,j in enumerate(total_train_metrics):
+            for i, j in enumerate(total_train_metrics):
                 total_train_metrics[j] = total_train_metrics[j] / train_iters
                 total_train_metrics[j] = self.metrics[i].keywords['func'](total_train_metrics[j])
 
@@ -382,7 +387,7 @@ class Trainer(object):
         for metric in self.metrics: # iterate metrics specified by users
             train_metrics[metric.keywords['func'].__name__] = 0
             for batch in range(batch_size): # iterate data from the dataloader
-                values, func = metric(predict[batch].detach().cpu(), data[1][batch]) # return confusion_matrix and specific functions
+                values, _ = metric(predict[batch].detach().cpu(), data[1][batch]) # return confusion_matrix and specific functions
                 train_metrics[metric.keywords['func'].__name__] += values  # predict.shape = [B,C,H,W]
             train_metrics[metric.keywords['func'].__name__] /= batch_size
 

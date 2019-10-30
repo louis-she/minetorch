@@ -79,3 +79,23 @@ recall = functools.partial(confusion_matrix, func=compute_recall, separate_class
 accuracy = functools.partial(confusion_matrix, func=compute_accuracy, separate_class=True)
 dice = functools.partial(confusion_matrix, func=compute_dice, separate_class=True)
 iou = functools.partial(confusion_matrix, func=compute_iou, separate_class=True)
+
+input = functions(logtis, targets, threshold)
+
+def functions_(input=accuracy, func=lambda x: x, separate_class=True):
+    return input, func
+
+def accuracy(input, targs, threshold=0.5):
+    "Computes accuracy with `targs` when `input` is bs * n_classes."
+    input = torch.sigmoid(input) > threshold
+    n = targs.shape[0]
+    input = input.view(n,-1)
+    targs = targs.view(n,-1)
+    print(input.shape)
+    print(targs.shape)
+    return (input==targs).float().mean()
+
+a = torch.randn(4,256,1600)
+b = torch.ones(4,256,1600)
+c = torch.randn(4,6)
+d = torch.ones(4,6)
