@@ -315,7 +315,7 @@ class Trainer(object):
                 for i, j in enumerate(total_val_metrics):
                     total_val_metrics[j] = total_val_metrics[j] / val_iters
                     total_val_metrics[j] = self.metrics[i].keywords['func'](total_val_metrics[j])
-                    
+
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch}'
                                      f'finished, loss is {total_val_loss}')
@@ -474,11 +474,12 @@ class Trainer(object):
         for statable_name, statable in self.statable.items():
             state['statable'][statable_name] = statable.state_dict()
 
-        torch.save(state, self.standard_model_path(name))
+        modelpath = self.standard_model_path(name)
+        torch.save(state, modelpath)
         message = f'save checkpoint to {self.standard_model_path(name)}'
         self.logger.info(message)
         self.notebook_output(message)
-        self.call_hook_func('after_checkpoint_persisted')
+        self.call_hook_func('after_checkpoint_persisted', modelpath=modelpath)
 
     def standard_model_path(self, model_name):
         return os.path.join(self.models_dir, f'{model_name}.pth.tar')
