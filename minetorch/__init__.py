@@ -1,4 +1,4 @@
-from .trainer import Trainer
+from .miner import Miner
 from .plugin import Plugin
 
-__all__ = ['Trainer', 'Plugin']
+__all__ = ['Miner', 'Plugin']

@@ -11,7 +11,7 @@ import numpy as np
 from . import drawers
 
 
-class Minor(object):
+class Miner(object):
     """The heart of minetorch
 
     Args:
@@ -21,7 +21,7 @@ class Minor(object):
             Pytorch model optimizer (torch.optim.Optimizer): Pytorch optimizer
         loss_func (function):
             A special hook function to compute loss, the function receive 2 variable:
-            * Trainer: the trainer object
+            * Miner: the miner object
             * Data: Batch data been yield by the loader
             return value of the hook function should be a float number of the loss
         code (str, optional):
@@ -45,7 +45,7 @@ class Minor(object):
             Save model every `persist_stride` epochs
         drawer (minetorch.Drawer or string, optional):
             Defaults to matplotlib.
-            If provide, Trainer will draw training loss and validation loss
+            If provide, Miner will draw training loss and validation loss
             curves, could be `tensorboard` or self implemented Drawer object
         hooks (dict, optional):
             Defaults to {}. Define hook functions.
@@ -114,7 +114,7 @@ class Minor(object):
 
         self.plugins = plugins
         for plugin in self.plugins:
-            plugin.set_trainer(self)
+            plugin.set_miner(self)
 
         self.status = 'init'
         self.call_hook_func('after_init')
