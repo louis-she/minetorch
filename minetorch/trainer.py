@@ -11,7 +11,7 @@ import numpy as np
 from . import drawers
 
 
-class Trainer(object):
+class Minor(object):
     """The heart of minetorch
 
     Args:
@@ -71,7 +71,6 @@ class Trainer(object):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         self.create_dirs()
-        self.plugins = plugins
         self.gpu = gpu
         self.devices = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.logger = logger
@@ -108,12 +107,17 @@ class Trainer(object):
         self.metrics_metadata = {}
 
         self.init_model()
-        self.call_hook_func('after_init')
-        self.status = 'init'
         self.trival = trival
 
         self._set_tqdm()
         self._check_statable()
+
+        self.plugins = plugins
+        for plugin in self.plugins:
+            plugin.set_trainer(self)
+
+        self.status = 'init'
+        self.call_hook_func('after_init')
 
     def _check_statable(self):
         for name, statable in self.statable.items():
@@ -258,11 +262,13 @@ class Trainer(object):
 
     def call_hook_func(self, name, **payload):
         if name in self.hook_funcs:
-            self.hook_funcs[name](payload, self)
+            self.hook_funcs[name](payload)
         else:
             for plugin in self.plugins:
+                if not plugin.before_hook(name, payload):
+                    continue
                 if hasattr(plugin, name):
-                    getattr(plugin, name)(payload, self)
+                    getattr(plugin, name)(payload)
 
     def train(self):
         """start to train the model
@@ -437,6 +443,7 @@ class Trainer(object):
 
         self.call_hook_func(
             'after_val_iteration_ended',
+            predicts=predict,
             loss=loss,
             data=data,
             index=index,
