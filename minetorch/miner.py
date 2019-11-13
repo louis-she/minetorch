@@ -67,7 +67,6 @@ class Miner(object):
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
                  logging_format=None, trival=False, in_notebook=False, plugins=[],
                  logger=None):
-
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         self.create_dirs()
@@ -89,14 +88,13 @@ class Miner(object):
 
         self.loss_func = loss_func
         self.metrics = metrics
-        for metric in self.metrics:
+        for i, metric in enumerate(self.metrics):
             if not hasattr(metric, 'keywords'):
-                metric = functools.partial(metric, func=lambda x: x, separate_class=True)
+                self.metrics[i] = functools.partial(metric, func=lambda x: x, separate_class=True)
 
         self.resume = resume
         self.eval_stride = eval_stride
         self.persist_stride = persist_stride
-
         self.lowest_train_loss = float('inf')
         self.lowest_val_loss = float('inf')
         self.current_epoch = 0
@@ -105,17 +103,16 @@ class Miner(object):
         self.hook_funcs = hooks
         self.max_epochs = max_epochs
         self.metrics_metadata = {}
-
-        self.init_model()
         self.trival = trival
-
-        self._set_tqdm()
-        self._check_statable()
 
         self.plugins = plugins
         for plugin in self.plugins:
             plugin.set_miner(self)
 
+        self._set_tqdm()
+        self.call_hook_func('before_init')
+        self._check_statable()
+        self.init_model()
         self.status = 'init'
         self.call_hook_func('after_init')
 
