@@ -88,9 +88,16 @@ class Miner(object):
 
         self.loss_func = loss_func
         self.metrics = metrics
+
+
+        def decorate_metric(metric):
+            def __inner_wrapper(logits, targets, func=lambda x: x, separate_class=False):
+                return metric(logits, targets), func
+            return __inner_wrapper
+
         for i, metric in enumerate(self.metrics):
             if not hasattr(metric, 'keywords'):
-                self.metrics[i] = functools.partial(metric, func=lambda x: x, separate_class=True)
+                self.metrics[i] = decorate_metric(metric)
 
         self.resume = resume
         self.eval_stride = eval_stride
