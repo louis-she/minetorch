@@ -98,6 +98,7 @@ class Miner(object):
         for i, metric in enumerate(self.metrics):
             if not hasattr(metric, 'keywords'):
                 self.metrics[i] = decorate_metric(metric)
+                functools.update_wrapper(self.metrics[i], metric)
 
         self.resume = resume
         self.eval_stride = eval_stride

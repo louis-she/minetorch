@@ -75,7 +75,16 @@ def compute_iou(c_matrix):
 
 
 precision = functools.partial(confusion_matrix, func=compute_precision, separate_class=True)
+functools.update_wrapper(precision, compute_precision)
+
 recall = functools.partial(confusion_matrix, func=compute_recall, separate_class=True)
+functools.update_wrapper(recall, compute_recall)
+
 accuracy = functools.partial(confusion_matrix, func=compute_accuracy, separate_class=True)
+functools.update_wrapper(accuracy, compute_accuracy)
+
 dice = functools.partial(confusion_matrix, func=compute_dice, separate_class=True)
+functools.update_wrapper(dice, compute_dice)
+
 iou = functools.partial(confusion_matrix, func=compute_iou, separate_class=True)
+functools.update_wrapper(iou, compute_iou)
