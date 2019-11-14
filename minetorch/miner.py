@@ -100,7 +100,8 @@ class Miner(object):
                 self.metrics[i] = decorate_metric(metric)
                 functools.update_wrapper(self.metrics[i], metric)
                 self.metrics_func.append(lambda x: x)
-            self.metrics_func.append(metric.keywords['func'])
+            else:
+                self.metrics_func.append(metric.keywords['func'])
         
         self.resume = resume
         self.eval_stride = eval_stride
