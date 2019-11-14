@@ -88,7 +88,7 @@ class Miner(object):
 
         self.loss_func = loss_func
         self.metrics = metrics
-
+        self.metrics_func = []
 
         def decorate_metric(metric):
             def __inner_wrapper(logits, targets, func=lambda x: x, separate_class=False):
@@ -99,7 +99,9 @@ class Miner(object):
             if not hasattr(metric, 'keywords'):
                 self.metrics[i] = decorate_metric(metric)
                 functools.update_wrapper(self.metrics[i], metric)
-
+                self.metrics_func.append(lambda x: x)
+            self.metrics_func.append(metric.keywords['func'])
+        
         self.resume = resume
         self.eval_stride = eval_stride
         self.persist_stride = persist_stride
@@ -299,7 +301,7 @@ class Miner(object):
                     total_train_metrics[metric] += train_metrics[metric]
             for i, j in enumerate(total_train_metrics):
                 total_train_metrics[j] = total_train_metrics[j] / train_iters
-                total_train_metrics[j] = self.metrics[i].__call__[1](total_train_metrics[j])
+                total_train_metrics[j] = self.metrics_func[i](total_train_metrics[j])
 
             total_train_loss = total_train_loss / train_iters
             self.notebook_output(f'training of epoch {self.current_epoch} finished, '
@@ -325,7 +327,7 @@ class Miner(object):
                                 total_val_metrics[metric] += val_metrics[metric]
                 for i, j in enumerate(total_val_metrics):
                     total_val_metrics[j] = total_val_metrics[j] / val_iters
-                    total_val_metrics[j] = self.metrics[i].__call__[1](total_val_metrics[j])
+                    total_val_metrics[j] = self.metrics_func[i](total_val_metrics[j])
 
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch}'
