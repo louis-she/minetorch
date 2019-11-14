@@ -299,7 +299,7 @@ class Miner(object):
                     total_train_metrics[metric] += train_metrics[metric]
             for i, j in enumerate(total_train_metrics):
                 total_train_metrics[j] = total_train_metrics[j] / train_iters
-                total_train_metrics[j] = self.metrics[i].__call__(total_train_metrics[j])
+                total_train_metrics[j] = self.metrics[i].__call__[1](total_train_metrics[j])
 
             total_train_loss = total_train_loss / train_iters
             self.notebook_output(f'training of epoch {self.current_epoch} finished, '
@@ -325,7 +325,7 @@ class Miner(object):
                                 total_val_metrics[metric] += val_metrics[metric]
                 for i, j in enumerate(total_val_metrics):
                     total_val_metrics[j] = total_val_metrics[j] / val_iters
-                    total_val_metrics[j] = self.metrics[i].__call__(total_val_metrics[j])
+                    total_val_metrics[j] = self.metrics[i].__call__[1](total_val_metrics[j])
 
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch}'
