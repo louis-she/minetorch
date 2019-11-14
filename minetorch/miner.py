@@ -347,8 +347,8 @@ class Miner(object):
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
                 for metric in self.metrics:
-                    if total_train_metrics[metric.__name__].shape.numel() != 1:
-                        for i in range(total_train_metrics[metric.__name__].shape.numel()):
+                    if total_train_metrics[metric.__name__].shape[0] != 1:
+                        for i in range(total_train_metrics[metric.__name__].shape[0]):
                             self.drawer.scalars(
                                 {
                                     'train': total_train_metrics[metric.__name__][i],
