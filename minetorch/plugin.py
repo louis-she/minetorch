@@ -15,7 +15,7 @@ class Plugin():
         self.miner.notify(message, _type)
 
     def __getattr__(self, key):
-        if self.miner is None or key not in self.miner.__dict__:
+        if self.miner is None or not hasattr(self.miner, key):
             raise AttributeError(key)
         return getattr(self.miner, key)
 

@@ -249,7 +249,9 @@ class Miner(object):
                     statable.load_state_dict(checkpoint['statable'][name])
             msg = 'checkpoint loaded'
             self.notebook_output(msg, _type='success')
+        self.model = self.parallel_model(self.model)
 
+    def parallel_model(self, model):
         if self.gpu:
             gpu_count = torch.cuda.device_count()
             if gpu_count == 0:
@@ -257,8 +259,10 @@ class Miner(object):
             else:
                 self.notify(f'found {gpu_count} GPUs, will use all of them to train')
                 devices = list(map(lambda x: f'cuda:{x}', range(gpu_count)))
-                self.model.cuda()
-                self.model = torch.nn.DataParallel(self.model, devices)
+                model.cuda()
+                model = torch.nn.DataParallel(model, devices)
+        return model
+
 
     def notify(self, message, _type='info'):
         getattr(self.logger, _type)(message)
