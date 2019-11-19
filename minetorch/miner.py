@@ -88,7 +88,7 @@ class Miner(object):
 
         self.loss_func = loss_func
         self.metrics = metrics
-
+        self.metrics_func = []
 
         def decorate_metric(metric):
             def __inner_wrapper(logits, targets, func=lambda x: x, separate_class=False):
@@ -98,7 +98,11 @@ class Miner(object):
         for i, metric in enumerate(self.metrics):
             if not hasattr(metric, 'keywords'):
                 self.metrics[i] = decorate_metric(metric)
-
+                functools.update_wrapper(self.metrics[i], metric)
+                self.metrics_func.append(lambda x: x)
+            else:
+                self.metrics_func.append(metric.keywords['func'])
+        
         self.resume = resume
         self.eval_stride = eval_stride
         self.persist_stride = persist_stride
@@ -302,7 +306,7 @@ class Miner(object):
                     total_train_metrics[metric] += train_metrics[metric]
             for i, j in enumerate(total_train_metrics):
                 total_train_metrics[j] = total_train_metrics[j] / train_iters
-                total_train_metrics[j] = self.metrics[i].keywords['func'](total_train_metrics[j])
+                total_train_metrics[j] = self.metrics_func[i](total_train_metrics[j])
 
             total_train_loss = total_train_loss / train_iters
             self.notebook_output(f'training of epoch {self.current_epoch} finished, '
@@ -328,7 +332,7 @@ class Miner(object):
                                 total_val_metrics[metric] += val_metrics[metric]
                 for i, j in enumerate(total_val_metrics):
                     total_val_metrics[j] = total_val_metrics[j] / val_iters
-                    total_val_metrics[j] = self.metrics[i].keywords['func'](total_val_metrics[j])
+                    total_val_metrics[j] = self.metrics_func[i](total_val_metrics[j])
 
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch}'
@@ -347,20 +351,20 @@ class Miner(object):
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
                 for metric in self.metrics:
-                    if total_train_metrics[metric.keywords['func'].__name__].shape.numel() != 1:
-                        for i in range(total_train_metrics[metric.keywords['func'].__name__].shape.numel()):
+                    if total_train_metrics[metric.__name__].shape.numel() != 1:
+                        for i in range(total_train_metrics[metric.__name__].shape.numel()):
                             self.drawer.scalars(
                                 {
-                                    'train': total_train_metrics[metric.keywords['func'].__name__][i],
-                                    'val': total_val_metrics[metric.keywords['func'].__name__][i]
+                                    'train': total_train_metrics[metric.__name__][i],
+                                    'val': total_val_metrics[metric.__name__][i]
                                     },
-                                metric.keywords['func'].__name__+'_class_{}'.format(i+1)
+                                metric.__name__+'_class_{}'.format(i+1)
                                 )
                     else:
                         self.drawer.scalars(
-                            {'train': total_train_metrics[metric.keywords['func'].__name__],
-                            'val': total_val_metrics[metric.keywords['func'].__name__]},
-                            metric.keywords['func'].__name__
+                            {'train': total_train_metrics[metric.__name__],
+                            'val': total_val_metrics[metric.__name__]},
+                            metric.__name__
                             )
 
             if total_train_loss < self.lowest_train_loss:
@@ -400,11 +404,11 @@ class Miner(object):
         loss = self.loss_func(predict, data[1].to(self.devices))
         train_metrics = {}
         for metric in self.metrics: # iterate metrics specified by users
-            train_metrics[metric.keywords['func'].__name__] = 0
+            train_metrics[metric.__name__] = 0
             for batch in range(batch_size): # iterate data from the dataloader
                 values, _ = metric(predict[batch].detach().cpu(), data[1][batch]) # return confusion_matrix and specific functions
-                train_metrics[metric.keywords['func'].__name__] += values  # predict.shape = [B,C,H,W]
-            train_metrics[metric.keywords['func'].__name__] /= batch_size
+                train_metrics[metric.__name__] += values  # predict.shape = [B,C,H,W]
+            train_metrics[metric.__name__] /= batch_size
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -440,11 +444,11 @@ class Miner(object):
         loss = self.loss_func(predict, data[1].to(self.devices))
         val_metrics = {}
         for metric in self.metrics:
-            val_metrics[metric.keywords['func'].__name__] = 0
+            val_metrics[metric.__name__] = 0
             for batch in range(batch_size):
                 values, func = metric(predict[batch].detach().cpu(), data[1][batch])
-                val_metrics[metric.keywords['func'].__name__] += values  # predict.shape = [B,C,H,W]
-            val_metrics[metric.keywords['func'].__name__] /= batch_size
+                val_metrics[metric.__name__] += values  # predict.shape = [B,C,H,W]
+            val_metrics[metric.__name__] /= batch_size
         loss = loss.detach().cpu().item()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))

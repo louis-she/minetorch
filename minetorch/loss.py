@@ -3,7 +3,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 
-# Below loss functions are referenced at https://www.kaggle.com/bigironsphere/loss-function-library-keras-pytorch
 def dice_loss(inputs, targets, smooth=1):
     inputs = torch.sigmoid(inputs)
     inputs = inputs.view(-1)
@@ -68,10 +67,30 @@ def focaltversky_loss(inputs, targets, smooth=1, alpha=0.5, beta=0.5, gamma=1):
     return focaltversky
 
 
+# Below lovasz loss is referenced at https://github.com/bermanmaxim/LovaszSoftmax.git
 def lovaszhingeLoss(inputs, targets):
     inputs = torch.sigmoid(inputs)
     lovasz = lovasz_hinge(inputs, targets, per_image=False)
     return lovasz
+
+
+def flatten_probas(probas, labels, ignore=None):
+    """
+    Flattens predictions in the batch
+    """
+    if probas.dim() == 3:
+        # assumes output of a sigmoid layer
+        B, H, W = probas.size()
+        probas = probas.view(B, 1, H, W)
+    B, C, H, W = probas.size()
+    probas = probas.permute(0, 2, 3, 1).contiguous().view(-1, C)  # B * H * W, C = P, C
+    labels = labels.view(-1)
+    if ignore is None:
+        return probas, labels
+    valid = (labels != ignore)
+    vprobas = probas[valid.nonzero().squeeze()]
+    vlabels = labels[valid]
+    return vprobas, vlabels
 
 
 def flatten_binary_scores(scores, labels, ignore=None):
