@@ -60,6 +60,10 @@ def compute_recall(c_matrix):
     return c_matrix[0] / (c_matrix[0] + c_matrix[2])
 
 
+def compute_neg_precision(c_matrix):
+    return c_matrix[3] / (c_matrix[3] + c_matrix[2])
+
+
 def compute_accuracy(c_matrix):
     return (c_matrix[0] + c_matrix[3]) / (c_matrix[0] + c_matrix[1] + c_matrix[2] + c_matrix[3])
 
@@ -79,6 +83,9 @@ functools.update_wrapper(precision, compute_precision)
 
 recall = functools.partial(confusion_matrix, func=compute_recall, separate_class=True)
 functools.update_wrapper(recall, compute_recall)
+
+neg_precision = functools.partial(confusion_matrix, func=compute_neg_precision, separate_class=True)
+functools.update_wrapper(neg_precision, compute_neg_precision)
 
 accuracy = functools.partial(confusion_matrix, func=compute_accuracy, separate_class=True)
 functools.update_wrapper(accuracy, compute_accuracy)
