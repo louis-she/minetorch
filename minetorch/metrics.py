@@ -74,17 +74,17 @@ def compute_iou(c_matrix):
     return (c_matrix[0] + smooth) / (c_matrix[0] + c_matrix[1] + c_matrix[2] + smooth)
 
 
-precision = functools.partial(confusion_matrix, func=compute_precision, separate_class=True)
+precision = functools.partial(confusion_matrix, func=compute_precision, separate_class=False)
 functools.update_wrapper(precision, compute_precision)
 
-recall = functools.partial(confusion_matrix, func=compute_recall, separate_class=True)
+recall = functools.partial(confusion_matrix, func=compute_recall, separate_class=False)
 functools.update_wrapper(recall, compute_recall)
 
-accuracy = functools.partial(confusion_matrix, func=compute_accuracy, separate_class=True)
+accuracy = functools.partial(confusion_matrix, func=compute_accuracy, separate_class=False)
 functools.update_wrapper(accuracy, compute_accuracy)
 
-dice = functools.partial(confusion_matrix, func=compute_dice, separate_class=True)
+dice = functools.partial(confusion_matrix, func=compute_dice, separate_class=False)
 functools.update_wrapper(dice, compute_dice)
 
-iou = functools.partial(confusion_matrix, func=compute_iou, separate_class=True)
+iou = functools.partial(confusion_matrix, func=compute_iou, separate_class=False)
 functools.update_wrapper(iou, compute_iou)
