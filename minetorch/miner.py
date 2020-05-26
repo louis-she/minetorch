@@ -340,9 +340,7 @@ class Miner(object):
             self.call_hook_func(
                 'after_epoch_end',
                 train_loss=total_train_loss,
-                val_loss=total_val_loss,
                 train_metric=train_metrics,
-                val_metric=val_metrics,
                 epoch=self.current_epoch
                 )
 
