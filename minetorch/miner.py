@@ -61,7 +61,7 @@ class Miner(object):
             hooks and plugins the same time.
     """
 
-    def __init__(self, alchemistic_directory, model, optimizer, loss_func, metrics=[],
+    def __init__(self, alchemistic_directory, model, optimizer, loss_func,
                  code="geass", train_dataloader=None, val_dataloader=None,
                  resume=True, eval_stride=1, persist_stride=1, gpu=True,
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
@@ -87,22 +87,7 @@ class Miner(object):
         self.val_dataloader = val_dataloader
 
         self.loss_func = loss_func
-        self.metrics = metrics
-        self.metrics_func = []
 
-        def decorate_metric(metric):
-            def __inner_wrapper(logits, targets, func=lambda x: x, separate_class=False):
-                return metric(logits, targets), func
-            return __inner_wrapper
-
-        for i, metric in enumerate(self.metrics):
-            if not hasattr(metric, 'keywords'):
-                self.metrics[i] = decorate_metric(metric)
-                functools.update_wrapper(self.metrics[i], metric)
-                self.metrics_func.append(lambda x: x)
-            else:
-                self.metrics_func.append(metric.keywords['func'])
-        
         self.resume = resume
         self.eval_stride = eval_stride
         self.persist_stride = persist_stride
@@ -113,7 +98,6 @@ class Miner(object):
         self.current_val_iteration = 0
         self.hook_funcs = hooks
         self.max_epochs = max_epochs
-        self.metrics_metadata = {}
         self.trival = trival
 
         self.plugins = plugins
@@ -280,7 +264,7 @@ class Miner(object):
                 if not plugin.before_hook(name, payload):
                     continue
                 if hasattr(plugin, name):
-                    getattr(plugin, name)(payload)
+                    getattr(plugin, name)(**payload)
 
     def train(self):
         """start to train the model
@@ -293,27 +277,18 @@ class Miner(object):
             train_iters = len(self.train_dataloader)
 
             total_train_loss = 0
-            total_train_metrics = {}
             self.notebook_output(f'start to train epoch {self.current_epoch}')
             for index, data in enumerate(self.tqdm(self.train_dataloader)):
                 if self.trival is True and index == 10:
                     break
-                train_loss, train_metrics = self.run_train_iteration(index, data, train_iters)
+                train_loss = self.run_train_iteration(index, data, train_iters)
                 total_train_loss += train_loss
-                for metric in train_metrics:
-                    if metric not in total_train_metrics:
-                        total_train_metrics[metric] = 0
-                    total_train_metrics[metric] += train_metrics[metric]
-            for i, j in enumerate(total_train_metrics):
-                total_train_metrics[j] = total_train_metrics[j] / train_iters
-                total_train_metrics[j] = self.metrics_func[i](total_train_metrics[j])
 
             total_train_loss = total_train_loss / train_iters
             self.notebook_output(f'training of epoch {self.current_epoch} finished, '
                                  f'loss is {total_train_loss}')
 
             total_val_loss = 0
-            total_val_metrics = {}
             if self.val_dataloader is not None:
                 val_iters = len(self.val_dataloader)
                 with torch.set_grad_enabled(False):
@@ -322,17 +297,8 @@ class Miner(object):
                     for index, data in enumerate(self.tqdm(self.val_dataloader)):
                         if self.trival is True and index == 10:
                             break
-                        val_loss, val_metrics = self.run_val_iteration(index, data, val_iters)
+                        val_loss = self.run_val_iteration(index, data, val_iters)
                         total_val_loss += val_loss
-                        for metric in val_metrics:
-                            if metric not in total_val_metrics.keys():
-                                total_val_metrics[metric] = 0
-                                total_val_metrics[metric] += val_metrics[metric]
-                            else:
-                                total_val_metrics[metric] += val_metrics[metric]
-                for i, j in enumerate(total_val_metrics):
-                    total_val_metrics[j] = total_val_metrics[j] / val_iters
-                    total_val_metrics[j] = self.metrics_func[i](total_val_metrics[j])
 
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch}'
@@ -340,30 +306,13 @@ class Miner(object):
             self.call_hook_func(
                 'after_epoch_end',
                 train_loss=total_train_loss,
-                train_metric=train_metrics,
                 epoch=self.current_epoch
-                )
+            )
 
             if self.drawer is not None:
                 self.drawer.scalars(
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
-                for metric in self.metrics:
-                    if total_train_metrics[metric.__name__].shape.numel() != 1:
-                        for i in range(total_train_metrics[metric.__name__].shape.numel()):
-                            self.drawer.scalars(
-                                {
-                                    'train': total_train_metrics[metric.__name__][i],
-                                    'val': total_val_metrics[metric.__name__][i]
-                                    },
-                                metric.__name__+'_class_{}'.format(i+1)
-                                )
-                    else:
-                        self.drawer.scalars(
-                            {'train': total_train_metrics[metric.__name__],
-                            'val': total_val_metrics[metric.__name__]},
-                            metric.__name__
-                            )
 
             if total_train_loss < self.lowest_train_loss:
                 self.lowest_train_loss = total_train_loss
@@ -397,17 +346,8 @@ class Miner(object):
             total_iters=train_iters,
             iteration=self.current_train_iteration
             )
-        batch_size = data[0].shape[0]
         predict = self.model(data[0].to(self.devices))
         loss = self.loss_func(predict, data[1].to(self.devices))
-        train_metrics = {}
-        for metric in self.metrics: # iterate metrics specified by users
-            train_metrics[metric.__name__] = 0
-            for batch in range(batch_size): # iterate data from the dataloader
-                values, _ = metric(predict[batch].detach().cpu(), data[1][batch]) # return confusion_matrix and specific functions
-                train_metrics[metric.__name__] += values  # predict.shape = [B,C,H,W]
-            train_metrics[metric.__name__] /= batch_size
-
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -424,8 +364,8 @@ class Miner(object):
             index=index,
             total_iters=train_iters,
             iteration=self.current_train_iteration
-            )
-        return loss, train_metrics
+        )
+        return loss
 
     def run_val_iteration(self, index, data, val_iters):
         self.status = 'val'
@@ -436,21 +376,12 @@ class Miner(object):
             index=index,
             total_iters=val_iters,
             iteration=self.current_val_iteration
-            )
-        batch_size = data[0].shape[0]
+        )
         predict = self.model(data[0].to(self.devices))
         loss = self.loss_func(predict, data[1].to(self.devices))
-        val_metrics = {}
-        for metric in self.metrics:
-            val_metrics[metric.__name__] = 0
-            for batch in range(batch_size):
-                values, func = metric(predict[batch].detach().cpu(), data[1][batch])
-                val_metrics[metric.__name__] += values  # predict.shape = [B,C,H,W]
-            val_metrics[metric.__name__] /= batch_size
         loss = loss.detach().cpu().item()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
-
         self.call_hook_func(
             'after_val_iteration_ended',
             predicts=predict,
@@ -459,8 +390,8 @@ class Miner(object):
             index=index,
             total_iters=val_iters,
             iteration=self.current_val_iteration
-            )
-        return loss, val_metrics
+        )
+        return loss
 
     def persist(self, name):
         """save the model to disk
