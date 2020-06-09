@@ -4,7 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from minetorch.trainer import Trainer
+from minetorch.miner import Miner
+from minetorch.metrics import MultiClassesClassificationMetricWithLogic
 from torchvision import datasets, transforms
 
 
@@ -44,49 +45,21 @@ val_loader = torch.utils.data.DataLoader(
                    ])),
     batch_size=256, shuffle=True)
 
-
-# step 3(plan-A): define a loss computing function
-def compute_loss(trainer, data):
-    image, target = data
-    output = trainer.model(image)
-    return F.nll_loss(output, target)
-
-
-# step 3(plan-B): define a loss computing function
-# Uncoment the code bellow to train mnist with cross_entropy loss
-# def compute_loss(model, data):
-#     image, target = data
-#     output = model(image)
-#     return F.cross_entropy(output, target)
-
-
-# step 3.5(optional): define a after_epoch_end hook to compute accuracy,
-#                     need some understanding of Trainer class
-def after_epoch_end(trainer, **kwargs):
-    trainer.model.eval()
-    correct = 0
-    with torch.no_grad():
-        for data, target in trainer.val_dataloader:
-            output = model(data)
-            pred = output.max(1, keepdim=True)[1]
-            correct += pred.eq(target.view_as(pred)).sum().numpy()
-    accuracy = correct / len(trainer.val_dataloader.dataset)
-    trainer.drawer.scalar(accuracy, 'accuracy')
-
-# step 4: start to train
+# step 3: start to train, pay attension to the parameters of Miner
 model = Net()
 
-trainer = Trainer(
-    # if training with plan-B, use the code bellow
+trainer = Miner(
     alchemistic_directory='./alchemistic_directory',
+    code="geass",
     model=model,
     optimizer=optim.SGD(model.parameters(), lr=0.01),
     train_dataloader=train_loader,
     val_dataloader=val_loader,
-    loss_func=compute_loss,
-    hooks={'after_epoch_end': after_epoch_end},
+    loss_func=torch.nn.CrossEntropyLoss(),
     drawer='matplotlib',
-    in_notebook=True
+    plugins=[
+        MultiClassesClassificationMetricWithLogic()
+    ]
 )
 
 trainer.train()
