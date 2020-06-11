@@ -24,7 +24,7 @@ class Plugin():
         return getattr(self.miner, key)
 
     def print_txt(self, printable, name):
-        print_file = Path(self.alchemistic_directory) / self.code / 'prints' / name
+        print_file = Path(self.alchemistic_directory) / self.code / 'prints' / f'{name}.txt'
         print_file.parent.mkdir(parents=True, exist_ok=True)
         with open(print_file, 'a') as f:
             print(f'================ Epoch {self.current_epoch} ================\n', file=f)
