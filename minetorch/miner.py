@@ -258,7 +258,7 @@ class Miner(object):
 
     def call_hook_func(self, name, **payload):
         if name in self.hook_funcs:
-            self.hook_funcs[name](payload)
+            self.hook_funcs[name](miner=self, **payload)
         else:
             for plugin in self.plugins:
                 if not plugin.before_hook(name, payload):
