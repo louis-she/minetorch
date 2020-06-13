@@ -73,6 +73,7 @@ class Miner(object):
         self.gpu = gpu
         self.devices = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.logger = logger
+        self.code_dir = os.path.join(alchemistic_directory, code)
         if self.logger is None:
             self.set_logging_config(alchemistic_directory, code, logging_format)
             self.logger = logging
@@ -303,12 +304,6 @@ class Miner(object):
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch}'
                                      f'finished, loss is {total_val_loss}')
-            self.call_hook_func(
-                'after_epoch_end',
-                train_loss=total_train_loss,
-                epoch=self.current_epoch
-            )
-
             if self.drawer is not None:
                 self.drawer.scalars(
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
@@ -335,6 +330,13 @@ class Miner(object):
                 self.call_hook_func('before_quit')
                 self.logger.info('exceed max epochs, quit!')
                 break
+
+            self.call_hook_func(
+                'after_epoch_end',
+                train_loss=total_train_loss,
+                val_loss=total_val_loss,
+                epoch=self.current_epoch
+            )
 
     def run_train_iteration(self, index, data, train_iters):
         self.status = 'train'

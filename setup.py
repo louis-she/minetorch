@@ -12,7 +12,7 @@ setuptools.setup(
     author='louis',
     author_email='chenglu.she@gmail.com',
     keywords='pytorch minecraft',
-    install_requires=['tensorboardX', 'torch', 'matplotlib', 'albumentations'],
+    install_requires=['tensorboardX', 'torch', 'matplotlib', 'albumentations', 'seaborn'],
     entry_points = {
         'console_scripts': ['minetorch=minetorch.command_line:main'],
     }

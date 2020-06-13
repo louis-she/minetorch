@@ -1,5 +1,9 @@
 import numpy as np
-from sklearn.metrics import cohen_kappa_score, confusion_matrix
+from sklearn.metrics import cohen_kappa_score, confusion_matrix, classification_report
+
+import seaborn as sn
+import pandas as pd
+import matplotlib.pyplot as plt
 
 from .plugin import Plugin
 
@@ -9,10 +13,13 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
     This can be used directly if your loss function is torch.nn.CrossEntropy
     """
 
-    def __init__(self, accuracy=True, confusion_matrix=True, kappa_score=True):
+    def __init__(self, accuracy=True, confusion_matrix=True, kappa_score=True,
+            plot_confusion_matrix=True, classification_report=True):
         self.accuracy = accuracy
         self.confusion_matrix = confusion_matrix
         self.kappa_score = kappa_score
+        self.plot_confusion_matrix = plot_confusion_matrix
+        self.classification_report = classification_report
 
     def before_epoch_start(self, epoch):
         self.predicts = np.array([]).astype(np.float)
@@ -27,10 +34,27 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
         self.predicts = np.concatenate((self.predicts, predicts))
         self.targets = np.concatenate((self.targets, targets))
 
-    def after_epoch_end(self, **ignore):
+    def after_epoch_end(self, val_loss, **ignore):
         self.accuracy and self._accuracy()
         self.confusion_matrix and self._confusion_matrix()
         self.kappa_score and self._kappa_score()
+        self.classification_report and self._classification_report()
+        self.plot_confusion_matrix and self._plot_confusion_matrix(val_loss)
+
+    def _classification_report(self):
+        result = classification_report(self.targets, self.predicts)
+        self.print_txt(result, 'classification_report')
+
+    def _plot_confusion_matrix(self, val_loss):
+        matrix = confusion_matrix(self.targets, self.predicts)
+        df_cm = pd.DataFrame(matrix)
+        svm = sn.heatmap(df_cm, annot=True, cmap='OrRd', fmt='.3g')
+        figure = svm.get_figure()
+        if val_loss < self.lowest_val_loss:
+            figure.savefig(self.plugin_file(f'confusion_matrix_epoch_best.png'))
+        figure.savefig(self.plugin_file(f'confusion_matrix_epoch_{self.current_epoch}.png'))
+        figure.savefig(self.plugin_file(f'confusion_matrix_epoch_latest.png'))
+        plt.clf()
 
     def _accuracy(self):
         self.drawer.scalars(
