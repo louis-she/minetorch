@@ -111,6 +111,10 @@ class MatplotlibDrawer(Drawer):
     def _update_state(self, values, graph):
         if graph not in self.state or not isinstance(self.state[graph], dict):
             self.state[graph] = {}
+            for key in values:
+                if key not in self.state[graph]:
+                    self.state[graph][key] = []
+                self.state[graph][key].append(0)
         for key in values:
             if key not in self.state[graph]:
                 self.state[graph][key] = []
