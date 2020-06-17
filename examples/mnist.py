@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from minetorch.miner import Miner
 from minetorch.metrics import MultiClassesClassificationMetricWithLogic
+from minetorch.spreadsheet import GoogleSheet
 from torchvision import datasets, transforms
 
 
@@ -48,6 +49,10 @@ val_loader = torch.utils.data.DataLoader(
 # step 3: start to train, pay attension to the parameters of Miner
 model = Net()
 
+# step 4(optional): create google sheet
+
+sheet = GoogleSheet('Your sheet id', 'your-google-service-account-credensial-file.json')
+
 trainer = Miner(
     alchemistic_directory='./alchemistic_directory',
     code="geass",
@@ -59,7 +64,8 @@ trainer = Miner(
     drawer='matplotlib',
     plugins=[
         MultiClassesClassificationMetricWithLogic()
-    ]
+    ],
+    sheet=sheet
 )
 
 trainer.train()

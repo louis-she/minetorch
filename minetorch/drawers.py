@@ -9,23 +9,20 @@ class Drawer():
     """To vistualize everything in training process
     """
 
-    def __init__(self, alchemistic_directory, code, state=None):
+    def __init__(self, miner, state=None):
         """Constructor
 
         Args:
-            alchemistic_directory (string):
-                same as trainer's alchemistic_directory
-            code (string):
-                same as trainer's alchemistic_directory
+            miner (Miner):
+                Miner instance
             graph (state, optional):
                 Defaults to None. Since we could draw multiple graph during
                 training, the state records the current position of each graph
                 The keys are the name of the graphs and values are current
                 positions.
         """
-        self.step_file = os.path.join(alchemistic_directory, code, '.drawer_step')
-        self.code = code
-        self.alchemistic_directory = alchemistic_directory
+        self.step_file = os.path.join(miner.alchemistic_directory, miner.code, '.drawer_step')
+        self.miner = miner
 
         if state is None:
             self.state = {}
@@ -69,10 +66,10 @@ class TensorboardDrawer(Drawer):
     """To vistualize everything in training process using tensorboard
     """
 
-    def __init__(self, alchemistic_directory, code, step=None):
-        super().__init__(alchemistic_directory, code, step)
+    def __init__(self, miner, step=None):
+        super().__init__(miner, step)
         self.writer = SummaryWriter(log_dir=os.path.join(
-            alchemistic_directory, code
+            miner.alchemistic_directory, miner.code
         ))
 
     def scalars(self, value, graph):
@@ -86,7 +83,7 @@ class TensorboardDrawer(Drawer):
         """
         if graph not in self.state:
             self.state[graph] = 0
-        key = '{}/{}'.format(self.code, graph)
+        key = '{}/{}'.format(self.miner.code, graph)
         if isinstance(value, dict):
             self.writer.add_scalars(key, value, self.state[graph])
         else:
@@ -96,9 +93,9 @@ class TensorboardDrawer(Drawer):
 
 class MatplotlibDrawer(Drawer):
 
-    def __init__(self, alchemistic_directory, code, state=None):
-        super().__init__(alchemistic_directory, code, state)
-        self.graph_dir = os.path.join(alchemistic_directory, code, 'graphs')
+    def __init__(self, miner, state=None):
+        super().__init__(miner, state)
+        self.graph_dir = os.path.join(self.miner.alchemistic_directory, self.miner.code, 'graphs')
         self.data_file = os.path.join(self.graph_dir, '.graphs.pickle')
         self.colors = ['blue', 'orange', 'green', 'red', 'purple',
                        'brown', 'pink', 'gray', 'olive', 'cyan']
@@ -132,7 +129,8 @@ class MatplotlibDrawer(Drawer):
             ax.plot(self.state[graph][curve], label=curve, color=self.colors[index])
 
         ax.legend(loc='upper left')
-        fig.savefig(png_file)
+        fig.savefig(png_file, facecolor="#F0FFFC")
+        return png_file
 
     def scalars(self, values, graph):
         """Add a scalar on a graph
@@ -144,4 +142,4 @@ class MatplotlibDrawer(Drawer):
                 graph name
         """
         self._update_state(values, graph)
-        self._save_png(graph)
+        return self._save_png(graph)

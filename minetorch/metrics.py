@@ -21,6 +21,11 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
         self.plot_confusion_matrix = plot_confusion_matrix
         self.classification_report = classification_report
 
+    def before_init(self):
+        self.create_sheet_column('latest_confusion_matrix', 'Latest Confusion Matrix')
+        self.create_sheet_column('kappa_score', 'Kappa Score')
+        self.create_sheet_column('accuracy', 'Accuracy')
+
     def before_epoch_start(self, epoch):
         self.predicts = np.array([]).astype(np.float)
         self.targets = np.array([]).astype(np.int)
@@ -56,16 +61,25 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
         figure.savefig(self.plugin_file(f'confusion_matrix_epoch_latest.png'))
         plt.clf()
 
+        self.update_sheet('latest_confusion_matrix', {
+            'raw': self.plugin_file(f'confusion_matrix_epoch_latest.png'),
+            'processor': 'upload_image'})
+
     def _accuracy(self):
-        self.drawer.scalars(
+        png_file = self.drawer.scalars(
             {'accuracy': (self.predicts == self.targets).sum() / len(self.predicts)}, 'accuracy'
         )
+        if png_file:
+            self.update_sheet('accuracy', {'raw': png_file, 'processor': 'upload_image'})
 
     def _confusion_matrix(self):
         matrix = confusion_matrix(self.targets, self.predicts)
         self.print_txt(matrix, 'confusion_matrix')
 
     def _kappa_score(self):
-        self.drawer.scalars(
+        png_file = self.drawer.scalars(
             {'kappa_score': cohen_kappa_score(self.targets, self.predicts, weights='quadratic')}, 'kappa_score'
         )
+
+        if png_file:
+            self.update_sheet('kappa_score', {'raw': png_file, 'processor': 'upload_image'})

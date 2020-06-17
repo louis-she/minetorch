@@ -66,7 +66,7 @@ class Miner(object):
                  resume=True, eval_stride=1, persist_stride=1, gpu=True,
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
                  logging_format=None, trival=False, in_notebook=False, plugins=[],
-                 logger=None):
+                 logger=None, sheet=None):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         self.create_dirs()
@@ -101,6 +101,10 @@ class Miner(object):
         self.max_epochs = max_epochs
         self.trival = trival
 
+        self.sheet = sheet
+        if self.sheet:
+            self._init_sheet()
+
         self.plugins = plugins
         for plugin in self.plugins:
             plugin.set_miner(self)
@@ -109,6 +113,8 @@ class Miner(object):
         self.call_hook_func('before_init')
         self._check_statable()
         self.init_model()
+        self.sheet.onready()
+        self.sheet.flush()
         self.status = 'init'
         self.call_hook_func('after_init')
 
@@ -122,6 +128,23 @@ class Miner(object):
             self.tqdm = tqdm.tqdm_notebook
         else:
             self.tqdm = lambda x: x
+
+    def _init_sheet(self):
+        self.sheet.set_miner(self)
+        self.sheet.reset_index()
+        self.sheet.create_column('code', 'Code')
+        self.sheet.create_column('loss', 'Loss')
+        self.sheet.update('code', self.code)
+
+    def create_sheet_column(self, key, title):
+        if self.sheet is None:
+            return
+        self.sheet.create_column(key, title)
+
+    def update_sheet(self, key, value):
+        if self.sheet is None:
+            return
+        self.sheet.update(key, value)
 
     def set_logging_config(self, alchemistic_directory, code, logging_format):
         self.log_dir = os.path.join(alchemistic_directory, code)
@@ -140,8 +163,7 @@ class Miner(object):
             self.drawer = drawers.TensorboardDrawer(
                 self.alchemistic_directory, self.code)
         elif drawer == 'matplotlib':
-            self.drawer = drawers.MatplotlibDrawer(
-                self.alchemistic_directory, self.code)
+            self.drawer = drawers.MatplotlibDrawer(self)
         else:
             self.drawer = drawer
 
@@ -305,9 +327,11 @@ class Miner(object):
                 self.notebook_output(f'validation of epoch {self.current_epoch}'
                                      f'finished, loss is {total_val_loss}')
             if self.drawer is not None:
-                self.drawer.scalars(
+                png_file = self.drawer.scalars(
                     {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
+                if png_file is not None:
+                    self.update_sheet('loss', {'raw': png_file, 'processor': 'upload_image'})
 
             if total_train_loss < self.lowest_train_loss:
                 self.lowest_train_loss = total_train_loss
@@ -331,6 +355,8 @@ class Miner(object):
                 self.logger.info('exceed max epochs, quit!')
                 break
 
+            if self.sheet:
+                self.sheet.flush()
             self.call_hook_func(
                 'after_epoch_end',
                 train_loss=total_train_loss,
