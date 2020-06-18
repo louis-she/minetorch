@@ -2,6 +2,8 @@ import logging
 import os
 import time
 from pathlib import Path
+from datetime import datetime
+import math
 
 import functools
 import torch
@@ -114,6 +116,12 @@ class Miner(object):
         self._check_statable()
         self.init_model()
         if self.sheet:
+            self.sheet_progress = dict(
+                epoch=0,
+                train_percentage='0%',
+                val_percentage='0%'
+            )
+            self.last_flushed_at = 0
             self.sheet.onready()
             self.sheet.flush()
         self.status = 'init'
@@ -134,6 +142,7 @@ class Miner(object):
         self.sheet.set_miner(self)
         self.sheet.reset_index()
         self.sheet.create_column('code', 'Code')
+        self.sheet.create_column('progress', 'Progress')
         self.sheet.create_column('loss', 'Loss')
         self.sheet.update('code', self.code)
 
@@ -301,18 +310,28 @@ class Miner(object):
             train_iters = len(self.train_dataloader)
 
             total_train_loss = 0
+            percentage = 0
+            total = len(self.train_dataloader)
             self.notebook_output(f'start to train epoch {self.current_epoch}')
+            self._update_progress(force=True, epoch=self.current_epoch)
             for index, data in enumerate(self.tqdm(self.train_dataloader)):
                 if self.trival is True and index == 10:
                     break
                 train_loss = self.run_train_iteration(index, data, train_iters)
                 total_train_loss += train_loss
+                current_percentage = math.ceil(index / total * 100)
+                if current_percentage != percentage:
+                    self._update_progress(train_percentage=f'{percentage}%')
+                    percentage = current_percentage
+            self._update_progress(force=True, train_percentage=f'{current_percentage}%')
 
             total_train_loss = total_train_loss / train_iters
             self.notebook_output(f'training of epoch {self.current_epoch} finished, '
                                  f'loss is {total_train_loss}')
 
             total_val_loss = 0
+            percentage = 0
+            total = len(self.val_dataloader)
             if self.val_dataloader is not None:
                 val_iters = len(self.val_dataloader)
                 with torch.set_grad_enabled(False):
@@ -323,6 +342,11 @@ class Miner(object):
                             break
                         val_loss = self.run_val_iteration(index, data, val_iters)
                         total_val_loss += val_loss
+                        current_percentage = math.ceil(index / total * 100)
+                        if current_percentage != percentage:
+                            self._update_progress(val_percentage=f'{percentage}%')
+                            percentage = current_percentage
+                    self._update_progress(force=True, val_percentage=f'{current_percentage}%')
 
                 total_val_loss = total_val_loss / val_iters
                 self.notebook_output(f'validation of epoch {self.current_epoch}'
@@ -504,3 +528,24 @@ class Miner(object):
             current_dir = os.path.join(current_dir, dir_name)
             if not os.path.isdir(current_dir):
                 os.mkdir(current_dir)
+
+    def periodly_flush(self, force=False):
+        if self.sheet is None:
+            return
+        now = int(datetime.now().timestamp())
+        # flush every 10 seconds
+        if not force and now - self.last_flushed_at < 5:
+            return
+        self.sheet.flush()
+        self.last_flushed_at = now
+
+    def _update_progress(self, force=False, **kwargs):
+        self.sheet_progress.update(kwargs)
+        progress = \
+f"""
+         epoch:  {self.sheet_progress.get('epoch')}
+train progress:  {self.sheet_progress.get('train_percentage')}
+  val progress:  {self.sheet_progress.get('val_percentage')}
+"""
+        self.sheet.update('progress', progress)
+        self.periodly_flush(force)
