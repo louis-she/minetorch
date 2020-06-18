@@ -64,13 +64,17 @@ class MinetorchSpreadsheet(Plugin):
 
 class GoogleSheet(MinetorchSpreadsheet):
 
-    def __init__(self, sheet_id, service_account_file, meta_prefix=''):
+    def __init__(self, sheet_id, service_account_file, meta_prefix='', build_kwargs=None):
         super().__init__()
+
+        if build_kwargs is None:
+            build_kwargs = {}
+
         self.sheet_id = sheet_id
         self.meta_prefix = meta_prefix
 
         credentials = service_account.Credentials.from_service_account_file(service_account_file)
-        service = build('sheets', 'v4', credentials=credentials)
+        service = build('sheets', 'v4', credentials=credentials, **build_kwargs)
         self.sheet = service.spreadsheets()
         self.drive = build('drive', 'v3', credentials=credentials)
 
