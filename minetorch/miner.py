@@ -313,7 +313,7 @@ class Miner(object):
             percentage = 0
             total = len(self.train_dataloader)
             self.notebook_output(f'start to train epoch {self.current_epoch}')
-            self._update_progress(force=True, epoch=self.current_epoch)
+            self._update_progress(force=True, epoch=self.current_epoch, train_percentage='0%', val_percentage='0%')
             for index, data in enumerate(self.tqdm(self.train_dataloader)):
                 if self.trival is True and index == 10:
                     break
