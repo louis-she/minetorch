@@ -18,6 +18,57 @@ In [Minecraft](https://minecraft.net/), torches are very important for mining. N
 pip install minetorch
 ```
 
+## Minetorch X Google Sheets
+
+Minetorch can easily work with Google Sheets. To step up, you should have a Google account and, if you are in China, a proxy.
+
+**Enable Google API**
+
+1. Sign in to https://console.developers.google.com with your Google account
+2. Create a new `Project`
+3. In the API Libarary, search `drive` and `sheet`, and enable them both. During this, Google should have alert you about creating the service account. If you have get the right credential file, ignore step 4.
+4. Create a Google Service Account in at https://console.developers.google.com/iam-admin/iam .
+
+After all these steps you should get a `json` credential file which looks like this:
+
+```
+{
+  "type": "xxxxxx",
+  "project_id": "xxxxxx",
+  "private_key_id": "xxxxxx",
+  "private_key": "-----BEGIN PRIVATE KEY-----\n .......... \n-----END PRIVATE KEY-----\n",
+  "client_email": "xxxxxx@xxxxxx-xxxxxxxxxx.iam.gserviceaccount.com",
+  "client_id": "xxxxxxxxxxxxxxxxxxxxx",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.iam.gserviceaccount.com"
+}
+```
+
+**Create the spreadsheet**
+
+1. At http://drive.google.com/, create a new spreadsheet.
+2. Share that spreadsheet with your service account, you can find your service account email address in your credential file.
+3. Get the id of the spreadsheet, it's right in the middle of the URL.
+
+**Ready to go**
+
+In your code, just create a `minetorch.spreadsheet.GoogleSheet` instance and pass it to `Miner`.
+
+```python
+miner = Miner(
+    # ...
+    sheet=GoogleSheet('Your sheet id', 'path-of-your-google-service-account-credensial-file.json')
+    # ...
+)
+
+miner.train()
+```
+
+and that's it, your spreadsheet should be automatically updated when you start your training process.
+
+
 ## Quick Start
 
 1. Clone this repo

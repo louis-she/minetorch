@@ -113,8 +113,9 @@ class Miner(object):
         self.call_hook_func('before_init')
         self._check_statable()
         self.init_model()
-        self.sheet.onready()
-        self.sheet.flush()
+        if self.sheet:
+            self.sheet.onready()
+            self.sheet.flush()
         self.status = 'init'
         self.call_hook_func('after_init')
 

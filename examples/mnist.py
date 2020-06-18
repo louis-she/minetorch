@@ -51,8 +51,6 @@ model = Net()
 
 # step 4(optional): create google sheet
 
-sheet = GoogleSheet('Your sheet id', 'your-google-service-account-credensial-file.json')
-
 trainer = Miner(
     alchemistic_directory='./alchemistic_directory',
     code="geass",
@@ -65,7 +63,7 @@ trainer = Miner(
     plugins=[
         MultiClassesClassificationMetricWithLogic()
     ],
-    sheet=sheet
+    # sheet=GoogleSheet('Your sheet id', 'your-google-service-account-credensial-file.json')
 )
 
 trainer.train()
