@@ -164,7 +164,7 @@ class GoogleSheet(MinetorchSpreadsheet):
                         "backgroundColor": self.dark_bg,
                         "textFormat": {
                             "foregroundColor": self.white,
-                            "bold": True,
+                            "bold": False,
                             "fontSize": 12,
                         },
                         "horizontalAlignment": "CENTER",
@@ -359,11 +359,15 @@ class GoogleSheet(MinetorchSpreadsheet):
             "majorDimension": "ROWS",
             "values": [values]
         }
-        self.sheet.values().update(
-            spreadsheetId=self.sheet_id,
-            range=a1,
-            valueInputOption='USER_ENTERED',
-            body=value_range).execute()
+        try:
+            self.sheet.values().update(
+                spreadsheetId=self.sheet_id,
+                range=a1,
+                valueInputOption='USER_ENTERED',
+                body=value_range).execute()
+        except Exception as e:
+            self.logger.warn(f'Update sheet failed with {e}')
+            return
 
     def flush(self):
         irow = self._index_of(self.experiment_row_name)
@@ -377,8 +381,6 @@ class GoogleSheet(MinetorchSpreadsheet):
                 value = getattr(self, f'_process_{processor}')(key, raw_value)
             icol = column_indices[key]
             self._update_cells(f'{self.num_to_letter(icol)}{irow + 1}', [value])
-
-
         self.cached_row_data = {}
 
     def _process_upload_image(self, key, value, retry=True):
