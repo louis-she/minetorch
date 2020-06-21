@@ -108,10 +108,6 @@ class MatplotlibDrawer(Drawer):
     def _update_state(self, values, graph):
         if graph not in self.state or not isinstance(self.state[graph], dict):
             self.state[graph] = {}
-            for key in values:
-                if key not in self.state[graph]:
-                    self.state[graph][key] = []
-                self.state[graph][key].append(0)
         for key in values:
             if key not in self.state[graph]:
                 self.state[graph][key] = []
@@ -126,7 +122,11 @@ class MatplotlibDrawer(Drawer):
         ax = fig.add_subplot(1, 1, 1)
         ax.grid(True)
         for index, curve in enumerate(self.state[graph]):
-            ax.plot(self.state[graph][curve], label=curve, color=self.colors[index])
+            ax.plot(
+                list(range(len(self.state[graph][curve]) + 1))[1:],
+                self.state[graph][curve],
+                label=curve,
+                color=self.colors[index])
 
         ax.legend(loc='upper left')
         fig.savefig(png_file, facecolor="#F0FFFC")

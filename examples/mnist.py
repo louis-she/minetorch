@@ -9,6 +9,11 @@ from minetorch.metrics import MultiClassesClassificationMetricWithLogic
 from minetorch.spreadsheet import GoogleSheet
 from torchvision import datasets, transforms
 
+import socket
+import socks
+socks.set_default_proxy(socks.SOCKS5, "proxy.featurize.cn", 38080)
+socket.socket = socks.socksocket
+
 
 # step 1: define some model
 class Net(nn.Module):
@@ -49,11 +54,9 @@ val_loader = torch.utils.data.DataLoader(
 # step 3: start to train, pay attension to the parameters of Miner
 model = Net()
 
-# step 4(optional): create google sheet
-
 trainer = Miner(
     alchemistic_directory='./alchemistic_directory',
-    code="geass",
+    code="Experiment-2",
     model=model,
     optimizer=optim.SGD(model.parameters(), lr=0.01),
     train_dataloader=train_loader,
@@ -63,7 +66,7 @@ trainer = Miner(
     plugins=[
         MultiClassesClassificationMetricWithLogic()
     ],
-    # sheet=GoogleSheet('Your sheet id', 'your-google-service-account-credensial-file.json')
+    sheet=GoogleSheet('1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4', 'quickstart.json')
 )
 
 trainer.train()

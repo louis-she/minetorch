@@ -7,6 +7,7 @@ In [Minecraft](https://minecraft.net/), torches are very important for mining. N
 ## Features
 
 * Logging of course.
+* Play with Google Sheets.
 * Visualization. built-in with Tensorboard or Matplotlib.
 * Resumption. Default will resume from the last checkpoint.
 * Many hook points.
@@ -22,7 +23,12 @@ pip install minetorch
 
 Minetorch can easily work with Google Sheets. To step up, you should have a Google account and, if you are in China, a proxy.
 
+This is the [demo sheet](https://docs.google.com/spreadsheets/d/1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4/edit#gid=0) that produced with Minetorch training on MNIST dataset.
+
+![](./images/sheet.png)
+
 **Enable Google API**
+
 
 1. Sign in to https://console.developers.google.com with your Google account
 2. Create a new `Project`
@@ -68,6 +74,7 @@ miner.train()
 
 and that's it, your spreadsheet should be automatically updated when you start your training process.
 
+> Minetorch update the sheet in async way, so it will not slow down the training speed.
 
 ## Quick Start
 

@@ -56,9 +56,9 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
         svm = sn.heatmap(df_cm, annot=True, cmap='OrRd', fmt='.3g')
         figure = svm.get_figure()
         if val_loss < self.lowest_val_loss:
-            figure.savefig(self.plugin_file(f'confusion_matrix_epoch_best.png'))
-        figure.savefig(self.plugin_file(f'confusion_matrix_epoch_{self.current_epoch}.png'))
-        figure.savefig(self.plugin_file(f'confusion_matrix_epoch_latest.png'))
+            figure.savefig(self.plugin_file(f'confusion_matrix_epoch_best.png'), facecolor="#F0FFFC")
+        figure.savefig(self.plugin_file(f'confusion_matrix_epoch_{self.current_epoch}.png'), facecolor="#F0FFFC")
+        figure.savefig(self.plugin_file(f'confusion_matrix_epoch_latest.png'), facecolor="#F0FFFC")
         plt.clf()
 
         self.update_sheet('latest_confusion_matrix', {

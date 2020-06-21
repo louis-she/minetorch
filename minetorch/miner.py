@@ -534,12 +534,15 @@ class Miner(object):
             return
         now = int(datetime.now().timestamp())
         # flush every 10 seconds
-        if not force and now - self.last_flushed_at < 5:
+        if not force and now - self.last_flushed_at < 10:
             return
         self.sheet.flush()
         self.last_flushed_at = now
 
     def _update_progress(self, force=False, **kwargs):
+        if self.sheet is None:
+            return
+
         self.sheet_progress.update(kwargs)
         progress = \
 f"""

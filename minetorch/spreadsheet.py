@@ -1,12 +1,33 @@
-from .plugin import Plugin
+import functools
+import logging
+from concurrent.futures import ThreadPoolExecutor
 
-from googleapiclient.errors import HttpError
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
+from .plugin import Plugin
+
+
+pool = ThreadPoolExecutor(1)
+logger = logging.getLogger(__name__)
+
+def _async(fn):
+
+    @functools.wraps(fn)
+    def _func(*args, **kwargs):
+        def _inner(*args, **kwargs):
+            try:
+                fn(*args, **kwargs)
+            except Exception as e:
+                logger.warn(f'error occured while handle task {e}')
+                raise e
+        return pool.submit(_inner, *args, **kwargs)
+
+    return _func
 
 class ColumnNotExistsError(Exception):
     pass
@@ -26,6 +47,7 @@ class MinetorchSpreadsheet(Plugin):
     def _create_end_column_divider(self):
         raise NotImplementedError
 
+    @_async
     def update(self, key, value):
         """Update value for a column"""
         if key not in self.columns:
@@ -83,7 +105,7 @@ class GoogleSheet(MinetorchSpreadsheet):
     def _meta(self, key):
         return f'{self.meta_prefix}{key}'
 
-    def num_to_letter(self, num):
+    def _num_to_letter(self, num):
         num += 1
         letters = ''
         while num:
@@ -108,12 +130,14 @@ class GoogleSheet(MinetorchSpreadsheet):
 
     _exists = _index_of
 
+    @_async
     def reset_index(self):
         self.banner_index = self._create_banner_dimension()
         self.title_index = self._create_title_dimension()
         self.endcol_index = self._create_end_column_divider()
         self.experiment_row_index = self._insert_dimension(self.experiment_row_name, self.title_index + 1, 'ROWS')
 
+    @_async
     def prepare(self):
         self.reset_index()
         self.update('code', self.code)
@@ -241,6 +265,7 @@ class GoogleSheet(MinetorchSpreadsheet):
         self.sheet.batchUpdate(spreadsheetId=self.sheet_id, body=body).execute()
         return self._exists(row_name)
 
+    @_async
     def onready(self):
         banner = """😀 Thanks for using Minetorch, if you found it's useful, please considering star the project at https://github.com/minetorch/minetorch.
 
@@ -303,8 +328,9 @@ class GoogleSheet(MinetorchSpreadsheet):
         }
 
         self.sheet.batchUpdate(spreadsheetId=self.sheet_id, body=body).execute()
-        self._update_cells(f'{self.num_to_letter(icol_start)}{self.banner_index + 1}', [banner])
+        self._update_cells(f'{self._num_to_letter(icol_start)}{self.banner_index + 1}', [banner])
 
+    @_async
     def create_column(self, key, title, size=None):
         super().create_column(key, title)
         col_index = self._index_of(self.end_column_name)
@@ -351,7 +377,7 @@ class GoogleSheet(MinetorchSpreadsheet):
             change_cell_request,
             assign_name_request
         ])
-        self._update_cells(f'{self.num_to_letter(index)}{self.title_index + 1}', [title])
+        self._update_cells(f'{self._num_to_letter(index)}{self.title_index + 1}', [title])
 
     def _update_cells(self, a1, values):
         value_range = {
@@ -369,6 +395,7 @@ class GoogleSheet(MinetorchSpreadsheet):
             self.logger.warn(f'Update sheet failed with {e}')
             return
 
+    @_async
     def flush(self):
         irow = self._index_of(self.experiment_row_name)
         column_indices = self._get_column_indices()
@@ -380,7 +407,7 @@ class GoogleSheet(MinetorchSpreadsheet):
             else:
                 value = getattr(self, f'_process_{processor}')(key, raw_value)
             icol = column_indices[key]
-            self._update_cells(f'{self.num_to_letter(icol)}{irow + 1}', [value])
+            self._update_cells(f'{self._num_to_letter(icol)}{irow + 1}', [value])
         self.cached_row_data = {}
 
     def _process_upload_image(self, key, value, retry=True):
