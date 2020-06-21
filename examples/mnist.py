@@ -56,7 +56,7 @@ model = Net()
 
 trainer = Miner(
     alchemistic_directory='./alchemistic_directory',
-    code="Experiment-2",
+    code="Experiment-1",
     model=model,
     optimizer=optim.SGD(model.parameters(), lr=0.01),
     train_dataloader=train_loader,
@@ -66,7 +66,8 @@ trainer = Miner(
     plugins=[
         MultiClassesClassificationMetricWithLogic()
     ],
-    sheet=GoogleSheet('1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4', 'quickstart.json')
+    sheet=GoogleSheet('1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4', 'quickstart.json'),
+    accumulated_iter=5
 )
 
 trainer.train()

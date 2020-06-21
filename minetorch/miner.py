@@ -68,7 +68,7 @@ class Miner(object):
                  resume=True, eval_stride=1, persist_stride=1, gpu=True,
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
                  logging_format=None, trival=False, in_notebook=False, plugins=[],
-                 logger=None, sheet=None):
+                 logger=None, sheet=None, accumulated_iter=1):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         self.create_dirs()
@@ -83,6 +83,7 @@ class Miner(object):
         self.models_dir = os.path.join(alchemistic_directory, code, 'models')
         self.in_notebook = in_notebook
         self.statable = statable
+        self.accumulated_iter = accumulated_iter
 
         self.model = model
         self.optimizer = optimizer
@@ -318,11 +319,16 @@ class Miner(object):
                 if self.trival is True and index == 10:
                     break
                 train_loss = self.run_train_iteration(index, data, train_iters)
+                if (index % self.accumulated_iter) == 0:
+                    self.optimizer.step()
+                    self.optimizer.zero_grad()
                 total_train_loss += train_loss
                 current_percentage = math.ceil(index / total * 100)
                 if current_percentage != percentage:
                     self._update_progress(train_percentage=f'{percentage}%')
                     percentage = current_percentage
+            self.optimizer.step()
+            self.optimizer.zero_grad()
             self._update_progress(force=True, train_percentage=f'{current_percentage}%')
 
             total_train_loss = total_train_loss / train_iters
@@ -397,8 +403,7 @@ class Miner(object):
             data=data,
             index=index,
             total_iters=train_iters,
-            iteration=self.current_train_iteration
-            )
+            iteration=self.current_train_iteration)
         predict = self.model(data[0].to(self.devices))
         loss = self.loss_func(predict, data[1].to(self.devices))
         self.optimizer.zero_grad()
