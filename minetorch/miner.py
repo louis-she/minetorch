@@ -83,7 +83,7 @@ class Miner(object):
         self.models_dir = os.path.join(alchemistic_directory, code, 'models')
         self.in_notebook = in_notebook
         self.statable = statable
-        self.accumulated_iter = accumulated_iter
+        self.accumulated_iter = float(accumulated_iter)
 
         self.model = model
         self.optimizer = optimizer
@@ -319,7 +319,7 @@ class Miner(object):
                 if self.trival is True and index == 10:
                     break
                 train_loss = self.run_train_iteration(index, data, train_iters)
-                if (index % self.accumulated_iter) == 0:
+                if int((index + 1) % self.accumulated_iter) == 0:
                     self.optimizer.step()
                     self.optimizer.zero_grad()
                 total_train_loss += train_loss
@@ -405,15 +405,14 @@ class Miner(object):
             total_iters=train_iters,
             iteration=self.current_train_iteration)
         predict = self.model(data[0].to(self.devices))
+        # for the last batch, loss is not supposed divide by self.accumulated_iter
+        # just ignored this tiny issue
         loss = self.loss_func(predict, data[1].to(self.devices))
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+        seperate_loss = loss / self.accumulated_iter
+        seperate_loss.backward()
         loss = loss.detach().cpu().item()
         self.logger.info('[train {}/{}/{}] loss {}'.format(
             self.current_epoch, index, train_iters, loss))
-        if loss < self.lowest_train_loss:
-            self.lowest_train_loss = loss
 
         self.call_hook_func(
             'after_train_iteration_end',

@@ -42,21 +42,21 @@ train_loader = torch.utils.data.DataLoader(
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
                    ])),
-    batch_size=256, shuffle=True)
+    batch_size=128, shuffle=True)
 
 val_loader = torch.utils.data.DataLoader(
     datasets.MNIST('./data', train=False, transform=transforms.Compose([
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
                    ])),
-    batch_size=256, shuffle=True)
+    batch_size=128, shuffle=True)
 
 # step 3: start to train, pay attension to the parameters of Miner
 model = Net()
 
 trainer = Miner(
     alchemistic_directory='./alchemistic_directory',
-    code="Experiment-1",
+    code="Experiment-6",
     model=model,
     optimizer=optim.SGD(model.parameters(), lr=0.01),
     train_dataloader=train_loader,
@@ -67,7 +67,7 @@ trainer = Miner(
         MultiClassesClassificationMetricWithLogic()
     ],
     sheet=GoogleSheet('1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4', 'quickstart.json'),
-    accumulated_iter=5
+    accumulated_iter=1
 )
 
 trainer.train()
