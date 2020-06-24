@@ -48,3 +48,6 @@ class Plugin():
 
     def create_sheet_column(self, key, name):
         self.miner.create_sheet_column(f'{self.sheet_key_prefix}{key}', f'{self.sheet_key_prefix}{name}')
+
+    def update_sheet(self, key, value):
+        self.miner.update_sheet(f'{self.sheet_key_prefix}{key}', value)
