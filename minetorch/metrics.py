@@ -14,12 +14,15 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
     """
 
     def __init__(self, accuracy=True, confusion_matrix=True, kappa_score=True,
-            plot_confusion_matrix=True, classification_report=True):
+            plot_confusion_matrix=True, classification_report=True, sheet_key_prefix=''):
+
+        super().__init__(sheet_key_prefix)
         self.accuracy = accuracy
         self.confusion_matrix = confusion_matrix
         self.kappa_score = kappa_score
         self.plot_confusion_matrix = plot_confusion_matrix
         self.classification_report = classification_report
+        self.sheet_key_prefix = sheet_key_prefix
 
     def before_init(self):
         self.create_sheet_column('latest_confusion_matrix', 'Latest Confusion Matrix')
