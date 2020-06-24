@@ -71,6 +71,8 @@ class Miner(object):
                  logger=None, sheet=None, accumulated_iter=1, ignore_optimizer_resume=False):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
+        if trival:
+            self.code = f'trival_{code}'
         self.create_dirs()
         self.gpu = gpu
         self.devices = torch.device("cuda" if torch.cuda.is_available() else "cpu")
