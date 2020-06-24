@@ -68,7 +68,7 @@ class Miner(object):
                  resume=True, eval_stride=1, persist_stride=1, gpu=True,
                  drawer='matplotlib', hooks={}, max_epochs=None, statable={},
                  logging_format=None, trival=False, in_notebook=False, plugins=[],
-                 logger=None, sheet=None, accumulated_iter=1):
+                 logger=None, sheet=None, accumulated_iter=1, ignore_optimizer_resume=False):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         self.create_dirs()
@@ -84,6 +84,7 @@ class Miner(object):
         self.in_notebook = in_notebook
         self.statable = statable
         self.accumulated_iter = float(accumulated_iter)
+        self.ignore_optimizer_resume = ignore_optimizer_resume
 
         self.model = model
         self.optimizer = optimizer
@@ -252,7 +253,7 @@ class Miner(object):
                 self.notebook_output(msg)
                 self.model.load_state_dict(checkpoint['state_dict'], strict=False)
 
-            if 'optimizer' in checkpoint:
+            if 'optimizer' in checkpoint and not self.ignore_optimizer_resume:
                 try:
                     self.optimizer.load_state_dict(checkpoint['optimizer'])
                 except:
