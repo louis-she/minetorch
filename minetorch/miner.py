@@ -77,12 +77,12 @@ class Miner(object):
         self.gpu = gpu
         self.devices = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.logger = logger
-        self.code_dir = os.path.join(alchemistic_directory, code)
+        self.code_dir = os.path.join(alchemistic_directory, self.code)
         if self.logger is None:
-            self.set_logging_config(alchemistic_directory, code, logging_format)
+            self.set_logging_config(alchemistic_directory, self.code, logging_format)
             self.logger = logging
         self.create_drawer(drawer)
-        self.models_dir = os.path.join(alchemistic_directory, code, 'models')
+        self.models_dir = os.path.join(alchemistic_directory, self.code, 'models')
         self.in_notebook = in_notebook
         self.statable = statable
         self.accumulated_iter = float(accumulated_iter)
