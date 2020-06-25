@@ -4,10 +4,10 @@ from pathlib import Path
 
 class Plugin():
 
-    def __init__(self, sheet_key_prefix=''):
+    def __init__(self, prefix=''):
         self.name = self.__class__.__name__
         self.miner = None
-        self.sheet_key_prefix = sheet_key_prefix
+        self.prefix = prefix
 
     def before_hook(self, hook_name, payload):
         return True
@@ -47,7 +47,10 @@ class Plugin():
         return os.path.join(self.plugin_dir, name)
 
     def create_sheet_column(self, key, name):
-        self.miner.create_sheet_column(f'{self.sheet_key_prefix}{key}', f'{self.sheet_key_prefix}{name}')
+        self.miner.create_sheet_column(f'{self.prefix}{key}', f'{self.prefix}{name}')
 
     def update_sheet(self, key, value):
-        self.miner.update_sheet(f'{self.sheet_key_prefix}{key}', value)
+        self.miner.update_sheet(f'{self.prefix}{key}', value)
+
+    def scalars(self, values, graph):
+        return self.miner.drawer.scalars(values, f'{self.prefix}{graph}')

@@ -69,7 +69,7 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
             'processor': 'upload_image'})
 
     def _accuracy(self):
-        png_file = self.drawer.scalars(
+        png_file = self.scalars(
             {'accuracy': (self.predicts == self.targets).sum() / len(self.predicts)}, 'accuracy'
         )
         if png_file:
@@ -80,7 +80,7 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
         self.print_txt(matrix, 'confusion_matrix')
 
     def _kappa_score(self):
-        png_file = self.drawer.scalars(
+        png_file = self.scalars(
             {'kappa_score': cohen_kappa_score(self.targets, self.predicts, weights='quadratic')}, 'kappa_score'
         )
 
