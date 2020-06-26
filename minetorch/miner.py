@@ -242,8 +242,8 @@ class Miner(object):
             self.current_epoch = checkpoint.get('epoch', 0)
             self.current_train_iteration = checkpoint.get('train_iteration', 0)
             self.current_val_iteration = checkpoint.get('val_iteration', 0)
-            self.lowest_train_loss = checkpoint.get('lowest_train_loss')
-            self.lowest_val_loss = checkpoint.get('lowest_val_loss', 0)
+            self.lowest_train_loss = checkpoint.get('lowest_train_loss', 9999)
+            self.lowest_val_loss = checkpoint.get('lowest_val_loss', 9999)
 
             try:
                 self.model.load_state_dict(checkpoint['state_dict'], strict=True)
