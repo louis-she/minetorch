@@ -239,11 +239,11 @@ class Miner(object):
             self.logger.info(msg)
             self.notebook_output(msg)
             checkpoint = torch.load(checkpoint_path)
-            self.current_epoch = checkpoint['epoch']
-            self.current_train_iteration = checkpoint['train_iteration']
-            self.current_val_iteration = checkpoint['val_iteration']
-            self.lowest_train_loss = checkpoint['lowest_train_loss']
-            self.lowest_val_loss = checkpoint['lowest_val_loss']
+            self.current_epoch = checkpoint.get('epoch', 0)
+            self.current_train_iteration = checkpoint.get('train_iteration', 0)
+            self.current_val_iteration = checkpoint.get('val_iteration', 0)
+            self.lowest_train_loss = checkpoint.get('lowest_train_loss')
+            self.lowest_val_loss = checkpoint.get('lowest_val_loss', 0)
 
             try:
                 self.model.load_state_dict(checkpoint['state_dict'], strict=True)
