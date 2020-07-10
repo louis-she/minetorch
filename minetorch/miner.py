@@ -63,12 +63,13 @@ class Miner(object):
             hooks and plugins the same time.
     """
 
-    def __init__(self, alchemistic_directory, model, optimizer, loss_func,
-                 code="geass", train_dataloader=None, val_dataloader=None,
-                 resume=True, eval_stride=1, persist_stride=1, gpu=True,
-                 drawer='matplotlib', hooks={}, max_epochs=None, statable={},
-                 logging_format=None, trival=False, in_notebook=False, plugins=[],
-                 logger=None, sheet=None, accumulated_iter=1, ignore_optimizer_resume=False):
+    def __init__(
+            self, alchemistic_directory, model, optimizer, loss_func,
+            code="geass", train_dataloader=None, val_dataloader=None,
+            resume=True, eval_stride=1, persist_stride=1, gpu=True,
+            drawer='matplotlib', hooks={}, max_epochs=None, statable={},
+            logging_format=None, trival=False, in_notebook=False, plugins=[],
+            logger=None, sheet=None, accumulated_iter=1, ignore_optimizer_resume=False):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         if trival:
@@ -410,7 +411,7 @@ class Miner(object):
         predict = self.model(data[0].to(self.devices))
         # for the last batch, loss is not supposed divide by self.accumulated_iter
         # just ignored this tiny issue
-        loss = self.loss_func(predict, data[1].to(self.devices))
+        loss = self.loss_func(predict, *data[1:])
         seperate_loss = loss / self.accumulated_iter
         seperate_loss.backward()
         loss = loss.detach().cpu().item()
@@ -438,7 +439,7 @@ class Miner(object):
             iteration=self.current_val_iteration
         )
         predict = self.model(data[0].to(self.devices))
-        loss = self.loss_func(predict, data[1].to(self.devices))
+        loss = self.loss_func(predict, *data[1:])
         loss = loss.detach().cpu().item()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
