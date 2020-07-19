@@ -67,8 +67,8 @@ class TensorboardDrawer(Drawer):
     """To vistualize everything in training process using tensorboard
     """
 
-    def __init__(self, miner, step=None):
-        super().__init__(miner, step)
+    def __init__(self, miner, state=None):
+        super().__init__(miner, state)
         self.writer = SummaryWriter(log_dir=os.path.join(
             miner.alchemistic_directory, miner.code
         ))

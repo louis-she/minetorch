@@ -62,12 +62,13 @@ trainer = Miner(
     train_dataloader=train_loader,
     val_dataloader=val_loader,
     loss_func=torch.nn.CrossEntropyLoss(),
-    drawer='matplotlib',
+    drawer='tensorboard',
     plugins=[
         MultiClassesClassificationMetricWithLogic()
     ],
-    sheet=GoogleSheet('1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4', 'quickstart.json'),
-    accumulated_iter=1
+    # sheet=GoogleSheet('1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4', 'quickstart.json'),
+    accumulated_iter=1,
+    trival=True
 )
 
 trainer.train()

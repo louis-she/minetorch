@@ -175,8 +175,7 @@ class Miner(object):
 
     def create_drawer(self, drawer):
         if drawer == 'tensorboard':
-            self.drawer = drawers.TensorboardDrawer(
-                self.alchemistic_directory, self.code)
+            self.drawer = drawers.TensorboardDrawer(self)
         elif drawer == 'matplotlib':
             self.drawer = drawers.MatplotlibDrawer(self)
         else:
