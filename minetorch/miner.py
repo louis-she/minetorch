@@ -410,7 +410,8 @@ class Miner(object):
         predict = self.model(data[0].to(self.devices))
         # for the last batch, loss is not supposed divide by self.accumulated_iter
         # just ignored this tiny issue
-        loss = self.loss_func(predict, *data[1:])
+        # loss = self.loss_func(predict, *data[1:])
+        loss = self.loss_func(predict, data[1].to(self.devices))
         seperate_loss = loss / self.accumulated_iter
         seperate_loss.backward()
         loss = loss.detach().cpu().item()
@@ -438,7 +439,8 @@ class Miner(object):
             iteration=self.current_val_iteration
         )
         predict = self.model(data[0].to(self.devices))
-        loss = self.loss_func(predict, *data[1:])
+        # loss = self.loss_func(predict, *data[1:])
+        loss = self.loss_func(predict, data[1].to(self.devices))
         loss = loss.detach().cpu().item()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
