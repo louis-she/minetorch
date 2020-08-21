@@ -9,11 +9,6 @@ from minetorch.metrics import MultiClassesClassificationMetricWithLogic
 from minetorch.spreadsheet import GoogleSheet
 from torchvision import datasets, transforms
 
-import socket
-import socks
-socks.set_default_proxy(socks.SOCKS5, "proxy.featurize.cn", 38080)
-socket.socket = socks.socksocket
-
 
 # step 1: define some model
 class Net(nn.Module):
@@ -62,7 +57,6 @@ trainer = Miner(
     train_dataloader=train_loader,
     val_dataloader=val_loader,
     loss_func=torch.nn.CrossEntropyLoss(),
-    drawer='tensorboard',
     plugins=[
         MultiClassesClassificationMetricWithLogic()
     ],

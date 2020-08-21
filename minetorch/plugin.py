@@ -53,4 +53,4 @@ class Plugin():
         self.miner.update_sheet(f'{self.prefix}{key}', value)
 
     def scalars(self, values, graph):
-        return self.miner.drawer.scalars(values, f'{self.prefix}{graph}')
+        return self.miner.drawer.scalars(self.miner.current_epoch, values, f'{self.prefix}{graph}')

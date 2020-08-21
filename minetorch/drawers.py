@@ -30,7 +30,7 @@ class Drawer():
         else:
             self.state = state
 
-    def scalars(self, value, graph):
+    def scalars(self, x, value, graph):
         """Plot different scalars on a graph
 
         Args:
@@ -41,7 +41,7 @@ class Drawer():
         """
         raise NotImplementedError()
 
-    def scalar(self, value, graph):
+    def scalar(self, x, value, graph):
         """Plot one scalar on a graph
 
         Args:
@@ -50,7 +50,7 @@ class Drawer():
             graph (string):
                 graph name
         """
-        self.scalars({graph: value}, graph)
+        self.scalars(x, {graph: value}, graph)
 
     def get_state(self):
         """Return current state(counter) of the Drawer
@@ -73,7 +73,7 @@ class TensorboardDrawer(Drawer):
             miner.alchemistic_directory, miner.code
         ))
 
-    def scalars(self, value, graph):
+    def scalars(self, x, value, graph):
         """Add a scalar on a graph
 
         Args:
@@ -106,13 +106,13 @@ class MatplotlibDrawer(Drawer):
             with open(self.data_file, 'rb') as f:
                 self.graph_data = pickle.load(f)
 
-    def _update_state(self, values, graph):
+    def _update_state(self, x, values, graph):
         if graph not in self.state or not isinstance(self.state[graph], dict):
             self.state[graph] = {}
         for key in values:
             if key not in self.state[graph]:
-                self.state[graph][key] = []
-            self.state[graph][key].append(values[key])
+                self.state[graph][key] = {}
+            self.state[graph][key][x] = values[key]
         with open(self.data_file, 'wb') as f:
             pickle.dump(self.state, f)
 
@@ -124,8 +124,7 @@ class MatplotlibDrawer(Drawer):
         ax.grid(True)
         for index, curve in enumerate(self.state[graph]):
             ax.plot(
-                list(range(len(self.state[graph][curve]) + 1))[1:],
-                self.state[graph][curve],
+                *zip(*sorted(self.state[graph][curve].items())),
                 label=curve,
                 color=self.colors[index])
 
@@ -133,7 +132,7 @@ class MatplotlibDrawer(Drawer):
         fig.savefig(png_file, facecolor="#F0FFFC")
         return png_file
 
-    def scalars(self, values, graph):
+    def scalars(self, x, values, graph):
         """Add a scalar on a graph
 
         Args:
@@ -142,5 +141,5 @@ class MatplotlibDrawer(Drawer):
             graph (string):
                 graph name
         """
-        self._update_state(values, graph)
+        self._update_state(x, values, graph)
         return self._save_png(graph)

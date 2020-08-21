@@ -1,15 +1,16 @@
+import functools
 import logging
+import math
 import os
 import time
-from pathlib import Path
 from datetime import datetime
-import math
+from pathlib import Path
 
-import functools
-import torch
-import tqdm
-from IPython.core.display import HTML, display
 import numpy as np
+import torch
+
+from IPython.core.display import HTML, display
+
 from . import drawers
 
 
@@ -362,7 +363,7 @@ class Miner(object):
                                      f'finished, loss is {total_val_loss}')
             if self.drawer is not None:
                 png_file = self.drawer.scalars(
-                    {'train': total_train_loss, 'val': total_val_loss}, 'loss'
+                    self.current_epoch, {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
                 if png_file is not None:
                     self.update_sheet('loss', {'raw': png_file, 'processor': 'upload_image'})
