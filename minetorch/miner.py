@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import time
+import tqdm
 from datetime import datetime
 from pathlib import Path
 
