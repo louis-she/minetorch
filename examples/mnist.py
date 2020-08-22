@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from minetorch.miner import Miner
 from minetorch.metrics import MultiClassesClassificationMetricWithLogic
+from minetorch.plugins.noise_detector import NoiseSampleDetector
 from minetorch.spreadsheet import GoogleSheet
 from torchvision import datasets, transforms
 
@@ -58,9 +59,10 @@ trainer = Miner(
     val_dataloader=val_loader,
     loss_func=torch.nn.CrossEntropyLoss(),
     plugins=[
-        MultiClassesClassificationMetricWithLogic()
+        MultiClassesClassificationMetricWithLogic(),
+        NoiseSampleDetector(metric=torch.nn.CrossEntropyLoss(reduction='none'))
     ],
-    # sheet=GoogleSheet('1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4', 'quickstart.json'),
+    sheet=GoogleSheet('1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4', 'quickstart.json'),
     accumulated_iter=1,
     trival=True
 )
