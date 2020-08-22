@@ -46,8 +46,8 @@ class NoiseSampleDetector(Plugin, Statable):
                 self._predict_dataset(self.val_dataloader)
             )
 
-        _, train_indices = torch.sort(torch.std(torch.stack(self.train_metrics), dim=0))
-        _, val_indices = torch.sort(torch.std(torch.stack(self.val_metrics), dim=0))
+        _, train_indices = torch.sort(torch.std(torch.stack(self.train_metrics), dim=0), descending=True)
+        _, val_indices = torch.sort(torch.std(torch.stack(self.val_metrics), dim=0), descending=True)
 
         self.print_txt(f"Train dataset most {self.topn} suspicious indices: {train_indices.tolist()[:self.topn]} \n"
                        f"Validation dataset most {self.topn} suspicious indices: {val_indices.tolist()[:self.topn]}",
