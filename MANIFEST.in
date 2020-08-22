@@ -1,0 +1,1 @@
+recursive-include minetorch/plugins/ *.py
