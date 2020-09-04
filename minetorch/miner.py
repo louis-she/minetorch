@@ -71,7 +71,8 @@ class Miner(object):
             resume=True, eval_stride=1, persist_stride=1, gpu=True,
             drawer='matplotlib', hooks={}, max_epochs=None, statable={},
             logging_format=None, trival=False, in_notebook=False, plugins=[],
-            logger=None, sheet=None, accumulated_iter=1, ignore_optimizer_resume=False):
+            logger=None, sheet=None, accumulated_iter=1, ignore_optimizer_resume=False,
+            forward=None):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         if trival:
@@ -109,6 +110,7 @@ class Miner(object):
         self.hook_funcs = hooks
         self.max_epochs = max_epochs
         self.trival = trival
+        self.forward = forward
 
         self.sheet = sheet
         if self.sheet:
