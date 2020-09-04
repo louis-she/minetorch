@@ -63,6 +63,8 @@ class Miner(object):
         plugins (list, optional):
             Defaults to []. This is actually a collection of `hooks`, do not set
             hooks and plugins the same time.
+        forward (function):
+            custom forward function.
     """
 
     def __init__(
@@ -110,7 +112,7 @@ class Miner(object):
         self.hook_funcs = hooks
         self.max_epochs = max_epochs
         self.trival = trival
-        self.forward = forward
+        self.forward_fn = forward
 
         self.sheet = sheet
         if self.sheet:
@@ -411,11 +413,7 @@ class Miner(object):
             index=index,
             total_iters=train_iters,
             iteration=self.current_train_iteration)
-        predict = self.model(data[0].to(self.devices))
-        # for the last batch, loss is not supposed divide by self.accumulated_iter
-        # just ignored this tiny issue
-        # loss = self.loss_func(predict, *data[1:])
-        loss = self.loss_func(predict, data[1].to(self.devices))
+        _, loss = self._forward(data)
         seperate_loss = loss / self.accumulated_iter
         seperate_loss.backward()
         loss = loss.detach().cpu().item()
@@ -432,6 +430,14 @@ class Miner(object):
         )
         return loss
 
+    def _forward(self, data):
+        if self.forward_fn:
+            return self.forward_fn(self, data)
+        else:
+            predict = self.model(data[0].to(self.devices))
+            loss = self.loss_func(predict, data[1].to(self.devices))
+            return predict, loss
+
     def run_val_iteration(self, index, data, val_iters):
         self.status = 'val'
         self.current_val_iteration += 1
@@ -442,9 +448,7 @@ class Miner(object):
             total_iters=val_iters,
             iteration=self.current_val_iteration
         )
-        predict = self.model(data[0].to(self.devices))
-        # loss = self.loss_func(predict, *data[1:])
-        loss = self.loss_func(predict, data[1].to(self.devices))
+        predict, loss = self._forward(data)
         loss = loss.detach().cpu().item()
         self.logger.info('[val {}/{}/{}] loss {}'.format(
             self.current_epoch, index, val_iters, loss))
