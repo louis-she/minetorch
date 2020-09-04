@@ -409,7 +409,12 @@ class Miner(object):
             index=index,
             total_iters=train_iters,
             iteration=self.current_train_iteration)
-        predict = self.model(data[0].to(self.devices))
+        if isinstance(data[0], torch.Tensor):
+            predict = self.model(data[0].to(self.devices))
+        elif isinstance(data[0], list):
+            inputs = list(map(lambda x: x.to(self.devices), data[0]))
+            predict = self.model(*inputs)
+
         # for the last batch, loss is not supposed divide by self.accumulated_iter
         # just ignored this tiny issue
         # loss = self.loss_func(predict, *data[1:])
