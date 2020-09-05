@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name='Minetorch',
     description='A tools collection for pytorch users',
-    version='0.6.4',
+    version='0.6.5',
     packages=setuptools.find_packages(),
     include_package_data=True,
     url="https://github.com/louis-she/minetorch",
@@ -23,7 +23,7 @@ setuptools.setup(
         'google-auth-httplib2',
         'google-auth-oauthlib'
     ],
-    entry_points = {
+    entry_points={
         'console_scripts': ['minetorch=minetorch.command_line:main'],
     }
 )

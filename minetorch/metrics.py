@@ -1,9 +1,9 @@
-import numpy as np
-from sklearn.metrics import cohen_kappa_score, confusion_matrix, classification_report
-
-import seaborn as sn
-import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sn
+from sklearn.metrics import (classification_report, cohen_kappa_score,
+                             confusion_matrix)
 
 from .plugin import Plugin
 
@@ -13,7 +13,8 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
     This can be used directly if your loss function is torch.nn.CrossEntropy
     """
 
-    def __init__(self, accuracy=True, confusion_matrix=True, kappa_score=True,
+    def __init__(
+            self, accuracy=True, confusion_matrix=True, kappa_score=True,
             plot_confusion_matrix=True, classification_report=True, sheet_key_prefix=''):
 
         super().__init__(sheet_key_prefix)
@@ -59,13 +60,13 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
         svm = sn.heatmap(df_cm, annot=True, cmap='OrRd', fmt='.3g')
         figure = svm.get_figure()
         if val_loss < self.lowest_val_loss:
-            figure.savefig(self.plugin_file(f'confusion_matrix_epoch_best.png'), facecolor="#F0FFFC")
+            figure.savefig(self.plugin_file('confusion_matrix_epoch_best.png'), facecolor="#F0FFFC")
         figure.savefig(self.plugin_file(f'confusion_matrix_epoch_{self.current_epoch}.png'), facecolor="#F0FFFC")
-        figure.savefig(self.plugin_file(f'confusion_matrix_epoch_latest.png'), facecolor="#F0FFFC")
+        figure.savefig(self.plugin_file('confusion_matrix_epoch_latest.png'), facecolor="#F0FFFC")
         plt.clf()
 
         self.update_sheet('latest_confusion_matrix', {
-            'raw': self.plugin_file(f'confusion_matrix_epoch_latest.png'),
+            'raw': self.plugin_file('confusion_matrix_epoch_latest.png'),
             'processor': 'upload_image'})
 
     def _accuracy(self):

@@ -1,15 +1,12 @@
-import functools
 import logging
 import math
 import os
 import time
-import tqdm
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
 import torch
-
+import tqdm
 from IPython.core.display import HTML, display
 
 from . import drawers
@@ -253,8 +250,8 @@ class Miner(object):
 
             try:
                 self.model.load_state_dict(checkpoint['state_dict'], strict=True)
-            except:
-                msg = ('load checkpoint failed, the state in the '
+            except Exception as e:
+                msg = (f'load checkpoint failed with {e}, the state in the '
                        'checkpoint is not matched with the model, '
                        'try to reload checkpoint with unstrict mode')
                 self.logger.warning(msg)
@@ -264,9 +261,9 @@ class Miner(object):
             if 'optimizer' in checkpoint and not self.ignore_optimizer_resume:
                 try:
                     self.optimizer.load_state_dict(checkpoint['optimizer'])
-                except:
-                    msg = ('load optimizer state failed, will skip this error and continue, '
-                            'stop the process if it is not expected')
+                except Exception as e:
+                    msg = (f'load optimizer state failed with {e}, will skip this error and continue, '
+                           'stop the process if it is not expected')
                     self.logger.warning(msg)
                     self.notebook_output(msg)
 
@@ -293,7 +290,6 @@ class Miner(object):
                 model.cuda()
                 model = torch.nn.DataParallel(model, devices)
         return model
-
 
     def notify(self, message, _type='info'):
         getattr(self.logger, _type)(message)
@@ -561,8 +557,7 @@ class Miner(object):
             return
 
         self.sheet_progress.update(kwargs)
-        progress = \
-f"""
+        progress = f"""
          epoch:  {self.sheet_progress.get('epoch')}
 train progress:  {self.sheet_progress.get('train_percentage')}
   val progress:  {self.sheet_progress.get('val_percentage')}

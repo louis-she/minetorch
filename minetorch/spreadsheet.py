@@ -2,18 +2,16 @@ import functools
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
-from google.auth.transport.requests import Request
 from google.oauth2 import service_account
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
 from .plugin import Plugin
 
-
 pool = ThreadPoolExecutor(1)
 logger = logging.getLogger(__name__)
+
 
 def _async(fn):
 
@@ -28,6 +26,7 @@ def _async(fn):
         return pool.submit(_inner, *args, **kwargs)
 
     return _func
+
 
 class ColumnNotExistsError(Exception):
     pass
@@ -73,7 +72,7 @@ class MinetorchSpreadsheet(Plugin):
 
     @property
     def title_row_name(self):
-        return f'_row_title'
+        return '_row_title'
 
     @property
     def end_column_name(self):
@@ -197,8 +196,7 @@ class GoogleSheet(MinetorchSpreadsheet):
                 },
                 "fields": "*",
             }
-        },
-        {
+        }, {
             'updateDimensionProperties': {
                 "range": {
                     "sheetId": 0,
@@ -222,7 +220,7 @@ class GoogleSheet(MinetorchSpreadsheet):
             return result
 
         if extra_request is None:
-            extra_request =[]
+            extra_request = []
 
         create_row_request = {
             "insertDimension": {

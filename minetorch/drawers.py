@@ -1,7 +1,6 @@
 import os
 from matplotlib.figure import Figure
 from tensorboardX import SummaryWriter
-from .plugin import Plugin
 import _pickle as pickle
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
