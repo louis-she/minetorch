@@ -62,7 +62,7 @@ trainer = Miner(
         MultiClassesClassificationMetricWithLogic(),
         NoiseSampleDetector(metric=torch.nn.CrossEntropyLoss(reduction='none'))
     ],
-    sheet=GoogleSheet('1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4', 'quickstart.json'),
+    # sheet=GoogleSheet('1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4', 'quickstart.json'),
     accumulated_iter=1,
     trival=True
 )
