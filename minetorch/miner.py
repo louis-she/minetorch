@@ -60,8 +60,10 @@ class Miner(object):
         plugins (list, optional):
             Defaults to []. This is actually a collection of `hooks`, do not set
             hooks and plugins the same time.
-        forward (function):
+        forward (function, optional):
             custom forward function.
+        verbose (boolean, optional):
+            los loss of every iteration
     """
 
     def __init__(
@@ -71,7 +73,7 @@ class Miner(object):
             drawer='matplotlib', hooks={}, max_epochs=None, statable={},
             logging_format=None, trival=False, in_notebook=False, plugins=[],
             logger=None, sheet=None, accumulated_iter=1, ignore_optimizer_resume=False,
-            forward=None):
+            forward=None, verbose=False):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         if trival:
@@ -110,6 +112,7 @@ class Miner(object):
         self.max_epochs = max_epochs
         self.trival = trival
         self.forward_fn = forward
+        self.verbose = verbose
 
         self.sheet = sheet
         if self.sheet:
@@ -413,8 +416,9 @@ class Miner(object):
         seperate_loss = loss / self.accumulated_iter
         seperate_loss.backward()
         loss = loss.detach().cpu().item()
-        self.logger.info('[train {}/{}/{}] loss {}'.format(
-            self.current_epoch, index, train_iters, loss))
+        if self.verbose:
+            self.logger.info('[train {}/{}/{}] loss {}'.format(
+                self.current_epoch, index, train_iters, loss))
 
         self.call_hook_func(
             'after_train_iteration_end',
@@ -446,8 +450,9 @@ class Miner(object):
         )
         predict, loss = self._forward(data)
         loss = loss.detach().cpu().item()
-        self.logger.info('[val {}/{}/{}] loss {}'.format(
-            self.current_epoch, index, val_iters, loss))
+        if self.verbose:
+            self.logger.info('[val {}/{}/{}] loss {}'.format(
+                self.current_epoch, index, val_iters, loss))
         self.call_hook_func(
             'after_val_iteration_ended',
             predicts=predict,
@@ -499,7 +504,7 @@ class Miner(object):
         return os.path.join(self.models_dir, f'{model_name}.pth.tar')
 
     def model_file_path(self, model_name):
-        model_name_path = Path(model_name)
+        model_name_path = Path(str(model_name))
         models_dir_path = Path(self.models_dir)
 
         search_paths = [

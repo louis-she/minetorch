@@ -452,15 +452,16 @@ class GoogleSheet(MinetorchSpreadsheet):
         try:
             result = self.drive.files().list(q="name='minetorch_assets'", fields='files(id)').execute()
             dir_id = result['files'][0]['id']
-            self.drive.permissions().create(fileId=dir_id, body={"role": "writer", "type": "anyone"})
-            return dir_id
         except IndexError:
             file_metadata = {
                 'name': 'minetorch_assets',
                 'mimeType': 'application/vnd.google-apps.folder'
             }
             file = self.drive.files().create(body=file_metadata, fields='id').execute()
-            return file.get('id')
+            dir_id = file.get('id')
+
+        self.drive.permissions().create(fileId=dir_id, body={"role": "writer", "type": "anyone"}).execute()
+        return dir_id
 
 
 """
