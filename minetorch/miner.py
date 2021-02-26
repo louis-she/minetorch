@@ -73,7 +73,7 @@ class Miner(object):
             drawer='matplotlib', hooks={}, max_epochs=None, statable={},
             logging_format=None, trival=False, in_notebook=False, plugins=[],
             logger=None, sheet=None, accumulated_iter=1, ignore_optimizer_resume=False,
-            forward=None, verbose=False):
+            forward=None, verbose=False, amp=False):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         if trival:
@@ -113,6 +113,7 @@ class Miner(object):
         self.trival = trival
         self.forward_fn = forward
         self.verbose = verbose
+        self.amp = amp
 
         self.sheet = sheet
         if self.sheet:
@@ -412,7 +413,11 @@ class Miner(object):
             index=index,
             total_iters=train_iters,
             iteration=self.current_train_iteration)
-        _, loss = self._forward(data)
+        if self.amp:
+            with torch.cuda.amp.autocast():
+                _, loss = self._forward(data)
+        else:
+            _, loss = self._forward(data)
         seperate_loss = loss / self.accumulated_iter
         seperate_loss.backward()
         loss = loss.detach().cpu().item()
