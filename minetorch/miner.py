@@ -324,11 +324,12 @@ class Miner(object):
             total = len(self.train_dataloader)
             self.notebook_output(f'start to train epoch {self.current_epoch}')
             self._update_progress(force=True, epoch=self.current_epoch, train_percentage='0%', val_percentage='0%')
-            for index, data in enumerate(self.tqdm(self.train_dataloader)):
+            t = self.tqdm(self.train_dataloader)
+            for index, data in enumerate(t):
                 if self.trival is True and index == 10:
                     break
                 train_loss = self.run_train_iteration(index, data, train_iters)
-                self.tqdm.set_postfix({"train loss": train_loss})
+                t.set_postfix({"train loss": train_loss})
                 if int((index + 1) % self.accumulated_iter) == 0:
                     self.optimizer.step()
                     self.optimizer.zero_grad()
@@ -353,11 +354,12 @@ class Miner(object):
                 with torch.set_grad_enabled(False):
                     self.model.eval()
                     self.notebook_output(f'validate epoch {self.current_epoch}')
-                    for index, data in enumerate(self.tqdm(self.val_dataloader)):
+                    t = self.tqdm(self.val_dataloader)
+                    for index, data in enumerate(t):
                         if self.trival is True and index == 10:
                             break
                         val_loss = self.run_val_iteration(index, data, val_iters)
-                        self.tqdm.set_postfix({"val loss": val_loss})
+                        t.set_postfix({"val loss": val_loss})
                         total_val_loss += val_loss
                         current_percentage = math.ceil(index / total * 100)
                         if current_percentage != percentage:
