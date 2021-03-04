@@ -328,6 +328,7 @@ class Miner(object):
                 if self.trival is True and index == 10:
                     break
                 train_loss = self.run_train_iteration(index, data, train_iters)
+                self.tqdm.set_postfix({"train loss": train_loss})
                 if int((index + 1) % self.accumulated_iter) == 0:
                     self.optimizer.step()
                     self.optimizer.zero_grad()
@@ -356,6 +357,7 @@ class Miner(object):
                         if self.trival is True and index == 10:
                             break
                         val_loss = self.run_val_iteration(index, data, val_iters)
+                        self.tqdm.set_postfix({"val loss": val_loss})
                         total_val_loss += val_loss
                         current_percentage = math.ceil(index / total * 100)
                         if current_percentage != percentage:
