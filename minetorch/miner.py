@@ -256,6 +256,7 @@ class Miner(object):
             self.lowest_train_loss = checkpoint.get('lowest_train_loss', 9999)
             self.lowest_val_loss = checkpoint.get('lowest_val_loss', 9999)
 
+            # load model state
             try:
                 self.model.load_state_dict(checkpoint['state_dict'], strict=True)
             except Exception as e:
@@ -266,6 +267,7 @@ class Miner(object):
                 self.notebook_output(msg)
                 self.model.load_state_dict(checkpoint['state_dict'], strict=False)
 
+            # load optimizer state
             if 'optimizer' in checkpoint and not self.ignore_optimizer_resume:
                 try:
                     self.optimizer.load_state_dict(checkpoint['optimizer'])
@@ -275,9 +277,21 @@ class Miner(object):
                     self.logger.warning(msg)
                     self.notebook_output(msg)
 
+            # load drawer state
             if (self.drawer is not None) and ('drawer_state' in checkpoint):
                 self.drawer.set_state(checkpoint['drawer_state'])
 
+            # load scaler state
+            if self.amp and self.amp_scaler:
+                try:
+                    self.optimizer.load_state_dict(checkpoint['scaler'])
+                except Exception as e:
+                    msg = (f'load scaler state failed with {e}, will skip this error and continue, '
+                            'stop the process if it is not expected')
+                    self.logger.warning(msg)
+                    self.notebook_output(msg)
+
+            # load other statable state
             if 'statable' in checkpoint:
                 for name, statable in self.statable.items():
                     if name not in checkpoint['statable']:
@@ -340,14 +354,14 @@ class Miner(object):
                         self.scaler.update()
                     else:
                         self.optimizer.step()
-                    self.optimizer.zero_grad()
+                    self.optimizer.zero_grad(set_to_none=True)
                 total_train_loss += train_loss
                 current_percentage = math.ceil(index / total * 100)
                 if current_percentage != percentage:
                     self._update_progress(train_percentage=f'{percentage}%')
                     percentage = current_percentage
             self.optimizer.step()
-            self.optimizer.zero_grad()
+            self.optimizer.zero_grad(set_to_none=True)
             self._update_progress(force=True, train_percentage=f'{current_percentage}%')
 
             total_train_loss = total_train_loss / train_iters
@@ -430,7 +444,7 @@ class Miner(object):
                 _, loss = self._forward(data)
                 seperate_loss = loss / self.accumulated_iter
                 if self.amp_scaler:
-                    seperate_loss = self.scaler(seperate_loss)
+                    seperate_loss = self.scaler.scale(seperate_loss)
         else:
             _, loss = self._forward(data)
             seperate_loss = loss / self.accumulated_iter
@@ -512,6 +526,9 @@ class Miner(object):
 
         for statable_name, statable in self.statable.items():
             state['statable'][statable_name] = statable.state_dict()
+
+        if self.amp and self.amp_scaler:
+            state['scaler'] = self.scaler.state_dict()
 
         modelpath = self.standard_model_path(name)
         torch.save(state, modelpath)
