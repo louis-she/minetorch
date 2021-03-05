@@ -73,7 +73,7 @@ class Miner(object):
             drawer='matplotlib', hooks={}, max_epochs=None, statable={},
             logging_format=None, trival=False, in_notebook=False, plugins=[],
             logger=None, sheet=None, accumulated_iter=1, ignore_optimizer_resume=False,
-            forward=None, verbose=False, amp=False):
+            forward=None, verbose=False, amp=False, amp_scaler=True):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         if trival:
@@ -114,6 +114,10 @@ class Miner(object):
         self.forward_fn = forward
         self.verbose = verbose
         self.amp = amp
+        self.amp_scaler = amp_scaler
+
+        if self.amp and self.amp_scaler:
+            self.scaler = torch.cuda.amp.GradScaler()
 
         self.sheet = sheet
         if self.sheet:
@@ -331,7 +335,11 @@ class Miner(object):
                 train_loss = self.run_train_iteration(index, data, train_iters)
                 t.set_postfix({"train loss": train_loss})
                 if int((index + 1) % self.accumulated_iter) == 0:
-                    self.optimizer.step()
+                    if self.amp and self.amp_scaler:
+                        self.scaler.step(self.optimizer)
+                        self.scaler.update()
+                    else:
+                        self.optimizer.step()
                     self.optimizer.zero_grad()
                 total_train_loss += train_loss
                 current_percentage = math.ceil(index / total * 100)
@@ -420,9 +428,12 @@ class Miner(object):
         if self.amp:
             with torch.cuda.amp.autocast():
                 _, loss = self._forward(data)
+                seperate_loss = loss / self.accumulated_iter
+                if self.amp_scaler:
+                    seperate_loss = self.scaler(seperate_loss)
         else:
             _, loss = self._forward(data)
-        seperate_loss = loss / self.accumulated_iter
+            seperate_loss = loss / self.accumulated_iter
         seperate_loss.backward()
         loss = loss.detach().cpu().item()
         if self.verbose:
