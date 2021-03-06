@@ -1,5 +1,4 @@
 class Statable:
-
     def load_state_dict(self):
         raise NotImplementedError
 

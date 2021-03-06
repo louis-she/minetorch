@@ -5,9 +5,8 @@ import _pickle as pickle
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 
-class Drawer():
-    """To vistualize everything in training process
-    """
+class Drawer:
+    """To vistualize everything in training process"""
 
     def __init__(self, miner, state=None):
         """Constructor
@@ -21,7 +20,9 @@ class Drawer():
                 The keys are the name of the graphs and values are current
                 positions.
         """
-        self.step_file = os.path.join(miner.alchemistic_directory, miner.code, '.drawer_step')
+        self.step_file = os.path.join(
+            miner.alchemistic_directory, miner.code, ".drawer_step"
+        )
         self.miner = miner
 
         if state is None:
@@ -52,25 +53,22 @@ class Drawer():
         self.scalars(x, {graph: value}, graph)
 
     def get_state(self):
-        """Return current state(counter) of the Drawer
-        """
+        """Return current state(counter) of the Drawer"""
         return self.state
 
     def set_state(self, state):
-        """Set current state(counter) to state
-        """
+        """Set current state(counter) to state"""
         self.state = state
 
 
 class TensorboardDrawer(Drawer):
-    """To vistualize everything in training process using tensorboard
-    """
+    """To vistualize everything in training process using tensorboard"""
 
     def __init__(self, miner, state=None):
         super().__init__(miner, state)
-        self.writer = SummaryWriter(log_dir=os.path.join(
-            miner.alchemistic_directory, miner.code
-        ))
+        self.writer = SummaryWriter(
+            log_dir=os.path.join(miner.alchemistic_directory, miner.code)
+        )
 
     def scalars(self, x, value, graph):
         """Add a scalar on a graph
@@ -83,7 +81,7 @@ class TensorboardDrawer(Drawer):
         """
         if graph not in self.state:
             self.state[graph] = 0
-        key = '{}/{}'.format(self.miner.code, graph)
+        key = "{}/{}".format(self.miner.code, graph)
         if isinstance(value, dict):
             self.writer.add_scalars(key, value, self.state[graph])
         else:
@@ -92,17 +90,28 @@ class TensorboardDrawer(Drawer):
 
 
 class MatplotlibDrawer(Drawer):
-
     def __init__(self, miner, state=None):
         super().__init__(miner, state)
-        self.graph_dir = os.path.join(self.miner.alchemistic_directory, self.miner.code, 'graphs')
-        self.data_file = os.path.join(self.graph_dir, '.graphs.pickle')
-        self.colors = ['blue', 'orange', 'green', 'red', 'purple',
-                       'brown', 'pink', 'gray', 'olive', 'cyan']
+        self.graph_dir = os.path.join(
+            self.miner.alchemistic_directory, self.miner.code, "graphs"
+        )
+        self.data_file = os.path.join(self.graph_dir, ".graphs.pickle")
+        self.colors = [
+            "blue",
+            "orange",
+            "green",
+            "red",
+            "purple",
+            "brown",
+            "pink",
+            "gray",
+            "olive",
+            "cyan",
+        ]
         if not os.path.isdir(self.graph_dir):
             os.mkdir(self.graph_dir)
         if os.path.isfile(self.data_file):
-            with open(self.data_file, 'rb') as f:
+            with open(self.data_file, "rb") as f:
                 self.graph_data = pickle.load(f)
 
     def _update_state(self, x, values, graph):
@@ -112,7 +121,7 @@ class MatplotlibDrawer(Drawer):
             if key not in self.state[graph]:
                 self.state[graph][key] = {}
             self.state[graph][key][x] = values[key]
-        with open(self.data_file, 'wb') as f:
+        with open(self.data_file, "wb") as f:
             pickle.dump(self.state, f)
 
     def _save_png(self, graph):
@@ -125,9 +134,10 @@ class MatplotlibDrawer(Drawer):
             ax.plot(
                 *zip(*sorted(self.state[graph][curve].items())),
                 label=curve,
-                color=self.colors[index])
+                color=self.colors[index]
+            )
 
-        ax.legend(loc='upper left')
+        ax.legend(loc="upper left")
         fig.savefig(png_file, facecolor="#F0FFFC")
         return png_file
 
