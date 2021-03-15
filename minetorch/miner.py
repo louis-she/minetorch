@@ -2,8 +2,10 @@ import logging
 import math
 import os
 import time
+from functools import partial
 from datetime import datetime
 from pathlib import Path
+from .plugin import Plugin
 
 import torch
 import tqdm
@@ -73,7 +75,7 @@ class Miner(object):
             drawer='matplotlib', hooks={}, max_epochs=None, statable={},
             logging_format=None, trival=False, in_notebook=False, plugins=[],
             logger=None, sheet=None, accumulated_iter=1, ignore_optimizer_resume=False,
-            forward=None, verbose=False, amp=False, amp_scaler=True):
+            forward=None, verbose=False, amp=False, amp_scaler=True, scheduler=None):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
         if trival:
@@ -92,6 +94,7 @@ class Miner(object):
         self.statable = statable
         self.accumulated_iter = float(accumulated_iter)
         self.ignore_optimizer_resume = ignore_optimizer_resume
+        self.scheduler = scheduler
 
         self.model = model
         self.optimizer = optimizer
@@ -124,11 +127,11 @@ class Miner(object):
             self._init_sheet()
 
         self.plugins = plugins
+        self.event_handlers = {}
         for plugin in self.plugins:
-            plugin.set_miner(self)
+            self._init_plugin(plugin)
 
         self._set_tqdm()
-        self.call_hook_func('before_init')
         self._check_statable()
         self.init_model()
         if self.sheet:
@@ -141,7 +144,38 @@ class Miner(object):
             self.sheet.onready()
             self.sheet.flush()
         self.status = 'init'
-        self.call_hook_func('after_init')
+
+    @staticmethod
+    def event(event_name):
+        def decorator(func):
+            func.__minetorch_event_name__ = event_name
+            def inner(*args, **kwargs):
+                return func(*args, **kwargs)
+            return inner
+        return decorator
+
+    def use(self, plugin):
+        if isinstance(plugin, Plugin):
+            self._init_plugin(plugin)
+        elif callable(plugin):
+            self._init_handler(plugin)
+        else:
+            raise RuntimeError("plugin should be subclass of Plugin or function")
+
+    def _init_plugin(self, plugin):
+        plugin.set_miner(self)
+        event_handlers = [method for method in dir(plugin) if callable(getattr(plugin, method, None)) and "__minetorch_event_name__" in getattr(plugin, method)]
+        for event_handler in event_handlers:
+            event_handler = partial(event_handler, plugin)
+            self._init_handler(event_handler)
+
+    def _init_handler(self, handler):
+        event_name = handler.__minetorch_event_name__
+        if event_name == "after_init":
+            return handler(self)
+        if event_name not in self.event_handlers:
+            self.event_handlers[event_name] = []
+        self.event_handlers[event_name].append(handler)
 
     def _check_statable(self):
         for name, statable in self.statable.items():
@@ -317,22 +351,18 @@ class Miner(object):
         getattr(self.logger, _type)(message)
         self.notebook_output(message, _type)
 
-    def call_hook_func(self, name, **payload):
-        if name in self.hook_funcs:
-            self.hook_funcs[name](miner=self, **payload)
-
-        for plugin in self.plugins:
-            if not plugin.before_hook(name, payload):
-                continue
-            if hasattr(plugin, name):
-                getattr(plugin, name)(**payload)
+    def fire(self, name, **payload):
+        if name not in self.event_handlers:
+            return
+        for handler in self.event_handlers:
+            handler(self, **payload)
 
     def train(self):
         """start to train the model
         """
         while True:
             self.current_epoch += 1
-            self.call_hook_func('before_epoch_start', epoch=self.current_epoch)
+            self.fire('before_epoch_start', epoch=self.current_epoch)
             self.notebook_divide(f'Epoch {self.current_epoch}')
             self.model.train()
             train_iters = len(self.train_dataloader)
@@ -393,11 +423,9 @@ class Miner(object):
                 self.notebook_output(f'validation of epoch {self.current_epoch}'
                                      f'finished, loss is {total_val_loss}')
             if self.drawer is not None:
-                png_file = self.drawer.scalars(
+                self.drawer.scalars(
                     self.current_epoch, {'train': total_train_loss, 'val': total_val_loss}, 'loss'
                 )
-                if png_file is not None:
-                    self.update_sheet('loss', {'raw': png_file, 'processor': 'upload_image'})
 
             if total_train_loss < self.lowest_train_loss:
                 self.lowest_train_loss = total_train_loss
@@ -417,23 +445,29 @@ class Miner(object):
                 self.persist('epoch_{}'.format(self.current_epoch))
 
             if self.max_epochs is not None and self.current_epoch >= self.max_epochs:
-                self.call_hook_func('before_quit')
+                self.fire('before_quit')
                 self.logger.info('exceed max epochs, quit!')
                 break
 
             if self.sheet:
                 self.sheet.flush()
-            self.call_hook_func(
+
+            self.fire(
                 'after_epoch_end',
                 train_loss=total_train_loss,
                 val_loss=total_val_loss,
                 epoch=self.current_epoch
             )
 
+            if hasattr(self.drawer, 'save_png'):
+                for graph in self.drawer.state:
+                    self.drawer.save_png(graph)
+
+
     def run_train_iteration(self, index, data, train_iters):
         self.status = 'train'
         self.current_train_iteration += 1
-        self.call_hook_func(
+        self.fire(
             'before_train_iteration_start',
             data=data,
             index=index,
@@ -454,7 +488,7 @@ class Miner(object):
             self.logger.info('[train {}/{}/{}] loss {}'.format(
                 self.current_epoch, index, train_iters, loss))
 
-        self.call_hook_func(
+        self.fire(
             'after_train_iteration_end',
             loss=loss,
             data=data,
@@ -475,7 +509,7 @@ class Miner(object):
     def run_val_iteration(self, index, data, val_iters):
         self.status = 'val'
         self.current_val_iteration += 1
-        self.call_hook_func(
+        self.fire(
             'before_val_iteration_start',
             data=data,
             index=index,
@@ -487,7 +521,7 @@ class Miner(object):
         if self.verbose:
             self.logger.info('[val {}/{}/{}] loss {}'.format(
                 self.current_epoch, index, val_iters, loss))
-        self.call_hook_func(
+        self.fire(
             'after_val_iteration_ended',
             predicts=predict,
             loss=loss,
@@ -501,7 +535,7 @@ class Miner(object):
     def persist(self, name):
         """save the model to disk
         """
-        self.call_hook_func('before_checkpoint_persisted')
+        self.fire('before_checkpoint_persisted')
         if self.drawer is not None:
             drawer_state = self.drawer.get_state()
         else:
@@ -535,7 +569,7 @@ class Miner(object):
         message = f'save checkpoint to {self.standard_model_path(name)}'
         self.logger.info(message)
         self.notebook_output(message)
-        self.call_hook_func('after_checkpoint_persisted', modelpath=modelpath)
+        self.fire('after_checkpoint_persisted', modelpath=modelpath)
 
     def standard_model_path(self, model_name):
         return os.path.join(self.models_dir, f'{model_name}.pth.tar')
