@@ -311,7 +311,7 @@ class Miner(object):
             # load scaler state
             if self.amp and self.amp_scaler:
                 try:
-                    self.optimizer.load_state_dict(checkpoint["scaler"])
+                    self.scaler.load_state_dict(checkpoint["scaler"])
                 except Exception as e:
                     msg = (
                         f"load scaler state failed with {e}, will skip this error and continue, "
