@@ -174,7 +174,7 @@ class Miner(object):
         if self.in_notebook:
             self.tqdm = tqdm.tqdm_notebook
         else:
-            self.tqdm = lambda x: x
+            self.tqdm = tqdm.tqdm
 
     def _init_sheet(self):
         self.sheet.set_miner(self)
