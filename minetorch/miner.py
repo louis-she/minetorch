@@ -172,7 +172,7 @@ class Miner(object):
 
     def _set_tqdm(self):
         if self.in_notebook:
-            self.tqdm = tqdm.tqdm_notebook
+            self.tqdm = tqdm.notebook.tqdm
         else:
             self.tqdm = tqdm.tqdm
 
