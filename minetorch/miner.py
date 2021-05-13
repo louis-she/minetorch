@@ -449,6 +449,7 @@ class Miner(object):
             if total_train_loss < self.lowest_train_loss:
                 self.lowest_train_loss = total_train_loss
 
+            should_persist_best = False
             if total_val_loss < self.lowest_val_loss:
                 message = (
                     "current val loss {} is lower than lowest {}, "
@@ -457,11 +458,14 @@ class Miner(object):
                     )
                 )
                 self.notify(message, "success")
-
                 self.lowest_val_loss = total_val_loss
+                should_persist_best = True
+
+            self.call_hook_func("before_persist_checkpoint")
+
+            if should_persist_best:
                 self.persist("best")
             self.persist("latest")
-
             if not self.current_epoch % self.persist_stride:
                 self.persist("epoch_{}".format(self.current_epoch))
 
