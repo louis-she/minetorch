@@ -325,6 +325,12 @@ class Miner(object):
                     if name not in checkpoint["statable"]:
                         continue
                     statable.load_state_dict(checkpoint["statable"][name])
+
+            # load plugin states
+            for plugin in self.plugins:
+                key = f"__plugin.{plugin.__class__.__name__}__"
+                plugin.load_state_dict(checkpoint.get(key, {}))
+
             msg = "checkpoint loaded"
             self.notify(msg, "success")
         self.model = self.parallel_model(self.model)
@@ -575,6 +581,10 @@ class Miner(object):
 
         for statable_name, statable in self.statable.items():
             state["statable"][statable_name] = statable.state_dict()
+
+        for plugin in self.plugins:
+            key = f"__plugin.{plugin.__class__.__name__}__"
+            state[key] = plugin.state_dict()
 
         if self.amp and self.amp_scaler:
             state["scaler"] = self.scaler.state_dict()

@@ -1,11 +1,18 @@
+from minetorch.statable import Statable
 import os
 
 
-class Plugin:
+class Plugin(Statable):
     def __init__(self, prefix=""):
         self.name = self.__class__.__name__
         self.miner = None
         self.prefix = prefix
+
+    def load_state_dict(self, state):
+        pass
+
+    def state_dict(self):
+        return {}
 
     def before_hook(self, hook_name, payload):
         return True
