@@ -36,19 +36,22 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
         self.create_sheet_column("accuracy", "Accuracy")
 
     def before_epoch_start(self, epoch):
+        self.raw_output = []
         self.predicts = np.array([]).astype(np.float)
         self.targets = np.array([]).astype(np.int)
 
     def after_val_iteration_ended(self, predicts, data, **ignore):
-        predicts = np.argmax(predicts.detach().cpu().numpy(), axis=1)
-
+        raw_output = predicts.detach().cpu().numpy()
+        predicts = np.argmax(raw_output, axis=1)
         predicts = predicts.reshape([-1])
         targets = data[1].cpu().numpy().reshape([-1])
 
+        self.raw_output.append(raw_output)
         self.predicts = np.concatenate((self.predicts, predicts))
         self.targets = np.concatenate((self.targets, targets))
 
     def after_epoch_end(self, val_loss, **ignore):
+        self._save_results()
         self.accuracy and self._accuracy()
         self.confusion_matrix and self._confusion_matrix()
         self.kappa_score and self._kappa_score()
@@ -113,3 +116,8 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
             self.update_sheet(
                 "kappa_score", {"raw": png_file, "processor": "upload_image"}
             )
+
+    def _save_results(self):
+        file_name = self.plugin_file(f"result.{self.current_epoch}.npz")
+        raw_output = np.stack(self.raw_output)
+        np.savez_compressed(file_name, predicts=self.predicts, targets=self.targets, raw_output=raw_output)
