@@ -392,13 +392,19 @@ class Miner(object):
                         self.scaler.update()
                     else:
                         self.optimizer.step()
-                    self.optimizer.zero_grad(set_to_none=True)
+                    if self.amp and self.amp_scaler:
+                        self.optimizer.zero_grad()
+                    else:
+                        self.optimizer.zero_grad(set_to_none=True)
                 total_train_loss += train_loss
                 current_percentage = math.ceil(index / total * 100)
                 if current_percentage != percentage:
                     self._update_progress(train_percentage=f"{percentage}%")
                     percentage = current_percentage
-            self.optimizer.zero_grad(set_to_none=True)
+            if self.amp and self.amp_scaler:
+                self.optimizer.zero_grad()
+            else:                   
+                self.optimizer.zero_grad(set_to_none=True)
             self._update_progress(force=True, train_percentage=f"{current_percentage}%")
 
             total_train_loss = total_train_loss / train_iters
