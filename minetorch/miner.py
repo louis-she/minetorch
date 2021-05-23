@@ -497,8 +497,8 @@ class Miner(object):
             with torch.cuda.amp.autocast():
                 _, loss = self._forward(data)
                 seperate_loss = loss / self.accumulated_iter
-                if self.amp_scaler:
-                    seperate_loss = self.scaler.scale(seperate_loss)
+            if self.amp_scaler:
+                seperate_loss = self.scaler.scale(seperate_loss)
         else:
             _, loss = self._forward(data)
             seperate_loss = loss / self.accumulated_iter
