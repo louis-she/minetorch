@@ -105,7 +105,7 @@ torchvision==0.2.2.post3
 tornado==6.0.1
 traitlets==4.3.2
 Twisted==20.3.0
-urllib3==1.24.2
+urllib3==1.26.5
 w3lib==1.20.0
 wcwidth==0.1.7
 webencodings==0.5.1
