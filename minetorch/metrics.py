@@ -37,20 +37,22 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
 
     def before_epoch_start(self, epoch):
         self.raw_output = []
-        self.predicts = np.array([]).astype(np.float)
-        self.targets = np.array([]).astype(np.int)
+        self.predicts = []
+        self.targets = []
 
     def after_val_iteration_ended(self, predicts, data, **ignore):
         raw_output = predicts.detach().cpu().numpy()
         predicts = np.argmax(raw_output, axis=1)
-        predicts = predicts.reshape([-1])
-        targets = data[1].cpu().numpy().reshape([-1])
+        targets = data[1].cpu().numpy()
 
         self.raw_output.append(raw_output)
-        self.predicts = np.concatenate((self.predicts, predicts))
-        self.targets = np.concatenate((self.targets, targets))
+        self.predicts.append(predicts)
+        self.targets.append(targets)
 
     def after_epoch_end(self, val_loss, **ignore):
+        self.predicts = np.concatenate(self.predicts)
+        self.targets = np.concatenate(self.targets)
+
         self._save_results()
         self.accuracy and self._accuracy()
         self.confusion_matrix and self._confusion_matrix()
@@ -119,5 +121,5 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
 
     def _save_results(self):
         file_name = self.plugin_file(f"result.{self.current_epoch}.npz")
-        raw_output = np.stack(self.raw_output)
+        raw_output = np.concatenate(self.raw_output)
         np.savez_compressed(file_name, predicts=self.predicts, targets=self.targets, raw_output=raw_output)
