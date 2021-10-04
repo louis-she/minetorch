@@ -403,7 +403,7 @@ class Miner(object):
                     percentage = current_percentage
             if self.amp and self.amp_scaler:
                 self.optimizer.zero_grad()
-            else:                   
+            else:
                 self.optimizer.zero_grad(set_to_none=True)
             self._update_progress(force=True, train_percentage=f"{current_percentage}%")
 
@@ -438,7 +438,7 @@ class Miner(object):
 
                 total_val_loss = total_val_loss / val_iters
                 self.notify(
-                    f"validation of epoch {self.current_epoch}"
+                    f"validation of epoch {self.current_epoch} "
                     f"finished, loss is {total_val_loss}"
                 )
             if self.drawer is not None:
