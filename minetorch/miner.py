@@ -4,12 +4,15 @@ import os
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import Callable, Iterable, List, Union
 
 import torch
 import tqdm
 from IPython.core.display import HTML, display
+from minetorch.charts import Chart, TensorBoardChart
 
-from . import drawers
+from minetorch.plugin import Plugin
+from minetorch.spreadsheet import MineTorchSpreadsheet
 
 
 class Miner(object):
@@ -44,10 +47,8 @@ class Miner(object):
         persist_stride (int, optional):
             Defaults to 1.
             Save model every `persist_stride` epochs
-        drawer (minetorch.Drawer or string, optional):
-            Defaults to matplotlib.
-            If provide, Miner will draw training loss and validation loss
-            curves, could be `tensorboard` or self implemented Drawer object
+        chart (minetorch.charts.Chart, optional):
+            Defaults to minetorch.charts.TensorBoardChart.
         hooks (dict, optional):
             Defaults to {}. Define hook functions.
         max_epochs ([type], optional):
@@ -68,33 +69,32 @@ class Miner(object):
 
     def __init__(
         self,
-        alchemistic_directory,
-        model,
-        optimizer,
-        loss_func,
-        code="geass",
-        train_dataloader=None,
-        val_dataloader=None,
-        resume=True,
-        eval_stride=1,
-        persist_stride=1,
-        gpu=True,
-        drawer="matplotlib",
+        alchemistic_directory: str,
+        model: torch.nn.Module,
+        optimizer: torch.optim.Optimizer,
+        loss_func: Callable,
+        code: str = "geass",
+        train_dataloader: Iterable = None,
+        val_dataloader: Iterable = None,
+        resume: Union[int, str, bool] = True,
+        eval_stride: int = 1,
+        persist_stride: int = 1,
+        gpu: bool = True,
+        chart_type: Chart = TensorBoardChart,
         hooks={},
-        max_epochs=None,
-        statable={},
-        logging_format=None,
-        trival=False,
-        in_notebook=False,
-        plugins=[],
-        logger=None,
-        sheet=None,
-        accumulated_iter=1,
-        ignore_optimizer_resume=False,
-        forward=None,
-        verbose=False,
-        amp=False,
-        amp_scaler=True,
+        max_epochs: int = None,
+        logging_format: str = None,
+        trival: bool = False,
+        in_notebook: bool = False,
+        plugins: List[Plugin] = [],
+        logger: logging.Logger = None,
+        sheet: MineTorchSpreadsheet = None,
+        accumulated_iter: int = 1,
+        ignore_optimizer_resume: bool = False,
+        forward: Callable = None,
+        verbose: bool = False,
+        amp: bool = False,
+        amp_scaler: bool = True,
     ):
         self.alchemistic_directory = alchemistic_directory
         self.code = code
@@ -108,10 +108,9 @@ class Miner(object):
         if self.logger is None:
             self.set_logging_config(alchemistic_directory, self.code, logging_format)
             self.logger = logging
-        self.create_drawer(drawer)
+        self.chart_type = chart_type
         self.models_dir = os.path.join(alchemistic_directory, self.code, "models")
         self.in_notebook = in_notebook
-        self.statable = statable
         self.accumulated_iter = float(accumulated_iter)
         self.ignore_optimizer_resume = ignore_optimizer_resume
 
@@ -151,8 +150,8 @@ class Miner(object):
 
         self._set_tqdm()
         self.call_hook_func("before_init")
-        self._check_statable()
         self.init_model()
+        self.loss_chart = self.create_chart("loss")
         if self.sheet:
             self.sheet_progress = dict(
                 epoch=0, train_percentage="0%", val_percentage="0%"
@@ -162,13 +161,6 @@ class Miner(object):
             self.sheet.flush()
         self.status = "init"
         self.call_hook_func("after_init")
-
-    def _check_statable(self):
-        for name, statable in self.statable.items():
-            if not (
-                hasattr(statable, "state_dict") and hasattr(statable, "load_state_dict")
-            ):
-                raise Exception(f"The {name} is not a statable object")
 
     def _set_tqdm(self):
         if self.in_notebook:
@@ -183,6 +175,9 @@ class Miner(object):
         self.sheet.create_column("progress", "Progress")
         self.sheet.create_column("loss", "Loss")
         self.sheet.update("code", self.code)
+
+    def create_chart(self, name: str):
+        return self.chart_type(self, name)
 
     def create_sheet_column(self, key, title):
         if self.sheet is None:
@@ -208,14 +203,6 @@ class Miner(object):
             datefmt="%m-%d %H:%M:%S",
             level=logging.INFO,
         )
-
-    def create_drawer(self, drawer):
-        if drawer == "tensorboard":
-            self.drawer = drawers.TensorboardDrawer(self)
-        elif drawer == "matplotlib":
-            self.drawer = drawers.MatplotlibDrawer(self)
-        else:
-            self.drawer = drawer
 
     def notebook_output(self, message, _type="info"):
         type_config = {
@@ -249,7 +236,7 @@ class Miner(object):
         if isinstance(self.model, torch.nn.DataParallel):
             raise Exception(
                 "Don't parallel the model yourself, instead, if the "
-                "`gpu` option is true(default), Minetorch will do this for you."
+                "`gpu` option is true(default), MineTorch will do this for you."
             )
 
         if self.resume is True:
@@ -258,7 +245,7 @@ class Miner(object):
                 checkpoint_path = self.model_file_path("latest")
             else:
                 checkpoint_path = None
-                msg = "Could not find checkpoint to resume, " "train from scratch"
+                msg = "Could not find checkpoint to resume, train from scratch"
                 self.notify(msg, "warning")
         elif isinstance(self.resume, str):
             checkpoint_path = self.model_file_path(self.resume)
@@ -304,10 +291,6 @@ class Miner(object):
                     )
                     self.notify(msg, "warning")
 
-            # load drawer state
-            if (self.drawer is not None) and ("drawer_state" in checkpoint):
-                self.drawer.set_state(checkpoint["drawer_state"])
-
             # load scaler state
             if self.amp and self.amp_scaler:
                 try:
@@ -318,13 +301,6 @@ class Miner(object):
                         "stop the process if it is not expected"
                     )
                     self.notify(msg, "warning")
-
-            # load other statable state
-            if "statable" in checkpoint:
-                for name, statable in self.statable.items():
-                    if name not in checkpoint["statable"]:
-                        continue
-                    statable.load_state_dict(checkpoint["statable"][name])
 
             # load plugin states
             for plugin in self.plugins:
@@ -365,12 +341,12 @@ class Miner(object):
         """start to train the model"""
         while True:
             self.current_epoch += 1
-            self.call_hook_func("before_epoch_start", epoch=self.current_epoch)
+            self.call_hook_func("before_epoch_start")
             self.notebook_divide(f"Epoch {self.current_epoch}")
             self.model.train()
             train_iters = len(self.train_dataloader)
 
-            total_train_loss = 0
+            self.epoch_train_loss = 0
             percentage = 0
             total = len(self.train_dataloader)
             self.notify(f"start to train epoch {self.current_epoch}")
@@ -396,7 +372,7 @@ class Miner(object):
                         self.optimizer.zero_grad()
                     else:
                         self.optimizer.zero_grad(set_to_none=True)
-                total_train_loss += train_loss
+                self.epoch_train_loss += train_loss
                 current_percentage = math.ceil(index / total * 100)
                 if current_percentage != percentage:
                     self._update_progress(train_percentage=f"{percentage}%")
@@ -407,13 +383,13 @@ class Miner(object):
                 self.optimizer.zero_grad(set_to_none=True)
             self._update_progress(force=True, train_percentage=f"{current_percentage}%")
 
-            total_train_loss = total_train_loss / train_iters
+            self.epoch_train_loss = self.epoch_train_loss / train_iters
             self.notify(
                 f"training of epoch {self.current_epoch} finished, "
-                f"loss is {total_train_loss}"
+                f"loss is {self.epoch_train_loss}"
             )
 
-            total_val_loss = 0
+            self.epoch_val_loss = 0
             percentage = 0
             total = len(self.val_dataloader)
             if self.val_dataloader is not None:
@@ -427,7 +403,7 @@ class Miner(object):
                             break
                         val_loss = self.run_val_iteration(index, data, val_iters)
                         t.set_postfix({"val loss": val_loss})
-                        total_val_loss += val_loss
+                        self.epoch_val_loss += val_loss
                         current_percentage = math.ceil(index / total * 100)
                         if current_percentage != percentage:
                             self._update_progress(val_percentage=f"{percentage}%")
@@ -436,35 +412,30 @@ class Miner(object):
                         force=True, val_percentage=f"{current_percentage}%"
                     )
 
-                total_val_loss = total_val_loss / val_iters
+                self.epoch_val_loss = self.epoch_val_loss / val_iters
                 self.notify(
                     f"validation of epoch {self.current_epoch} "
-                    f"finished, loss is {total_val_loss}"
+                    f"finished, loss is {self.epoch_val_loss}"
                 )
-            if self.drawer is not None:
-                png_file = self.drawer.scalars(
-                    self.current_epoch,
-                    {"train": total_train_loss, "val": total_val_loss},
-                    "loss",
-                )
-                if png_file is not None:
-                    self.update_sheet(
-                        "loss", {"raw": png_file, "processor": "upload_image"}
-                    )
 
-            if total_train_loss < self.lowest_train_loss:
-                self.lowest_train_loss = total_train_loss
+            self.loss_chart.add_points(
+                train=self.epoch_train_loss,
+                val=self.epoch_val_loss,
+            )
+
+            if self.epoch_train_loss < self.lowest_train_loss:
+                self.lowest_train_loss = self.epoch_train_loss
 
             should_persist_best = False
-            if total_val_loss < self.lowest_val_loss:
+            if self.epoch_val_loss < self.lowest_val_loss:
                 message = (
                     "current val loss {} is lower than lowest {}, "
                     "persist this model as best one".format(
-                        total_val_loss, self.lowest_val_loss
+                        self.epoch_val_loss, self.lowest_val_loss
                     )
                 )
                 self.notify(message, "success")
-                self.lowest_val_loss = total_val_loss
+                self.lowest_val_loss = self.epoch_val_loss
                 should_persist_best = True
 
             self.call_hook_func("before_persist_checkpoint")
@@ -482,12 +453,7 @@ class Miner(object):
 
             if self.sheet:
                 self.sheet.flush()
-            self.call_hook_func(
-                "after_epoch_end",
-                train_loss=total_train_loss,
-                val_loss=total_val_loss,
-                epoch=self.current_epoch,
-            )
+            self.call_hook_func("after_epoch_end")
 
     def run_train_iteration(self, index, data, train_iters):
         self.status = "train"
@@ -566,10 +532,6 @@ class Miner(object):
     def persist(self, name):
         """save the model to disk"""
         self.call_hook_func("before_checkpoint_persisted")
-        if self.drawer is not None:
-            drawer_state = self.drawer.get_state()
-        else:
-            drawer_state = {}
 
         if isinstance(self.model, torch.nn.DataParallel):
             model_state_dict = self.model.module.state_dict()
@@ -583,13 +545,8 @@ class Miner(object):
             "train_iteration": self.current_train_iteration,
             "val_iteration": self.current_val_iteration,
             "lowest_train_loss": self.lowest_train_loss,
-            "lowest_val_loss": self.lowest_val_loss,
-            "drawer_state": drawer_state,
-            "statable": {},
+            "lowest_val_loss": self.lowest_val_loss
         }
-
-        for statable_name, statable in self.statable.items():
-            state["statable"][statable_name] = statable.state_dict()
 
         for plugin in self.plugins:
             key = f"__plugin.{plugin.__class__.__name__}__"

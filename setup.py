@@ -1,12 +1,20 @@
+import re
+import ast
 import setuptools
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+with open('minetorch/__init__.py', 'rb') as f:
+    version = str(ast.literal_eval(_version_re.search(
+        f.read().decode('utf-8')).group(1)))
+
 setuptools.setup(
-    name='Minetorch',
+    name='MineTorch',
     description='A tools collection for pytorch users',
-    version='0.6.17',
+    version=version,
     packages=setuptools.find_packages(),
     include_package_data=True,
     url="https://github.com/minetorch/minetorch",
@@ -15,10 +23,8 @@ setuptools.setup(
     keywords='pytorch minetorch',
     install_requires=[
         'tensorboardX',
-        'torch',
         'matplotlib',
         'albumentations',
-        'seaborn',
         'google-api-python-client',
         'google-auth-httplib2',
         'google-auth-oauthlib'

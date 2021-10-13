@@ -1,8 +1,8 @@
-# Minetorch
+# MineTorch
 
 ![](./images/minetorch.jpg)
 
-In [Minecraft](https://minecraft.net/), torches are very important for mining. No one can get all the diamonds without a torch. So is data-mining, A special torch named [PyTorch](http://pytorch.org/) can help us get the diamonds in data. Minetorch is a tools collection for miners, to use PyTorch in a more convenient way.
+In [Minecraft](https://minecraft.net/), torches are very important for mining. No one can get all the diamonds without a torch. So is data-mining, A special torch named [PyTorch](http://pytorch.org/) can help us get the diamonds in data. MineTorch is a tools collection for miners, to use PyTorch in a more convenient way.
 
 ## Features
 
@@ -19,11 +19,11 @@ In [Minecraft](https://minecraft.net/), torches are very important for mining. N
 pip install minetorch
 ```
 
-## Minetorch X Google Sheets
+## MineTorch X Google Sheets
 
-Minetorch can easily work with Google Sheets. To step up, you should have a Google account and, if you are in China, a proxy.
+MineTorch can easily work with Google Sheets. To step up, you should have a Google account and, if you are in China, a proxy.
 
-This is the [demo sheet](https://docs.google.com/spreadsheets/d/1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4/edit#gid=0) that produced with Minetorch training on MNIST dataset.
+This is the [demo sheet](https://docs.google.com/spreadsheets/d/1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4/edit#gid=0) that produced with MineTorch training on MNIST dataset.
 
 ![](./images/sheet.png)
 
@@ -74,7 +74,7 @@ miner.train()
 
 and that's it, your spreadsheet should be automatically updated when you start your training process.
 
-> Minetorch update the sheet in async way, so it will not slow down the training speed.
+> MineTorch update the sheet in async way, so it will not slow down the training speed.
 
 ## Quick Start
 
@@ -90,7 +90,7 @@ git clone git@github.com:louis-she/minetorch.git
 python mnist.py
 ```
 
-The `mnist.py` is pretty much like PyTorch official mnist example https://github.com/pytorch/examples/blob/master/mnist/main.py, with some minor changes to be adapted to Minetorch.
+The `mnist.py` is pretty much like PyTorch official mnist example https://github.com/pytorch/examples/blob/master/mnist/main.py, with some minor changes to be adapted to MineTorch.
 
 This will create an `alchemistic_directory` and `data` directory in the working directory.
 
@@ -110,7 +110,7 @@ loss.png             |  accuracy.png
 
 
 
-> Note: Since PyTorch 1.0 comes with CUDA10 but the newest version of Tensorboard just supported CUDA9, so if you are using Tensorboard as a drawer, make sure you got CUDA9 installed, or it's better to use matplotlib. Due to this, Minetorch default drawer has changed to matplotlib instead of Tensorboard.
+> Note: Since PyTorch 1.0 comes with CUDA10 but the newest version of Tensorboard just supported CUDA9, so if you are using Tensorboard as a drawer, make sure you got CUDA9 installed, or it's better to use matplotlib. Due to this, MineTorch default drawer has changed to matplotlib instead of Tensorboard.
 
 4. Now let's change the loss function to cross_entropy(just follow some instructions in the comments of `mnist.py`), and train the mnist again.
 
@@ -118,7 +118,7 @@ loss.png             |  accuracy.png
 
 ## How it works
 
-Minetorch lets users focusing on **the only** necessary things, and will take care of the others. It's more like a skeleton and users should provide necessary components to make it work.
+MineTorch lets users focusing on **the only** necessary things, and will take care of the others. It's more like a skeleton and users should provide necessary components to make it work.
 
 The parameters users must provide:
 
@@ -148,7 +148,7 @@ And that's it, minetorch will take care of other things like `logging`, `resumin
 
 ## Hooks
 
-Minetorch provided many hook points for users to control the training behaviors. All the hook functions receive current  `trainer` instance as the arguments so the hook function can access all the functions and status of `Trainer`.
+MineTorch provided many hook points for users to control the training behaviors. All the hook functions receive current  `trainer` instance as the arguments so the hook function can access all the functions and status of `Trainer`.
 
 | hook points | description |
 | ----------- | ----------- |

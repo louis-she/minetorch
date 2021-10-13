@@ -29,6 +29,8 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
         self.plot_confusion_matrix = plot_confusion_matrix
         self.classification_report = classification_report
         self.sheet_key_prefix = sheet_key_prefix
+        self.accuracy_chart = self.create_chart(name="accuracy")
+        self.kappa_score_chart = self.create_chart(name="kappa_score")
 
     def before_init(self):
         self.create_sheet_column("latest_confusion_matrix", "Latest Confusion Matrix")
@@ -91,35 +93,23 @@ class MultiClassesClassificationMetricWithLogic(Plugin):
         )
 
     def _accuracy(self):
-        png_file = self.scalars(
-            {"accuracy": (self.predicts == self.targets).sum() / len(self.predicts)},
-            "accuracy",
-        )
-        if png_file:
-            self.update_sheet(
-                "accuracy", {"raw": png_file, "processor": "upload_image"}
-            )
+        score = (self.predicts == self.targets).sum() / len(self.predicts)
+        self.accuracy_chart.add_points(accuracy=score)
 
     def _confusion_matrix(self):
         matrix = confusion_matrix(self.targets, self.predicts)
         self.print_txt(matrix, "confusion_matrix")
 
     def _kappa_score(self):
-        png_file = self.scalars(
-            {
-                "kappa_score": cohen_kappa_score(
-                    self.targets, self.predicts, weights="quadratic"
-                )
-            },
-            "kappa_score",
-        )
-
-        if png_file:
-            self.update_sheet(
-                "kappa_score", {"raw": png_file, "processor": "upload_image"}
-            )
+        score = cohen_kappa_score(self.targets, self.predicts, weights="quadratic")
+        self.kappa_score_chart.add_points(kappa_score=score)
 
     def _save_results(self):
         file_name = self.plugin_file(f"result.{self.current_epoch}.npz")
         raw_output = np.concatenate(self.raw_output)
-        np.savez_compressed(file_name, predicts=self.predicts, targets=self.targets, raw_output=raw_output)
+        np.savez_compressed(
+            file_name,
+            predicts=self.predicts,
+            targets=self.targets,
+            raw_output=raw_output,
+        )
