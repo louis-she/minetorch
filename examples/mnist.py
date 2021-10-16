@@ -51,7 +51,7 @@ val_loader = torch.utils.data.DataLoader(
 model = Net()
 
 trainer = Miner(
-    alchemistic_directory='./alchemistic_directory',
+    base_dir='./base_dir',
     code="Experiment-6",
     model=model,
     optimizer=optim.SGD(model.parameters(), lr=0.01),
@@ -62,7 +62,6 @@ trainer = Miner(
         MultiClassesClassificationMetricWithLogic(),
         NoiseSampleDetector(metric=torch.nn.CrossEntropyLoss(reduction='none'))
     ],
-    # sheet=GoogleSheet('1SkS1NWdn1gyrSTbtDRCFUeEsE8dHBJkH0W391bOIGB4', 'quickstart.json'),
     accumulated_iter=1,
     trival=True
 )

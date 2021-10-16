@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 import os
-from typing import Union
+from typing import TYPE_CHECKING
 
 import _pickle as pickle
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from tensorboardX import SummaryWriter
 
-from minetorch.miner import Miner
+if TYPE_CHECKING:
+    from minetorch.miner import Miner
+
 
 
 class Chart:
@@ -24,6 +28,15 @@ class Chart:
         raise NotImplementedError()
 
     def init(self):
+        pass
+
+
+class NoneChart(Chart):
+
+    def init(self):
+        pass
+
+    def add_points(self, x: int, **kwargs):
         pass
 
 

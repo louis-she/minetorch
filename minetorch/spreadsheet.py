@@ -497,7 +497,7 @@ if __name__ == '__main__':
 
     res = np.random.rand(2, 2)
 
-    google_sheet.update('some_image', {'raw': './examples/alchemistic_directory/geass/graphs/accuracy.png', 'processor': 'upload_image'})
+    google_sheet.update('some_image', {'raw': './examples/base_dir/geass/graphs/accuracy.png', 'processor': 'upload_image'})
     google_sheet.update('loss', 0.9)
     google_sheet.update('confusion_matrix', repr(res))
     google_sheet.flush()

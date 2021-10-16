@@ -92,7 +92,7 @@ python mnist.py
 
 The `mnist.py` is pretty much like PyTorch official mnist example https://github.com/pytorch/examples/blob/master/mnist/main.py, with some minor changes to be adapted to MineTorch.
 
-This will create an `alchemistic_directory` and `data` directory in the working directory.
+This will create an `base_dir` and `data` directory in the working directory.
 
 3. Execute tensorboard to visualize
 
@@ -102,7 +102,7 @@ tensorboard ./log
 
 ![](./images/plan-a.png)
 
-or if you used `matplotlib` as the drawer, there would be 2 images under the path `${alchemistic_directory}/${code}/graph` named loss.png and accuracy.png
+or if you used `matplotlib` as the drawer, there would be 2 images under the path `${base_dir}/${code}/graph` named loss.png and accuracy.png
 
 loss.png             |  accuracy.png
 :-------------------------:|:-------------------------:
@@ -124,7 +124,7 @@ The parameters users must provide:
 
 | parameters | type | description |
 | ---------- | ---- | ----------- |
-| alchemistic_directory | string | path of a directory, all the `checkpoint`, `log` or `graph` will be saved in this `alchemistic_directory` |
+| base_dir | string | path of a directory, all the `checkpoint`, `log` or `graph` will be saved in this `base_dir` |
 | train_dataloader | torch.utils.data.DataLoader | Used to tell minetorch how to load training data |
 | model | torch.nn.Module | PyTorch's nn.Module |
 | loss_func | callable | A special hook function, should receive 2 arguments: `data` which yields by the loader and `trainer` which is the trainer instance, this function should return a single scalar which is the loss |
@@ -138,7 +138,7 @@ And that's it, minetorch will take care of other things like `logging`, `resumin
 | eval_stride  | int | Defaults to 1, how many epochs to run a validation process |
 | persist_stride  | int | Defaults to 1, how many epochs to save a checkpoint |
 | drawer  | minetorch.Drawer or string | Defaults to 'matplotlib'. To generate graphs of the whole training process, now support 'tensorboard' and 'matplotlib', can also write a customized Drawer by yourself |
-| code  | string | it's actually a subdirectory path of `alchemistic_directory`, for separating the results of different attempts, every attempt should have a unique name |
+| code  | string | it's actually a subdirectory path of `base_dir`, for separating the results of different attempts, every attempt should have a unique name |
 | hooks | dict | Defining hook function, see [Hooks](#hooks) |
 | max_epochs | int  | How many epochs to train, defaults to None, means unlimited |
 | logging_format | string  | Defaults to '%(levelname)s %(asctime)s %(message)s', same as logging's format |

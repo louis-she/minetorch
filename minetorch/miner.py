@@ -12,14 +12,13 @@ from IPython.core.display import HTML, display
 from minetorch.charts import Chart, TensorBoardChart
 
 from minetorch.plugin import Plugin
-from minetorch.spreadsheet import MineTorchSpreadsheet
 
 
 class Miner(object):
     """The heart of minetorch
 
     Args:
-        alchemistic_directory (string):
+        base_dir (string):
             The directory which minetorch will use to store everything in
         model (torch.nn.Module):
             Pytorch model optimizer (torch.optim.Optimizer): Pytorch optimizer
@@ -69,7 +68,7 @@ class Miner(object):
 
     def __init__(
         self,
-        alchemistic_directory: str,
+        base_dir: str,
         model: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         loss_func: Callable,
@@ -88,7 +87,6 @@ class Miner(object):
         in_notebook: bool = False,
         plugins: List[Plugin] = [],
         logger: logging.Logger = None,
-        sheet: MineTorchSpreadsheet = None,
         accumulated_iter: int = 1,
         ignore_optimizer_resume: bool = False,
         forward: Callable = None,
@@ -96,7 +94,7 @@ class Miner(object):
         amp: bool = False,
         amp_scaler: bool = True,
     ):
-        self.alchemistic_directory = alchemistic_directory
+        self.base_dir = base_dir
         self.code = code
         if trival:
             self.code = f"trival_{code}"
@@ -104,12 +102,12 @@ class Miner(object):
         self.gpu = gpu
         self.devices = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.logger = logger
-        self.code_dir = os.path.join(alchemistic_directory, self.code)
+        self.code_dir = os.path.join(base_dir, self.code)
         if self.logger is None:
-            self.set_logging_config(alchemistic_directory, self.code, logging_format)
+            self.set_logging_config(base_dir, self.code, logging_format)
             self.logger = logging
         self.chart_type = chart_type
-        self.models_dir = os.path.join(alchemistic_directory, self.code, "models")
+        self.models_dir = os.path.join(base_dir, self.code, "models")
         self.in_notebook = in_notebook
         self.accumulated_iter = float(accumulated_iter)
         self.ignore_optimizer_resume = ignore_optimizer_resume
@@ -140,10 +138,6 @@ class Miner(object):
         if self.amp and self.amp_scaler:
             self.scaler = torch.cuda.amp.GradScaler()
 
-        self.sheet = sheet
-        if self.sheet:
-            self._init_sheet()
-
         self.plugins = plugins
         for plugin in self.plugins:
             plugin.set_miner(self)
@@ -152,13 +146,6 @@ class Miner(object):
         self.call_hook_func("before_init")
         self.init_model()
         self.loss_chart = self.create_chart("loss")
-        if self.sheet:
-            self.sheet_progress = dict(
-                epoch=0, train_percentage="0%", val_percentage="0%"
-            )
-            self.last_flushed_at = 0
-            self.sheet.onready()
-            self.sheet.flush()
         self.status = "init"
         self.call_hook_func("after_init")
 
@@ -168,29 +155,11 @@ class Miner(object):
         else:
             self.tqdm = tqdm.tqdm
 
-    def _init_sheet(self):
-        self.sheet.set_miner(self)
-        self.sheet.reset_index()
-        self.sheet.create_column("code", "Code")
-        self.sheet.create_column("progress", "Progress")
-        self.sheet.create_column("loss", "Loss")
-        self.sheet.update("code", self.code)
-
     def create_chart(self, name: str):
         return self.chart_type(self, name)
 
-    def create_sheet_column(self, key, title):
-        if self.sheet is None:
-            return
-        self.sheet.create_column(key, title)
-
-    def update_sheet(self, key, value):
-        if self.sheet is None:
-            return
-        self.sheet.update(key, value)
-
-    def set_logging_config(self, alchemistic_directory, code, logging_format):
-        self.log_dir = os.path.join(alchemistic_directory, code)
+    def set_logging_config(self, base_dir, code, logging_format):
+        self.log_dir = os.path.join(base_dir, code)
         log_file = os.path.join(self.log_dir, "log.txt")
         logging_format = (
             logging_format
@@ -332,7 +301,7 @@ class Miner(object):
             self.hook_funcs[name](miner=self, **payload)
 
         for plugin in self.plugins:
-            if not plugin.before_hook(name, payload):
+            if not plugin.before_handler(name, payload):
                 continue
             if hasattr(plugin, name):
                 getattr(plugin, name)(**payload)
@@ -451,8 +420,6 @@ class Miner(object):
                 self.notify("exceed max epochs, quit!")
                 break
 
-            if self.sheet:
-                self.sheet.flush()
             self.call_hook_func("after_epoch_end")
 
     def run_train_iteration(self, index, data, train_iters):
@@ -467,11 +434,11 @@ class Miner(object):
         )
         if self.amp and self.amp_scaler:
             with torch.cuda.amp.autocast():
-                _, loss = self._forward(data)
+                raw_outputs, loss = self._forward(data)
                 seperate_loss = loss / self.accumulated_iter
             seperate_loss = self.scaler.scale(seperate_loss)
         else:
-            _, loss = self._forward(data)
+            raw_outputs, loss = self._forward(data)
             seperate_loss = loss / self.accumulated_iter
         seperate_loss.backward()
         loss = loss.detach().cpu().item()
@@ -484,6 +451,7 @@ class Miner(object):
 
         self.call_hook_func(
             "after_train_iteration_end",
+            raw_outputs=raw_outputs,
             loss=loss,
             data=data,
             index=index,
@@ -510,7 +478,7 @@ class Miner(object):
             total_iters=val_iters,
             iteration=self.current_val_iteration,
         )
-        predict, loss = self._forward(data)
+        raw_outputs, loss = self._forward(data)
         loss = loss.detach().cpu().item()
         if self.verbose:
             self.logger.info(
@@ -520,7 +488,7 @@ class Miner(object):
             )
         self.call_hook_func(
             "after_val_iteration_ended",
-            predicts=predict,
+            raw_outputs=raw_outputs,
             loss=loss,
             data=data,
             index=index,
@@ -569,10 +537,10 @@ class Miner(object):
         models_dir_path = Path(self.models_dir)
 
         search_paths = [
-            model_name_path,
-            models_dir_path / model_name_path,
             models_dir_path / f"{model_name}.pth.tar",
             models_dir_path / f"epoch_{model_name}.pth.tar",
+            models_dir_path / model_name_path,
+            model_name_path,
         ]
 
         for path in search_paths:
@@ -598,31 +566,8 @@ class Miner(object):
 
     def create_dir(self, *args):
         """Create directory"""
-        current_dir = self.alchemistic_directory
+        current_dir = self.base_dir
         for dir_name in args:
             current_dir = os.path.join(current_dir, dir_name)
             if not os.path.isdir(current_dir):
                 os.mkdir(current_dir)
-
-    def periodly_flush(self, force=False):
-        if self.sheet is None:
-            return
-        now = int(datetime.now().timestamp())
-        # flush every 10 seconds
-        if not force and now - self.last_flushed_at < 10:
-            return
-        self.sheet.flush()
-        self.last_flushed_at = now
-
-    def _update_progress(self, force=False, **kwargs):
-        if self.sheet is None:
-            return
-
-        self.sheet_progress.update(kwargs)
-        progress = f"""
-         epoch:  {self.sheet_progress.get('epoch')}
-train progress:  {self.sheet_progress.get('train_percentage')}
-  val progress:  {self.sheet_progress.get('val_percentage')}
-"""
-        self.sheet.update("progress", progress)
-        self.periodly_flush(force)

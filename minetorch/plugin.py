@@ -1,28 +1,30 @@
 import os
 from typing import Any, Dict
+import typing
+import numpy as np
+import functools
+import operator
 
 import torch
 
+_getitem = lambda a, b: operator.getitem(a, b)
 
 class Plugin:
     """Plugin is a self-contained, statable object for adding
     extra function to MineTorch, it's a more solid way than hook
     functions.
     """
-
-    # The state to persist for each `miner.persist` call
-    # by default all the variables are counted as states
-    __state_members__ = None
+    # The state to persist for each `miner.persist` call,
+    __state_members__ = []
 
     def __init__(self, prefix: str=""):
         self.name = self.__class__.__name__
         self.miner = None
         self.prefix = prefix
+        self.event_handlers = {}
 
     def load_state_dict(self, state: Dict):
         for key in state:
-            if hasattr(self, key):
-                self.notify(f"Overrting {key} of plugin {self.__class__.__name__} by passed in state", "warning")
             setattr(self, key, state[key])
 
     def state_dict(self):
@@ -71,11 +73,22 @@ class Plugin:
     def plugin_file(self, name):
         return os.path.join(self.plugin_dir, name)
 
-    def create_sheet_column(self, key, name):
-        self.miner.create_sheet_column(f"{self.prefix}{key}", f"{self.prefix}{name}")
+    def on(self, event: str, callback: typing.Callable):
+        """Listen on the event of this plugin.
+        Plugin should statement the event it will trigger
+        with __event__ variable
+        """
+        if event not in self.__events__:
+            raise RuntimeError(f"Event {event} is not valid in {self.__class__.__name__}")
+        if event not in self.event_handlers:
+            self.event_handlers[event] = []
+        self.event_handlers[event].append(callback)
 
-    def update_sheet(self, key, value):
-        self.miner.update_sheet(f"{self.prefix}{key}", value)
+    def trigger(self, event: str, payload: typing.Any):
+        """Plugin trigger some event with payload
+        """
+        for callback in self.event_handlers[event]:
+            callback(payload)
 
     def before_handler(self, hook_point: str, payload: Any):
         """If defined, every hook function will be called after
@@ -180,3 +193,60 @@ class Plugin:
         """Before all the training epoch finished, right before the
         process existed.
         """
+
+
+class RecordOutput:
+    """A mixin that will collect the model's outputs and the coorsponding
+    labels in every epoch. The Plugin with this mixin can access to the
+    following members:
+
+    `self.train_raw_outputs` np.Array, shape is [train_samples, *]
+        should be the raw outputs(forward first returned value)
+        from the modal
+    `self.train_labels` np.Array, shape is [train_samples, *]
+        should be the labels that yield from dataset
+    `self.val_raw_outputs` same as `self.train_raw_outputs` but data
+        is from val
+    `self.val_labels` same as `self.train_labels` but data is from val
+
+    Args:
+        target how to get target from data that yield from DataLoader
+    """
+    def __init__(self, target: typing.Union[typing.Callable, int, str] = None, **kwargs):
+        self._get_target_func = target
+        if self._get_target_func is None:
+            self._get_target_func = functools.partial(_getitem, b=1)
+        if isinstance(self._get_target_func, [int, str]):
+            self._get_target_func = functools.partial(_getitem, b=self.target)
+        super().__init__(**kwargs)
+
+    def before_epoch_start(self):
+        self.train_raw_outputs = []
+        self.train_labels = []
+        self.val_raw_outputs = []
+        self.val_labels = []
+
+    def _iteration_end(self, phase, raw_outputs, data):
+        if phase == "train":
+            target_raw_outputs = self.train_raw_outputs
+            target_labels = self.train_labels
+        else:
+            target_raw_outputs = self.val_raw_outputs
+            target_labels = self.val_labels
+
+        raw_outputs = raw_outputs.detach().cpu().numpy()
+        targets = self._get_target_func(data).cpu().numpy()
+        target_raw_outputs.append(raw_outputs)
+        target_labels.val_labels.append(targets)
+
+    def after_train_iteration_end(self, raw_outputs, data, **ignore):
+        self._iteration_end("train", raw_outputs, data)
+
+    def after_val_iteration_end(self, raw_outputs, data, **ignore):
+        self._iteration_end("val", raw_outputs, data)
+
+    def after_epoch_end(self):
+        self.train_raw_outputs = np.concatenate(self.train_raw_outputs)
+        self.train_labels = np.concatenate(self.train_labels)
+        self.val_raw_outputs = np.concatenate(self.val_raw_outputs)
+        self.val_labels = np.concatenate(self.val_labels)
