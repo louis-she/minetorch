@@ -1,6 +1,9 @@
 import os
 from typing import Any, Dict
 import typing
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from minetorch import Miner
 import numpy as np
 import functools
 import operator
@@ -18,8 +21,8 @@ class Plugin:
     __state_members__ = []
 
     def __init__(self, prefix: str=""):
-        self.name = self.__class__.__name__
-        self.miner = None
+        self.name : str = self.__class__.__name__
+        self.miner : Miner = None
         self.prefix = prefix
         self.event_handlers = {}
 
@@ -37,14 +40,9 @@ class Plugin:
     def set_miner(self, miner):
         self.miner = miner
 
-    def notify(self, message: str, _type : str):
+    def notify(self, message: str, _type : str = "info"):
         message = f"[{self.name}] {message}"
         self.miner.notify(message, _type)
-
-    def __getattr__(self, key):
-        if self.miner is None or not hasattr(self.miner, key):
-            raise AttributeError(key)
-        return getattr(self.miner, key)
 
     def print_txt(self, printable : Any, name: str):
         """write information to files every epoch
@@ -84,11 +82,15 @@ class Plugin:
             self.event_handlers[event] = []
         self.event_handlers[event].append(callback)
 
-    def trigger(self, event: str, payload: typing.Any):
+    def trigger(self, event: str, payload: typing.Any = None):
         """Plugin trigger some event with payload
         """
-        for callback in self.event_handlers[event]:
-            callback(payload)
+        if event in self.event_handlers:
+            for callback in self.event_handlers[event]:
+                callback(payload=payload, event=event, plugin=self)
+        if event in self.miner.event_handlers:
+            for callback in self.miner.event_handlers[event]:
+                callback(payload=payload, event=event, plugin=self)
 
     def before_handler(self, hook_point: str, payload: Any):
         """If defined, every hook function will be called after
@@ -146,16 +148,14 @@ class Plugin:
         >>> for (index, data) in enumerate(self.miner.train_dataloader): ...
         """
 
-    def after_train_iteration_end(self, data: Any, index: int, loss: torch.Tensor, predicts: torch.Tensor):
+    def after_train_iteration_end(self, data: Any, index: int, loss: torch.Tensor, raw_outputs: torch.Tensor):
         """After every train iteration ended.
 
         Args:
             data: the batch samples yield by dataloader
             index: index of this batch in the dataloader
-
-        The arguments is just like:
-
-        >>> for (index, data) in enumerate(self.miner.train_dataloader): ...
+            loss: loss of this batch
+            raw_outputs: outputs from model
         """
 
     def before_val_iteration_start(self, data: Any, index: int):
@@ -171,7 +171,7 @@ class Plugin:
         """
 
     def after_val_iteration_start(self, data: Any, index: int):
-        """Before every validation iteration ended.
+        """Before every validation iteration started.
 
         Args:
             data: the batch samples yield by dataloader
@@ -180,6 +180,16 @@ class Plugin:
         The arguments is just like:
 
         >>> for (index, data) in enumerate(self.miner.val_dataloader): ...
+        """
+
+    def after_val_iteration_end(self, data: Any, index: int, loss: torch.Tensor, raw_outputs: torch.Tensor):
+        """Before every validation iteration ended.
+
+        Args:
+            data: the batch samples yield by dataloader
+            index: index of this batch in the dataloader
+            loss: loss of this batch
+            raw_outputs: outputs from model
         """
 
     def after_epoch_end(self):
@@ -216,8 +226,8 @@ class RecordOutput:
         self._get_target_func = target
         if self._get_target_func is None:
             self._get_target_func = functools.partial(_getitem, b=1)
-        if isinstance(self._get_target_func, [int, str]):
-            self._get_target_func = functools.partial(_getitem, b=self.target)
+        if isinstance(self._get_target_func, (int, str)):
+            self._get_target_func = functools.partial(_getitem, b=target)
         super().__init__(**kwargs)
 
     def before_epoch_start(self):
@@ -234,10 +244,10 @@ class RecordOutput:
             target_raw_outputs = self.val_raw_outputs
             target_labels = self.val_labels
 
-        raw_outputs = raw_outputs.detach().cpu().numpy()
-        targets = self._get_target_func(data).cpu().numpy()
+        raw_outputs = raw_outputs.detach().cpu()
+        targets = self._get_target_func(data)
         target_raw_outputs.append(raw_outputs)
-        target_labels.val_labels.append(targets)
+        target_labels.append(targets)
 
     def after_train_iteration_end(self, raw_outputs, data, **ignore):
         self._iteration_end("train", raw_outputs, data)
@@ -246,7 +256,7 @@ class RecordOutput:
         self._iteration_end("val", raw_outputs, data)
 
     def after_epoch_end(self):
-        self.train_raw_outputs = np.concatenate(self.train_raw_outputs)
-        self.train_labels = np.concatenate(self.train_labels)
-        self.val_raw_outputs = np.concatenate(self.val_raw_outputs)
-        self.val_labels = np.concatenate(self.val_labels)
+        self.train_raw_outputs = torch.cat(self.train_raw_outputs)
+        self.train_labels = torch.cat(self.train_labels)
+        self.val_raw_outputs = torch.cat(self.val_raw_outputs)
+        self.val_labels = torch.cat(self.val_labels)

@@ -5,9 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from minetorch.miner import Miner
-from minetorch.metrics import MultiClassesClassificationMetricWithLogic
-from minetorch.plugins.noise_detector import NoiseSampleDetector
-from minetorch.spreadsheet import GoogleSheet
+from minetorch.metrics import Accuracy
 from torchvision import datasets, transforms
 
 
@@ -49,21 +47,17 @@ val_loader = torch.utils.data.DataLoader(
 
 # step 3: start to train, pay attension to the parameters of Miner
 model = Net()
+accuracy = Accuracy()
 
 trainer = Miner(
-    base_dir='./base_dir',
-    code="Experiment-6",
+    base_dir='./minetorch_experiments',
+    code="mnist",
     model=model,
     optimizer=optim.SGD(model.parameters(), lr=0.01),
     train_dataloader=train_loader,
     val_dataloader=val_loader,
     loss_func=torch.nn.CrossEntropyLoss(),
-    plugins=[
-        MultiClassesClassificationMetricWithLogic(),
-        NoiseSampleDetector(metric=torch.nn.CrossEntropyLoss(reduction='none'))
-    ],
-    accumulated_iter=1,
-    trival=True
+    plugins=[accuracy],
 )
 
 trainer.train()

@@ -6,14 +6,14 @@ from typing import TYPE_CHECKING
 import _pickle as pickle
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 if TYPE_CHECKING:
     from minetorch.miner import Miner
 
 
-
 class Chart:
+
     def __init__(self, miner: Miner, name: str):
         self.miner = miner
         self.name = name
@@ -23,8 +23,8 @@ class Chart:
     def code_dir(self):
         return self.miner.code_dir
 
-    def add_points(self, x: int = None, **kwargs):
-        """Add points to the chart on the x"""
+    def add_points(self, **kwargs):
+        """Add points to the chart"""
         raise NotImplementedError()
 
     def init(self):
@@ -36,7 +36,7 @@ class NoneChart(Chart):
     def init(self):
         pass
 
-    def add_points(self, x: int, **kwargs):
+    def add_points(self, **kwargs):
         pass
 
 
@@ -44,11 +44,12 @@ class TensorBoardChart(Chart):
     """Using TensorBoard to visualize charts"""
 
     def init(self):
-        self.writer = SummaryWriter(log_dir=self.code_dir)
+        tensorboard_dir = os.path.join(self.code_dir, 'tensorboard')
+        os.makedirs(tensorboard_dir, exist_ok=True)
+        self.writer = SummaryWriter(log_dir=tensorboard_dir)
 
-    def add_points(self, x: int, **kwargs):
-        key = f"{self.miner.code}/{self.name}"
-        self.writer.add_scalars(key, kwargs, self.name)
+    def add_points(self, **kwargs):
+        self.writer.add_scalars(self.name, kwargs, global_step=self.miner.current_epoch)
 
 
 class ImageFileChart(Chart):
@@ -99,8 +100,6 @@ class ImageFileChart(Chart):
         fig.savefig(png_file, facecolor="#F0FFFC")
         return png_file
 
-    def scalars(self, x: int = None, **kwargs):
-        if x is None:
-            x = self.miner.current_epoch
-        self._update_state(x, kwargs)
+    def scalars(self, **kwargs):
+        self._update_state(self.miner.current_epoch, kwargs)
         return self._save_png()

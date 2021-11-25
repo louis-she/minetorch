@@ -22,12 +22,13 @@ setuptools.setup(
     author_email='chenglu.she@gmail.com',
     keywords='pytorch minetorch',
     install_requires=[
-        'tensorboardX',
+        'torch',
+        'tqdm',
         'matplotlib',
         'albumentations',
-        'google-api-python-client',
-        'google-auth-httplib2',
-        'google-auth-oauthlib'
+        'ipython',
+        'pandas',
+        'seaborn'
     ],
     entry_points={
         'console_scripts': ['minetorch=minetorch.command_line:main'],

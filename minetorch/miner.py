@@ -71,7 +71,7 @@ class Miner(object):
         base_dir: str,
         model: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
-        loss_func: Callable,
+        loss_func: Callable = None,
         code: str = "geass",
         train_dataloader: Iterable = None,
         val_dataloader: Iterable = None,
@@ -147,6 +147,7 @@ class Miner(object):
         self.init_model()
         self.loss_chart = self.create_chart("loss")
         self.status = "init"
+        self.event_handlers = {}
         self.call_hook_func("after_init")
 
     def _set_tqdm(self):
@@ -155,8 +156,22 @@ class Miner(object):
         else:
             self.tqdm = tqdm.tqdm
 
-    def create_chart(self, name: str):
+    def create_chart(self, name: str) -> Chart:
+        """Create chart with a chart name
+        """
         return self.chart_type(self, name)
+
+    def on(self, event, callback):
+        """Listen on the event of miner.
+
+        Just like hooks, the event system of miner provide
+        a more flexiable way of adding callbacks. Thinking about
+        hooks are static callbacks, and event handlers are dynamic
+        callbacks that will be added by any plugins.
+        """
+        if event not in self.event_handlers:
+            self.event_handlers[event] = []
+        self.event_handlers[event].append(callback)
 
     def set_logging_config(self, base_dir, code, logging_format):
         self.log_dir = os.path.join(base_dir, code)
@@ -319,12 +334,6 @@ class Miner(object):
             percentage = 0
             total = len(self.train_dataloader)
             self.notify(f"start to train epoch {self.current_epoch}")
-            self._update_progress(
-                force=True,
-                epoch=self.current_epoch,
-                train_percentage="0%",
-                val_percentage="0%",
-            )
             t = self.tqdm(self.train_dataloader)
             for index, data in enumerate(t):
                 if self.trival is True and index == 10:
@@ -344,13 +353,11 @@ class Miner(object):
                 self.epoch_train_loss += train_loss
                 current_percentage = math.ceil(index / total * 100)
                 if current_percentage != percentage:
-                    self._update_progress(train_percentage=f"{percentage}%")
                     percentage = current_percentage
             if self.amp and self.amp_scaler:
                 self.optimizer.zero_grad()
             else:
                 self.optimizer.zero_grad(set_to_none=True)
-            self._update_progress(force=True, train_percentage=f"{current_percentage}%")
 
             self.epoch_train_loss = self.epoch_train_loss / train_iters
             self.notify(
@@ -375,11 +382,7 @@ class Miner(object):
                         self.epoch_val_loss += val_loss
                         current_percentage = math.ceil(index / total * 100)
                         if current_percentage != percentage:
-                            self._update_progress(val_percentage=f"{percentage}%")
                             percentage = current_percentage
-                    self._update_progress(
-                        force=True, val_percentage=f"{current_percentage}%"
-                    )
 
                 self.epoch_val_loss = self.epoch_val_loss / val_iters
                 self.notify(
@@ -415,12 +418,12 @@ class Miner(object):
             if not self.current_epoch % self.persist_stride:
                 self.persist("epoch_{}".format(self.current_epoch))
 
+            self.call_hook_func("after_epoch_end")
+
             if self.max_epochs is not None and self.current_epoch >= self.max_epochs:
                 self.call_hook_func("before_quit")
                 self.notify("exceed max epochs, quit!")
                 break
-
-            self.call_hook_func("after_epoch_end")
 
     def run_train_iteration(self, index, data, train_iters):
         self.status = "train"
@@ -429,8 +432,6 @@ class Miner(object):
             "before_train_iteration_start",
             data=data,
             index=index,
-            total_iters=train_iters,
-            iteration=self.current_train_iteration,
         )
         if self.amp and self.amp_scaler:
             with torch.cuda.amp.autocast():
@@ -455,8 +456,6 @@ class Miner(object):
             loss=loss,
             data=data,
             index=index,
-            total_iters=train_iters,
-            iteration=self.current_train_iteration,
         )
         return loss
 
@@ -475,8 +474,6 @@ class Miner(object):
             "before_val_iteration_start",
             data=data,
             index=index,
-            total_iters=val_iters,
-            iteration=self.current_val_iteration,
         )
         raw_outputs, loss = self._forward(data)
         loss = loss.detach().cpu().item()
@@ -487,13 +484,11 @@ class Miner(object):
                 )
             )
         self.call_hook_func(
-            "after_val_iteration_ended",
+            "after_val_iteration_end",
             raw_outputs=raw_outputs,
             loss=loss,
             data=data,
             index=index,
-            total_iters=val_iters,
-            iteration=self.current_val_iteration,
         )
         return loss
 

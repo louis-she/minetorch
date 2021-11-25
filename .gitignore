@@ -8,3 +8,5 @@ MineTorch.egg-info
 .DS_Store
 .venv
 .vscode
+.pytest_cache
+examples/minetorch_experiments/
