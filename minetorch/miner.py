@@ -157,8 +157,7 @@ class Miner(object):
             self.tqdm = tqdm.tqdm
 
     def create_chart(self, name: str) -> Chart:
-        """Create chart with a chart name
-        """
+        """Create chart with a chart name"""
         return self.chart_type(self, name)
 
     def on(self, event, callback):
@@ -508,7 +507,7 @@ class Miner(object):
             "train_iteration": self.current_train_iteration,
             "val_iteration": self.current_val_iteration,
             "lowest_train_loss": self.lowest_train_loss,
-            "lowest_val_loss": self.lowest_val_loss
+            "lowest_val_loss": self.lowest_val_loss,
         }
 
         for plugin in self.plugins:

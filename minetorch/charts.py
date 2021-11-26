@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 
 class Chart:
-
     def __init__(self, miner: Miner, name: str):
         self.miner = miner
         self.name = name
@@ -32,7 +31,6 @@ class Chart:
 
 
 class NoneChart(Chart):
-
     def init(self):
         pass
 
@@ -44,7 +42,7 @@ class TensorBoardChart(Chart):
     """Using TensorBoard to visualize charts"""
 
     def init(self):
-        tensorboard_dir = os.path.join(self.code_dir, 'tensorboard')
+        tensorboard_dir = os.path.join(self.code_dir, "tensorboard")
         os.makedirs(tensorboard_dir, exist_ok=True)
         self.writer = SummaryWriter(log_dir=tensorboard_dir)
 

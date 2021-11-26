@@ -2,6 +2,7 @@ import os
 from typing import Any, Dict
 import typing
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from minetorch import Miner
 import numpy as np
@@ -12,17 +13,19 @@ import torch
 
 _getitem = lambda a, b: operator.getitem(a, b)
 
+
 class Plugin:
     """Plugin is a self-contained, statable object for adding
     extra function to MineTorch, it's a more solid way than hook
     functions.
     """
+
     # The state to persist for each `miner.persist` call,
     __state_members__ = []
 
-    def __init__(self, prefix: str=""):
-        self.name : str = self.__class__.__name__
-        self.miner : Miner = None
+    def __init__(self, prefix: str = ""):
+        self.name: str = self.__class__.__name__
+        self.miner: Miner = None
         self.prefix = prefix
         self.event_handlers = {}
 
@@ -40,13 +43,12 @@ class Plugin:
     def set_miner(self, miner):
         self.miner = miner
 
-    def notify(self, message: str, _type : str = "info"):
+    def notify(self, message: str, _type: str = "info"):
         message = f"[{self.name}] {message}"
         self.miner.notify(message, _type)
 
-    def print_txt(self, printable : Any, name: str):
-        """write information to files every epoch
-        """
+    def print_txt(self, printable: Any, name: str):
+        """write information to files every epoch"""
         with open(self.plugin_file(f"{name}.txt"), "a") as f:
             print(
                 f"================ Epoch {self.current_epoch} ================\n",
@@ -77,14 +79,15 @@ class Plugin:
         with __event__ variable
         """
         if event not in self.__events__:
-            raise RuntimeError(f"Event {event} is not valid in {self.__class__.__name__}")
+            raise RuntimeError(
+                f"Event {event} is not valid in {self.__class__.__name__}"
+            )
         if event not in self.event_handlers:
             self.event_handlers[event] = []
         self.event_handlers[event].append(callback)
 
     def trigger(self, event: str, payload: typing.Any = None):
-        """Plugin trigger some event with payload
-        """
+        """Plugin trigger some event with payload"""
         if event in self.event_handlers:
             for callback in self.event_handlers[event]:
                 callback(payload=payload, event=event, plugin=self)
@@ -148,7 +151,9 @@ class Plugin:
         >>> for (index, data) in enumerate(self.miner.train_dataloader): ...
         """
 
-    def after_train_iteration_end(self, data: Any, index: int, loss: torch.Tensor, raw_outputs: torch.Tensor):
+    def after_train_iteration_end(
+        self, data: Any, index: int, loss: torch.Tensor, raw_outputs: torch.Tensor
+    ):
         """After every train iteration ended.
 
         Args:
@@ -182,7 +187,9 @@ class Plugin:
         >>> for (index, data) in enumerate(self.miner.val_dataloader): ...
         """
 
-    def after_val_iteration_end(self, data: Any, index: int, loss: torch.Tensor, raw_outputs: torch.Tensor):
+    def after_val_iteration_end(
+        self, data: Any, index: int, loss: torch.Tensor, raw_outputs: torch.Tensor
+    ):
         """Before every validation iteration ended.
 
         Args:
@@ -222,7 +229,10 @@ class RecordOutput:
     Args:
         target how to get target from data that yield from DataLoader
     """
-    def __init__(self, target: typing.Union[typing.Callable, int, str] = None, **kwargs):
+
+    def __init__(
+        self, target: typing.Union[typing.Callable, int, str] = None, **kwargs
+    ):
         self._get_target_func = target
         if self._get_target_func is None:
             self._get_target_func = functools.partial(_getitem, b=1)

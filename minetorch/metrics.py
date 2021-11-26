@@ -47,7 +47,7 @@ class Metric(Plugin):
         if self.optim_func(self.last_score, self.best_score):
             self.notify(
                 f"New best score {self.last_score} beats the last best {self.best_score}",
-                "success"
+                "success",
             )
             self.best_score = self.last_score
             self.trigger("NEW_BEST_SCORE")
@@ -104,16 +104,18 @@ class Accuracy(RecordOutput, Metric):
         if len(equals.shape) == 1:
             return equals.sum() / len(equals)
         else:
-            acc_of_samples = equals.sum(dim=list(range(1, len(a.shape)))) / a.shape[1:].numel()
+            acc_of_samples = (
+                equals.sum(dim=list(range(1, len(a.shape)))) / a.shape[1:].numel()
+            )
             return acc_of_samples.mean()
 
     def after_epoch_end(self):
         super().after_epoch_end()
-        val_score = self.accuracy_of_tensors(*self.transform_func(
-            self.val_raw_outputs, self.val_labels
-        ))
-        train_score = self.accuracy_of_tensors(*self.transform_func(
-            self.train_raw_outputs, self.train_labels
-        ))
+        val_score = self.accuracy_of_tensors(
+            *self.transform_func(self.val_raw_outputs, self.val_labels)
+        )
+        train_score = self.accuracy_of_tensors(
+            *self.transform_func(self.train_raw_outputs, self.train_labels)
+        )
         self.add_score(val_score)
         self.chart.add_points(train_acc=train_score, val_acc=val_score)
