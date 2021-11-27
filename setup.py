@@ -28,9 +28,11 @@ setuptools.setup(
         'albumentations',
         'ipython',
         'pandas',
-        'seaborn'
+        'seaborn',
+        'click',
+        'cookiecutter'
     ],
     entry_points={
-        'console_scripts': ['minetorch=minetorch.command_line:main'],
+        'console_scripts': ['minetorch=minetorch.cli:cli'],
     }
 )

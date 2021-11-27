@@ -122,15 +122,6 @@ class Plugin:
         Typical usage: init things that are associated with the states.
         """
 
-    def after_init(self):
-        """After init the plugin and models, the `self.miner` and all the
-        plugins are inited. Be awared that the persisted state is applyed
-        so some of the member vairable should have values now, if assign
-        new value, the state value will be overrided.
-
-        Typical usage: init things that are associated with the states.
-        """
-
     def before_epoch_start(self):
         """Before every epoch started. Do things that are associated with
         every epoch.
@@ -209,6 +200,18 @@ class Plugin:
     def before_quit(self):
         """Before all the training epoch finished, right before the
         process existed.
+        """
+
+    def before_persist_checkpoint(self):
+        """before save the checkpoints of the epoch
+        """
+
+    def before_checkpoint_persisted(self):
+        """before save every checkpoint
+        """
+
+    def after_checkpoint_persisted(self, modelpath):
+        """after save every checkpoint
         """
 
 
