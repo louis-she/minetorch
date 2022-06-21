@@ -53,7 +53,7 @@ nbconvert==5.4.1
 nbformat==4.4.0
 networkx==2.3
 notebook==6.1.5
-numpy==1.16.2
+numpy==1.22.0
 opencv-python==4.1.0.25
 opencv-python-headless==4.1.0.25
 pandas==0.24.2
