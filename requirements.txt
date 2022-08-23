@@ -49,7 +49,7 @@ matplotlib==3.0.3
 mccabe==0.6.1
 Minetorch==0.3.4
 mistune==0.8.4
-nbconvert==5.4.1
+nbconvert==6.5.1
 nbformat==4.4.0
 networkx==2.3
 notebook==6.1.5
